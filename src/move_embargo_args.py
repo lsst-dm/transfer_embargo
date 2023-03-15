@@ -4,6 +4,7 @@ from lsst.daf.butler import Butler
 import astropy
 
 test_args=True
+remove_collection=False # function to remove a collection from scratch butler
 
 # Define all the arguments
 # atelast one arg in dataId needed for 'where' clause.
@@ -73,3 +74,6 @@ if test_args:
         print(dt)
     print('-----------------------')
     print('embargo period: ',args.embargodays)
+    
+if remove_collection:
+    scratch_butler.pruneCollection(collections, purge=True, unstore=True)
