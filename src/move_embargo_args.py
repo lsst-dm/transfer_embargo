@@ -3,18 +3,18 @@ parser = argparse.ArgumentParser(description='Transferring data from embargo but
 from lsst.daf.butler import Butler
 import astropy
 
-test_args=True
-remove_collection=False # function to remove a collection from scratch butler
+test_args = True
+remove_collection = False # function to remove a collection from scratch butler
 
 # Define all the arguments
-# atelast one arg in dataId needed for 'where' clause.
+# at least one arg in dataId needed for 'where' clause.
 parser.add_argument("-fromrepo", "--fromrepo", type=str, metavar='/repo/embargo', default='/repo/embargo', help="Butler Repository path from which data is transferred. Input str. Default = '/repo/embargo'")
 parser.add_argument("-torepo", "--torepo", type=str, metavar='/home/j/jarugula/scratch', required=True, help = "Repository to which data is transferred. Input str")
 parser.add_argument("-dtype", "--datasettype", type=str, metavar='raw', required=False, help = "Dataset type. Input str")
 parser.add_argument("-coll", "--collections", type=str, metavar='LATISS/raw/all', required=False, help = "Data Collections. Input str")
-parser.add_argument("-instrument", "--instrument", type=str, metavar='LATISS',  required=True, help = "Instrument. Input str")
-parser.add_argument("-detector", "--detector", type=int, metavar=0,  required=False, help = "Detector number. Input int")
-parser.add_argument("-band", "--band", type=str, metavar='g',  required=False, help = "Band. Input str")
+parser.add_argument("-instrument", "--instrument", type=str, metavar='LATISS', required=True, help = "Instrument. Input str")
+parser.add_argument("-detector", "--detector", type=int, metavar=0, required=False, help = "Detector number. Input int")
+parser.add_argument("-band", "--band", type=str, metavar='g', required=False, help = "Band. Input str")
 parser.add_argument("-exposure", "--exposure", type=int, metavar=2022091400696,  required=False, help = "Exposure id. Input int")
 parser.add_argument("-days", "--embargodays", type=int, metavar=30, required=True, help = "Embargo time period in days. Input int")
 
@@ -63,7 +63,7 @@ datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=col
                                          where="exposure.id IN (exposure_ids)",
                                          bind={"exposure_ids": after_embargo})
 
-#Copy the Dataset after embargo period from embargo butler to scratch butler
+# Copy the Dataset after embargo period from embargo butler to scratch butler
 scratch_butler.transfer_from(butler, source_refs=datasetRefs, transfer='copy',skip_missing=True,register_dataset_types=True,transfer_dimensions=True)
 
 if test_args:
