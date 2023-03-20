@@ -11,11 +11,11 @@ setup lsst_distrib
 #run this if you need to create scratch butler
 #butler create scratch
 
-fromrepo = '/repo/embargo'
-torepo = '/home/j/jarugula/scratch'
-instrument = 'LATISS'
-days = 30
-dtype = 'raw'
+arg_fromrepo="/repo/embargo"
+arg_torepo="/home/j/jarugula/scratch"
+arg_instrument="LATISS"
+arg_days=30
+arg_dtype="raw"
 
-python move_embargo_args.py --help
-python move_embargo_args.py -fromrepo "$fromrepo" -torepo "$torepo" -instrument "$instrument" -days "$days" -dtype "$dtype"
+#python move_embargo_args.py --help
+python move_embargo_args.py -fromrepo $arg_fromrepo -torepo $arg_torepo -instrument $arg_instrument -days $arg_days -dtype $arg_dtype
