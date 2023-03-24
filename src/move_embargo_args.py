@@ -1,6 +1,7 @@
 import argparse
 from lsst.daf.butler import Butler
 import astropy
+import sys
 
 remove_collection = False # function to remove a collection from scratch butler
 transfer = False
@@ -24,31 +25,31 @@ def parse_args(args):
 
     
 if __name__ == "__main__":
-    print(sys.argv)
-    print(sys.argv[1:])
-    parser = parse_args(sys.argv[1:])
+    
+    args = sys.argv[1:]
+    parser = parse_args(args)
     
     # Define embargo and scratch butler
-    butler = Butler(args.fromrepo)
+    butler = Butler(parser.fromrepo)
     registry = butler.registry
 
-    scratch_butler = Butler(args.torepo, writeable=True)
+    scratch_butler = Butler(parser.torepo, writeable=True)
     scratch_registry = scratch_butler.registry
 
-    datasetType = args.datasettype
-    collections = args.collections
+    datasetType = parser.datasettype
+    collections = parser.collections
 
     # Dataset to move
     # dataID must include
-    if not [x for x in (args.instrument, args.detector, args.band) if x is None]: 
-        dataId = {'instrument': args.instrument, 'detector': args.detector, 'band':args.band}
-    elif not [x for x in (args.instrument, args.detector, args.band, args.exposure) if x is None]: 
-        dataId = {'instrument': args.instrument, 'detector': args.detector, 'band':args.band, 'exposure':args.exposure}
+    if not [x for x in (parser.instrument, parser.detector, parser.band) if x is None]: 
+        dataId = {'instrument': parser.instrument, 'detector': parser.detector, 'band': parser.band}
+    elif not [x for x in (parser.instrument, parser.detector, parser.band, parser.exposure) if x is None]: 
+        dataId = {'instrument': parser.instrument, 'detector': parser.detector, 'band': parser.band, 'exposure': parser.exposure}
     else:
-        dataId={'instrument': args.instrument}
+        dataId={'instrument': parser.instrument}
 
     # Define embargo period 
-    embargo_period = astropy.time.TimeDelta(args.embargodays, format='jd') # 30 julian days?
+    embargo_period = astropy.time.TimeDelta(parser.embargodays, format='jd') # 30 julian days?
     int_embargo_period = int(embargo_period.datetime.days)
     now = astropy.time.Time.now()
     int_now = int(now.datetime.strftime("%Y%m%d"))
