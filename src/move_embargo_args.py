@@ -1,24 +1,26 @@
 import argparse
-parser = argparse.ArgumentParser(description='Transferring data from embargo butler to another butler')
 from lsst.daf.butler import Butler
 import astropy
 
 remove_collection = False # function to remove a collection from scratch butler
 transfer = False
 
-# Define all the arguments
-# at least one arg in dataId needed for 'where' clause.
-parser.add_argument("-fromrepo", "--fromrepo", type=str, metavar='/repo/embargo', required=True, default='/repo/embargo', help="Butler Repository path from which data is transferred. Input str. Default = '/repo/embargo'")
-parser.add_argument("-torepo", "--torepo", type=str, metavar='/home/j/jarugula/scratch', required=True, help = "Repository to which data is transferred. Input str")
-parser.add_argument("-days", "--embargodays", type=int, metavar=30, required=True, help = "Embargo time period in days. Input int")
-parser.add_argument("-instrument", "--instrument", type=str, metavar='LATISS', required=True, help = "Instrument. Input str")
-parser.add_argument("-dtype", "--datasettype", type=str, metavar='raw', required=False, default='raw', help = "Dataset type. Input str")
-parser.add_argument("-coll", "--collections", type=str, metavar='LATISS/raw/all', required=False, default='LATISS/raw/all', help = "Data Collections. Input str")
-parser.add_argument("-detector", "--detector", type=int, metavar=0, required=False, help = "Detector number. Input int")
-parser.add_argument("-band", "--band", type=str, metavar='g', required=False, help = "Band. Input str")
-parser.add_argument("-exposure", "--exposure", type=int, metavar=2022091400696,  required=False, help = "Exposure id. Input int")
+def parse_args(args):
+    parser = argparse.ArgumentParser(description='Transferring data from embargo butler to another butler')
 
-args = parser.parse_args()
+    # Define all the arguments
+    # at least one arg in dataId needed for 'where' clause.
+    parser.add_argument("-fromrepo", "--fromrepo", type=str, metavar='/repo/embargo', required=True, default='/repo/embargo', help="Butler Repository path from which data is transferred. Input str. Default = '/repo/embargo'")
+    parser.add_argument("-torepo", "--torepo", type=str, metavar='/home/j/jarugula/scratch', required=True, help = "Repository to which data is transferred. Input str")
+    parser.add_argument("-days", "--embargodays", type=int, metavar=30, required=True, help = "Embargo time period in days. Input int")
+    parser.add_argument("-instrument", "--instrument", type=str, metavar='LATISS', required=True, help = "Instrument. Input str")
+    parser.add_argument("-dtype", "--datasettype", type=str, metavar='raw', required=False, help = "Dataset type. Input str")
+    parser.add_argument("-coll", "--collections", type=str, metavar='LATISS/raw/all', required=False, help = "Data Collections. Input str")
+    parser.add_argument("-detector", "--detector", type=int, metavar=0, required=False, help = "Detector number. Input int")
+    parser.add_argument("-band", "--band", type=str, metavar='g', required=False, help = "Band. Input str")
+    parser.add_argument("-exposure", "--exposure", type=int, metavar=2022091400696,  required=False, help = "Exposure id. Input int")
+
+    return parser.parse_args(args)
 
 # Define embargo and scratch butler
 butler = Butler(args.fromrepo)
