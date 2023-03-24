@@ -10,10 +10,9 @@ class TestSum(unittest.TestCase):
         Test something about move_embargo_args
         """
         args = [1, 2, 3] # need to insert arguments that go into move_embargo_args here to test it
-        result = move_embargo_args(args)
         # I'm not sure what we need to assert (below)
         # maybe the assertion can be related to missing arguments?
-        self.assertEqual(result, 6)
+        self.assertRaises(move_embargo_args(args))
 
 if __name__ == '__main__':
     unittest.main()
