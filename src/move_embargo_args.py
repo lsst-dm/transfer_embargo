@@ -3,10 +3,10 @@ import astropy.time
 from lsst.daf.butler import Butler
 
 # remove_collection clears the collection from scratch_butler if set to True.
-remove_collection = False
+REMOVE_COLLECTION = False
 
 # transfers data from embargo to scratch butler when set to True.
-transfer = False
+TRANSFER = False
 
 
 def parse_args():
@@ -87,10 +87,10 @@ if __name__ == "__main__":
 
     # Copy the Dataset after embargo period from
     # embargo butler to scratch butler.
-    if transfer:
+    if TRANSFER:
         dest.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
                                      skip_missing=True, register_dataset_types=True,
                                      transfer_dimensions=True)
     # Remove collection from scratch butler
-    if remove_collection:
+    if REMOVE_COLLECTION:
         dest.pruneCollection(collections, purge=True, unstore=True)
