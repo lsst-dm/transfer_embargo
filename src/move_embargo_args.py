@@ -1,7 +1,6 @@
 import argparse
+import astropy.time
 from lsst.daf.butler import Butler
-import astropy
-import sys
 
 # remove_collection clears the collection from scratch_butler if set to True.
 remove_collection = False
@@ -10,7 +9,7 @@ remove_collection = False
 transfer = False
 
 
-def parse_args(args):
+def parse_args():
     parser = argparse.ArgumentParser(description='Transferring data from embargo butler to another butler')
 
     # at least one arg in dataId needed for 'where' clause.
@@ -36,12 +35,11 @@ def parse_args(args):
     parser.add_argument("-exposure", "--exposure", type=int, metavar=2022091400696, required=False,
                         help="Exposure id. Input int")
 
-    return parser.parse_args(args)
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    parser = parse_args(args)
+    parser = parse_args()
     # Define embargo and scratch butler
     butler = Butler(parser.fromrepo)
     registry = butler.registry
