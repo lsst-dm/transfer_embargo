@@ -43,8 +43,8 @@ if __name__ == "__main__":
     # Define embargo and scratch butler
     butler = Butler(namespace.fromrepo)
     registry = butler.registry
-    scratch_butler = Butler(namespace.torepo, writeable=True)
-    scratch_registry = scratch_butler.registry
+    dest = Butler(namespace.torepo, writeable=True)
+    scratch_registry = dest.registry
     datasetType = namespace.datasettype
     collections = namespace.collections
 
@@ -88,9 +88,9 @@ if __name__ == "__main__":
     # Copy the Dataset after embargo period from
     # embargo butler to scratch butler.
     if transfer:
-        scratch_butler.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
+        dest.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
                                      skip_missing=True, register_dataset_types=True,
                                      transfer_dimensions=True)
     # Remove collection from scratch butler
     if remove_collection:
-        scratch_butler.pruneCollection(collections, purge=True, unstore=True)
+        dest.pruneCollection(collections, purge=True, unstore=True)
