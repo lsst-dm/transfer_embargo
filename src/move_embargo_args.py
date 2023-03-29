@@ -39,28 +39,28 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    parser = parse_args()
+    namespace = parse_args()
     # Define embargo and scratch butler
-    butler = Butler(parser.fromrepo)
+    butler = Butler(namespace.fromrepo)
     registry = butler.registry
-    scratch_butler = Butler(parser.torepo, writeable=True)
+    scratch_butler = Butler(namespace.torepo, writeable=True)
     scratch_registry = scratch_butler.registry
-    datasetType = parser.datasettype
-    collections = parser.collections
+    datasetType = namespace.datasettype
+    collections = namespace.collections
 
     # Dataset to move
     # dataID must include
-    if not [x for x in (parser.instrument, parser.detector, parser.band) if x is None]:
-        dataId = {'instrument': parser.instrument, 'detector': parser.detector,
-                  'band': parser.band}
-    elif not [x for x in (parser.instrument, parser.detector, parser.band, parser.exposure) if x is None]:
-        dataId = {'instrument': parser.instrument, 'detector': parser.detector,
-                  'band': parser.band, 'exposure': parser.exposure}
+    if not [x for x in (namespace.instrument, namespace.detector, namespace.band) if x is None]:
+        dataId = {'instrument': namespace.instrument, 'detector': namespace.detector,
+                  'band': namespace.band}
+    elif not [x for x in (namespace.instrument, namespace.detector, namespace.band, namespace.exposure) if x is None]:
+        dataId = {'instrument': namespace.instrument, 'detector': namespace.detector,
+                  'band': namespace.band, 'exposure': namespace.exposure}
     else:
-        dataId = {'instrument': parser.instrument}
+        dataId = {'instrument': namespace.instrument}
 
     # Define embargo period
-    embargo_period = astropy.time.TimeDelta(parser.embargodays, format='jd')
+    embargo_period = astropy.time.TimeDelta(namespace.embargodays, format='jd')
     int_embargo_period = int(embargo_period.datetime.days)
     now = astropy.time.Time.now()
     int_now = int(now.datetime.strftime("%Y%m%d"))
