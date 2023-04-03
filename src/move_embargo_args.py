@@ -14,25 +14,25 @@ def parse_args():
 
     # at least one arg in dataId needed for 'where' clause.
     parser.add_argument(
-        "-fromrepo", "--fromrepo", type=str, metavar='/repo/embargo',
+        "-f", "--fromrepo", type=str,
         required=True, default='/repo/embargo',
         help="Butler Repository path from which data is transferred. Input str. Default = '/repo/embargo'")
     parser.add_argument(
-        "-torepo", "--torepo", type=str, metavar='/home/j/jarugula/scratch',
+        "-t", "--torepo", type=str, default='/home/j/jarugula/scratch',
         required=True, help="Repository to which data is transferred. Input str")
-    parser.add_argument("-days", "--embargodays", type=int, metavar=30, required=True,
+    parser.add_argument("-d", "--embargodays", type=int, required=True, default=30,
                         help="Embargo time period in days. Input int")
-    parser.add_argument("-instrument", "--instrument", type=str, metavar='LATISS', required=True,
+    parser.add_argument("--instrument", type=str, required=True, default='LATISS',
                         help="Instrument. Input str")
-    parser.add_argument("-dtype", "--datasettype", type=str, metavar='raw', required=False,
+    parser.add_argument("--datasettype", type=str, required=False, default='raw',
                         help="Dataset type. Input str")
-    parser.add_argument("-coll", "--collections", type=str, metavar='LATISS/raw/all', required=False,
+    parser.add_argument("--collections", type=str, required=False, default='LATISS/raw/all',
                         help="Data Collections. Input str")
-    parser.add_argument("-detector", "--detector", type=int, metavar=0, required=False,
+    parser.add_argument("--detector", type=int, required=False, default=0,
                         help="Detector number. Input int")
-    parser.add_argument("-band", "--band", type=str, metavar='g', required=False,
+    parser.add_argument("--band", type=str, required=False, default='g',
                         help="Band. Input str")
-    parser.add_argument("-exposure", "--exposure", type=int, metavar=2022091400696, required=False,
+    parser.add_argument("--exposure", type=int, required=False, default=2022091400696,
                         help="Exposure id. Input int")
 
     return parser.parse_args()
