@@ -1,6 +1,6 @@
 import unittest
 import sys
-sys.path.insert(0,"..")
+#sys.path.insert(0,"..")
 from src import move_embargo_args
 
 class TestEmbargoArgs(unittest.TestCase):
