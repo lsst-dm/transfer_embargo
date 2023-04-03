@@ -61,7 +61,6 @@ if __name__ == "__main__":
 
     # Define embargo period
     embargo_period = astropy.time.TimeDelta(namespace.embargodays, format='jd')
-    int_embargo_period = int(embargo_period.datetime.days)
     now = astropy.time.Time.now()
     int_now = int(now.datetime.strftime("%Y%m%d"))
 
@@ -75,7 +74,7 @@ if __name__ == "__main__":
                                                           collections=collections,
                                                           where="now - exposure.day_obs > embargo_period",
                                                           bind={"now": int_now,
-                                                                "embargo_period": int_embargo_period})):
+                                                                "embargo_period": namespace.embargodays})):
         end_time = dt.timespan.end
         if now - end_time > embargo_period:
             after_embargo.append(dt.id)
