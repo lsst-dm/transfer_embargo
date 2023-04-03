@@ -11,7 +11,7 @@ class TestEmbargoArgs(unittest.TestCase):
         
         
         
-        args = ['-fromrepo', '/repo/embargo', '-torepo', '/home/j/jarugula/scratch', '-instrument', 'LATISS', '-days', '30', '-dtype', 'raw', '-coll', 'LATISS/raw/all', '-band', 'g']
+        args = ['-f', '/repo/embargo', '-t', '/home/j/jarugula/scratch', '--instrument', 'LATISS', '-days', '30', '--datasettype', 'raw', '--collections', 'LATISS/raw/all', '--band', 'g']
         
         parser = move_embargo_args.parse_args(args)
         self.assertTrue(parser.long)
