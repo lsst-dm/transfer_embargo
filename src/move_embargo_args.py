@@ -2,6 +2,8 @@ import argparse
 import astropy.time
 from lsst.daf.butler import Butler
 
+# Moving from argparese to click
+
 # remove_collection clears the collection from scratch_butler if set to True.
 REMOVE_COLLECTION = False
 
