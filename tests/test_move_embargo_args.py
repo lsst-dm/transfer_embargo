@@ -1,6 +1,6 @@
 import unittest
 # import sys
-# sys.path.insert(0,"..")
+# sys.path.insert(0, "..")
 # from src import move_embargo_args
 import move_embargo_args
 
@@ -17,7 +17,7 @@ class TestEmbargoArgs(unittest.TestCase):
                 '--datasettype', 'raw',
                 '--collections', 'LATISS/raw/all',
                 '--band', 'g']
-        parser = move_embargo_args.parse_args(args)
+        parser = move_embargo_args.parser(args)
         self.assertTrue(parser.long)
         '''
 
