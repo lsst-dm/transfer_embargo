@@ -55,7 +55,10 @@ if __name__ == "__main__":
     if not [x for x in (namespace.instrument, namespace.detector, namespace.band) if x is None]:
         dataId = {'instrument': namespace.instrument, 'detector': namespace.detector,
                   'band': namespace.band}
-    elif not [x for x in (namespace.instrument, namespace.detector, namespace.band, namespace.exposure) if x is None]:
+    elif not [x for x in (namespace.instrument,
+                          namespace.detector,
+                          namespace.band,
+                          namespace.exposure) if x is None]:
         dataId = {'instrument': namespace.instrument, 'detector': namespace.detector,
                   'band': namespace.band, 'exposure': namespace.exposure}
     else:
@@ -90,8 +93,8 @@ if __name__ == "__main__":
     # embargo butler to scratch butler.
     if TRANSFER:
         dest.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
-                                     skip_missing=True, register_dataset_types=True,
-                                     transfer_dimensions=True)
+                           skip_missing=True, register_dataset_types=True,
+                           transfer_dimensions=True)
     # Remove collection from scratch butler
     if REMOVE_COLLECTION:
         dest.pruneCollection(collections, purge=True, unstore=True)
