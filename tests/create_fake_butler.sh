@@ -9,4 +9,7 @@
 
 setup lsst_distrib
 #run this if you need to create scratch butler
-butler create fake
+butler create fake_from
+
+butler create fake_to
+
