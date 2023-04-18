@@ -30,6 +30,8 @@ class TestContents(unittest.TestCase):
         for i, dt in enumerate(registry.queryDimensionRecords('exposure')):
             end_time = dt.timespan.end
             print(end_time)
+            
+        print('done printing times')
         #print(list_butler)
         
         
