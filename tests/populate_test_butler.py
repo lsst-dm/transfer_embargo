@@ -12,9 +12,9 @@ def populate_fake_butler(time):
     """
     # Probably will have to run the main program in 
     
-    butler = Butler(namespace.fromrepo)
+    butler = Butler('/repo/embargo')
     registry = butler.registry
-    dest = Butler(namespace.torepo, writeable=True)
+    dest = Butler('fake_from/', writeable=True)
     scratch_registry = dest.registry
     datasetType = namespace.datasettype
     collections = namespace.collections
@@ -33,35 +33,26 @@ def populate_fake_butler(time):
     else:
         dataId = {'instrument': namespace.instrument}
 
-    # Define embargo period
-    embargo_period = astropy.time.TimeDelta(namespace.embargodays, format='jd')
-    now = astropy.time.Time.now()
-    int_now = int(now.datetime.strftime("%Y%m%d"))
+    # Define time window to be slightly larger than the embargo period of 30 days
+    embargo_period = astropy.time.TimeDelnow = astropy.time.Time.now()
+    int_time = int(time.datetime.strftime("%Y%m%d"))
 
-    # The Dimensions query
-    # If now - observation_end_time_in_embargo > embargo period : move
-    # Else: don't move
-    # Save data Ids of these observations into a list
-    after_embargo = []
-
+    within_window = []
     for i, dt in enumerate(registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
                                                           collections=collections,
-                                                          where="now - exposure.day_obs > embargo_period",
-                                                          bind={"now": int_now,
-                                                                "embargo_period": namespace.embargodays})):
+                                                          where="now - exposure.day_obs < embargo_period or now + exposure.day_obs > embargo_period",
+                                                          bind={"now": int_time,
+                                                                "embargo_period": 35})):
         end_time = dt.timespan.end
-        if now - end_time > embargo_period:
-            after_embargo.append(dt.id)
+        if (now - end_time < embargo_period) or (now + end_time > embargo_period):
+            within_window.append(dt.id)
 
     # Query the DataIds after embargo period
     datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=collections,
                                          where="exposure.id IN (exposure_ids)",
-                                         bind={"exposure_ids": after_embargo})
+                                         bind={"exposure_ids": within_window})
 
-    # Copy the Dataset after embargo period from
-    # embargo butler to scratch butler.
-    if TRANSFER:
-        dest.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
+    dest.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
                            skip_missing=True, register_dataset_types=True,
                            transfer_dimensions=True)
         
@@ -70,7 +61,7 @@ def populate_fake_butler(time):
 
 if __name__ == '__main__':
     # do the thing
-    time_list = [time_1, time_2]
+    time_list = ['2023-04-18 20:27:39.012635']
     for time in time_list:
         
         populate_fake_butler(time)
