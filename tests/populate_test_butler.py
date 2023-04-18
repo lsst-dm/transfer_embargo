@@ -28,9 +28,7 @@ def populate_fake_butler(time):
     embargo_period = astropy.time.TimeDelta(35, format='jd')
     time_astropy = astropy.time.Time(time)
     int_time = int(time_astropy.datetime.strftime("%Y%m%d"))
-    
-    print(type(embargo_period))
-    print(type(int_time))
+
 
     within_window = []
     for i, dt in enumerate(registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
@@ -39,7 +37,9 @@ def populate_fake_butler(time):
                                                           bind={"now": int_time,
                                                                 "embargo_period": 35})):
         end_time = dt.timespan.end
-        if (time - end_time < embargo_period) or (time + end_time > embargo_period):
+        print(type(time_astropy), type(end_time), type(embargo_period))
+        print(time_astropy)
+        if (time_astropy - end_time < embargo_period) | (time_astropy + end_time > embargo_period):
             within_window.append(dt.id)
 
     # Query the DataIds after embargo period
