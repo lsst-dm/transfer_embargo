@@ -1,3 +1,4 @@
+import astropy.time
 from lsst.daf.butler import Butler
 import move_embargo_args
 
@@ -16,26 +17,20 @@ def populate_fake_butler(time):
     registry = butler.registry
     dest = Butler('fake_from/', writeable=True)
     scratch_registry = dest.registry
-    datasetType = namespace.datasettype
-    collections = namespace.collections
+    datasetType = 'raw'
+    collections = 'LATISS/raw/all'
+    instrument = 'LATISS'
+    band = 'g'
 
-    # Dataset to move
-    # dataID must include
-    if not [x for x in (namespace.instrument, namespace.detector, namespace.band) if x is None]:
-        dataId = {'instrument': namespace.instrument, 'detector': namespace.detector,
-                  'band': namespace.band}
-    elif not [x for x in (namespace.instrument,
-                          namespace.detector,
-                          namespace.band,
-                          namespace.exposure) if x is None]:
-        dataId = {'instrument': namespace.instrument, 'detector': namespace.detector,
-                  'band': namespace.band, 'exposure': namespace.exposure}
-    else:
-        dataId = {'instrument': namespace.instrument}
+    dataId = {'instrument': instrument}
 
     # Define time window to be slightly larger than the embargo period of 30 days
-    embargo_period = astropy.time.TimeDelnow = astropy.time.Time.now()
-    int_time = int(time.datetime.strftime("%Y%m%d"))
+    embargo_period = astropy.time.TimeDelta(35, format='jd')
+    time_astropy = astropy.time.Time(time)
+    int_time = int(time_astropy.datetime.strftime("%Y%m%d"))
+    
+    print(type(embargo_period))
+    print(type(int_time))
 
     within_window = []
     for i, dt in enumerate(registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
@@ -44,7 +39,7 @@ def populate_fake_butler(time):
                                                           bind={"now": int_time,
                                                                 "embargo_period": 35})):
         end_time = dt.timespan.end
-        if (now - end_time < embargo_period) or (now + end_time > embargo_period):
+        if (time - end_time < embargo_period) or (time + end_time > embargo_period):
             within_window.append(dt.id)
 
     # Query the DataIds after embargo period
