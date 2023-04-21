@@ -25,28 +25,29 @@ def populate_fake_butler(time):
     dataId = {'instrument': instrument}
 
     # Define time window to be slightly larger than the embargo period of 30 days
-    embargo_period = astropy.time.TimeDelta(35, format='jd')
+    window = astropy.time.TimeDelta(35, format='jd')
     time_astropy = astropy.time.Time(time)
     int_time = int(time_astropy.datetime.strftime("%Y%m%d"))
 
 
     within_window = []
+    times = []
     for i, dt in enumerate(registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
                                                           collections=collections,
-                                                          where="now - exposure.day_obs < embargo_period or now + exposure.day_obs > embargo_period",
+                                                          where="now - window < exposure.day_obs and now + window > exposure.day_obs",
                                                           bind={"now": int_time,
-                                                                "embargo_period": 35})):
+                                                                "window": 35})):
         end_time = dt.timespan.end
-        print(type(time_astropy), type(end_time), type(embargo_period))
-        print(time_astropy)
-        if (time_astropy - end_time < embargo_period) | (time_astropy + end_time > embargo_period):
+        if (time_astropy - window < end_time) and (time_astropy + window > end_time):
             within_window.append(dt.id)
-
+            times.append(end_time)
+    print(f'moving {len(within_window)} data refs')
+    print(within_window)
+    print(times)
     # Query the DataIds after embargo period
     datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=collections,
                                          where="exposure.id IN (exposure_ids)",
                                          bind={"exposure_ids": within_window})
-
     dest.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
                            skip_missing=True, register_dataset_types=True,
                            transfer_dimensions=True)
