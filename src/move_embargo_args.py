@@ -1,6 +1,6 @@
 import argparse
 import astropy.time
-from lsst.daf.butler import Butler
+from lsst.daf.butler import Butler, Tiemspan
 
 # Moving from argparese to click
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # Define embargo period
     embargo_period = astropy.time.TimeDelta(namespace.embargodays, format='jd')
     now = astropy.time.Time.now()
-    int_now = int(now.datetime.strftime("%Y%m%d"))
+    timespan_embargo = Timespan(now, now - embargo_period)
 
     # The Dimensions query
     # If now - observation_end_time_in_embargo > embargo period : move
@@ -77,9 +77,8 @@ if __name__ == "__main__":
 
     for i, dt in enumerate(registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
                                                           collections=collections,
-                                                          where="now - exposure.day_obs > embargo_period",
-                                                          bind={"now": int_now,
-                                                                "embargo_period": namespace.embargodays})):
+                                                          where="NOT exposure.timespan OVERLAPS timespan_embargo",
+                                                          bind={"timespan_embargo": timespan_embargo})):
         end_time = dt.timespan.end
         if now - end_time > embargo_period:
             after_embargo.append(dt.id)
