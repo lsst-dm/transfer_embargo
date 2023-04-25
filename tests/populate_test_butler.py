@@ -3,7 +3,7 @@ import astropy.time
 from lsst.daf.butler import Butler
 import move_embargo_args
 
-def parse_args():
+def parse_args(raw_args = None):
     parser = argparse.ArgumentParser(description='Transferring data into fake_from butler, for use in testing')
     # at least one arg in dataId needed for 'where' clause.
     parser.add_argument(
@@ -17,7 +17,11 @@ def parse_args():
                         help="List of times you want to move", nargs="*")
     parser.add_argument("-d", "--window_days", type=int, required=True, default=35,
                         help="Time window around each time list entry you want to move")
-    return parser.parse_args()
+    print(parser)
+    print(vars(parser.parse_args()))
+    
+    #print('vars', vars(parser.parse_args(raw_args)))
+    return parser.parse_args()#raw_args)
 
 def populate_fake_butler(from_repo, to_repo, time, window_days, verbose = False):
     """
@@ -64,16 +68,22 @@ def populate_fake_butler(from_repo, to_repo, time, window_days, verbose = False)
     dest.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
                            skip_missing=True, register_dataset_types=True,
                            transfer_dimensions=True)
+
+def main(raw_args=None):#namespace):
+    print('raw_args', raw_args)
+    namespace = parse_args(raw_args=None)
+    print('namespace', namespace)
+    for time in namespace.move_times:
+        populate_fake_butler(namespace.fromrepo, namespace.torepo, time, namespace.window_days, verbose = True)
         
-        
+#def run():
+#    namespace = parse_args()
+    
+#    main(**namespace)
+    
 
 
 if __name__ == '__main__':
-    namespace = parse_args()
-    print(namespace)
-    # Define embargo and scratch butler
-    
-    #time_list = ['2023-04-18 20:27:39.012635']
-    #from_repo, to_repo, time, window_days,
-    for time in namespace.move_times:
-        populate_fake_butler(namespace.fromrepo, namespace.torepo, time, namespace.window_days, verbose = True)
+#    run()
+    main()
+
