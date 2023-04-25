@@ -3,7 +3,7 @@ import astropy.time
 from lsst.daf.butler import Butler
 import move_embargo_args
 
-def parse_args(raw_args = None):
+def parse_args():
     parser = argparse.ArgumentParser(description='Transferring data into fake_from butler, for use in testing')
     # at least one arg in dataId needed for 'where' clause.
     parser.add_argument(
@@ -17,11 +17,7 @@ def parse_args(raw_args = None):
                         help="List of times you want to move", nargs="*")
     parser.add_argument("-d", "--window_days", type=int, required=True, default=35,
                         help="Time window around each time list entry you want to move")
-    print(parser)
-    print(vars(parser.parse_args()))
-    
-    #print('vars', vars(parser.parse_args(raw_args)))
-    return parser.parse_args()#raw_args)
+    return parser.parse_args()
 
 def populate_fake_butler(from_repo, to_repo, time, window_days, verbose = False):
     """
@@ -44,8 +40,6 @@ def populate_fake_butler(from_repo, to_repo, time, window_days, verbose = False)
     window = astropy.time.TimeDelta(window_days, format='jd')
     time_astropy = astropy.time.Time(time)
     int_time = int(time_astropy.datetime.strftime("%Y%m%d"))
-
-
     within_window = []
     times = []
     for i, dt in enumerate(registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
@@ -59,8 +53,6 @@ def populate_fake_butler(from_repo, to_repo, time, window_days, verbose = False)
             times.append(end_time)
     if verbose:
         print(f'moving {len(within_window)} data refs')
-        #print(within_window)
-        #print(times)
     # Query the DataIds after embargo period
     datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=collections,
                                          where="exposure.id IN (exposure_ids)",
@@ -69,21 +61,12 @@ def populate_fake_butler(from_repo, to_repo, time, window_days, verbose = False)
                            skip_missing=True, register_dataset_types=True,
                            transfer_dimensions=True)
 
-def main(raw_args=None):#namespace):
-    print('raw_args', raw_args)
-    namespace = parse_args(raw_args=None)
-    print('namespace', namespace)
+def main():
+    namespace = parse_args()
     for time in namespace.move_times:
         populate_fake_butler(namespace.fromrepo, namespace.torepo, time, namespace.window_days, verbose = True)
-        
-#def run():
-#    namespace = parse_args()
-    
-#    main(**namespace)
-    
 
 
 if __name__ == '__main__':
-#    run()
     main()
 
