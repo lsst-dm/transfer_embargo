@@ -6,7 +6,7 @@ from lsst.daf.butler import Butler, Timespan
 REMOVE_COLLECTION = False
 
 # transfers data from embargo to scratch butler when set to True.
-TRANSFER = False
+TRANSFER = True
 
 
 def parse_args():
@@ -31,7 +31,6 @@ def parse_args():
     parser.add_argument("--nowtime", type=str, required=False, default='now',
                         help="Now time in (ISO, TAI timescale). If left blank it will \
                         use astropy.time.Time.now.")
-
     return parser.parse_args()
 
 
@@ -55,7 +54,6 @@ if __name__ == "__main__":
     else:
         now = astropy.time.Time.now()
     timespan_embargo = Timespan(now - embargo_period, now)
-
     # The Dimensions query
     # If (now - embargo period, now) does not overlap
     # with observation time interval: move
@@ -79,7 +77,6 @@ if __name__ == "__main__":
     #     end_time = dt.timespan.end
     #     if now - end_time >= embargo_period:
     #        after_embargo.append(dt.id)
-
     # Query the DataIds after embargo period
     datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=collections,
                                          where="exposure.id IN (exposure_ids)",
