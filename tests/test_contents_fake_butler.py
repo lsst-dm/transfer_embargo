@@ -1,5 +1,9 @@
 import unittest
 from lsst.daf.butler import Butler
+import move_embargo_args
+import populate_test_butler
+
+import subprocess
 
 
 class TestContents(unittest.TestCase):
@@ -7,26 +11,17 @@ class TestContents(unittest.TestCase):
         """
         Test the times of the files in the fake_to butler
         """
-        # Probably will have to run the main program in 
-        # order to do the moving, using a static 'now' time
-        '''
+        # First step is to populate the fake test butler
         args = ['-f', '/repo/embargo',
-                '-t', '/home/j/jarugula/scratch',
-                '--instrument', 'LATISS',
-                '-days', '30',
-                '--datasettype', 'raw',
-                '--collections', 'LATISS/raw/all',
-                '--band', 'g']
-        parser = move_embargo_args.parser(args)
-        self.assertTrue(parser.long)
-        '''
-        # Is there an 'is in' assert? That might be nice
-        namespace = 'fake_to'
-        butler = Butler(namespace)
+                '-t', 'fake_from',
+                '-m', ['2023-04-18', '2022-01-31'],
+                '-d', 35]
+        #populate_test_butler.main(*args)
+        subprocess.call(['python', 'populate_test_butler.py', '-f','/repo/embargo','-t','fake_from','-m','[2022-01-31,2022-04-18]','-d', '35'])
+        #populate_test_butler.main(['-f','/repo/embargo','-t','fake_from','-m','["2022-01-31"]','-d', '35'])
+        
+        butler = Butler('/repo/embargo')
         registry = butler.registry
-        
-        print('running through')
-        
         for i, dt in enumerate(registry.queryDimensionRecords('exposure')):
             end_time = dt.timespan.end
             print(end_time)
