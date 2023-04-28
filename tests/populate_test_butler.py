@@ -14,7 +14,7 @@ def parse_args():
         "-t", "--torepo", type=str,
         required=True, help="Repository to which data is transferred. Input str")
     parser.add_argument("-m", "--move_times", type=str, required=True,
-                        help="List of times you want to move", nargs="*")
+                        help="List of times you want to move", nargs="+")
     parser.add_argument("-d", "--window_days", type=int, required=True, default=35,
                         help="Time window around each time list entry you want to move")
     return parser.parse_args()
@@ -64,6 +64,7 @@ def populate_fake_butler(from_repo, to_repo, time, window_days, verbose = False)
 def main():
     namespace = parse_args()
     for time in namespace.move_times:
+        print(f'moving this time {time}')
         populate_fake_butler(namespace.fromrepo, namespace.torepo, time, namespace.window_days, verbose = True)
 
 
