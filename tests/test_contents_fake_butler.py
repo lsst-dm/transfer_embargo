@@ -10,6 +10,20 @@ class TestContents(unittest.TestCase):
         """
         Test the times of the files in the fake_to butler moved by our program
         """
+        # Info about things you are populating the fake_from butler with
+        # including the window (+/-) of files you're moving there
+        # and the center times of the file windows
+        populate_test_days = 35
+        center_time_populate_test_1 = '2022-04-18T00:00:00.000'
+        center_time_populate_test_2 = '2022-01-31T00:00:00.000'
+        center_time_populate_list = [center_time_populate_test_1, center_time_populate_test_2]
+        
+        # Info about the files that will be moved using the package
+        # from the fake_from to the fake_to butler
+        # move_embargo_args SHOULD move files that are five days before
+        # the now_time_embargo to the fake_to butler
+        embargo_days = 30
+        now_time_embargo = '2022-01-31T00:00:00.000'
         
         
         # First step is to remove/prune the data in the fake repos:
@@ -37,51 +51,42 @@ class TestContents(unittest.TestCase):
         
         # Now populate the fake_from butler
         # using populate_test_butler
-        subprocess.call(['python', 'populate_test_butler.py', '-f','/repo/embargo','-t','fake_from','-m','2022-01-31T00:00:00.000','2022-04-18T00:00:00.000','-d', '100'])
+        subprocess.call(['python', 'populate_test_butler.py', '-f','/repo/embargo','-t','fake_from','-m', center_time_populate_test_1, center_time_populate_test_2, '-d', str(populate_test_days)])
         #,2022-04-18T00:00:00.000
-        
-        # Then test to see what is in there
-        butler = Butler('fake_from')
-        registry = butler.registry
-        for i, dt in enumerate(registry.queryDatasets(datasetType=None,
-                                                          collections=None)):
-            end_time = dt.timespan.end
-            print(end_time)     
-        print('done printing times')
-        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        #for i, dt in enumerate(registry.queryDimensionRecords('exposure')):
-        #    end_time = dt.timespan.end
-        #    print(end_time)     
-        STOP
-        
-        # Then test to see what is in there
-        butler = Butler('fake_from')
-        registry = butler.registry
-        for i, dt in enumerate(registry.queryDimensionRecords('exposure')):
-            end_time = dt.timespan.end
-            print(end_time)     
-        print('done printing times')
-        STOP
-        
         
         
         # Run the move_embargo_args code
         # with transfer='move' as an option in move_embargo_args.py
         # remove the where clause from move_embargo_args.py and current code
         subprocess.call(['python', '../src/move_embargo_args.py', '-f', 'fake_from', '-t', 'fake_to', 
-                         '-d', '5', '--instrument', 'LATISS', '--datasettype', 'raw', 
-                         '--collections', 'LATISS/raw/all', '--band', 'g', '--nowtime', '2022-01-31T00:00:00.000'])
+                         '-d', str(embargo_days), '--instrument', 'LATISS', '--datasettype', 'raw', 
+                         '--collections', 'LATISS/raw/all', '--band', 'g', '--nowtime', now_time_embargo])
         # change move_embargo_args.py
         
         
-        # Look through the times of everything 
-        
+        # Then test to see what is in the new butler ('fake_to')
+        # It should be 
         butler = Butler('fake_to')
         registry = butler.registry
-        for i, dt in enumerate(registry.queryDimensionRecords('exposure')):
+        time_list = []
+        for i, dt in enumerate(registry.queryDatasets(datasetType=None,
+                                                          collections=None)):
             end_time = dt.timespan.end
-            print(end_time)     
-        print('done printing times')
+            time_list.append(end_time)
+        # Test if any of these are 
+        window_populate = astropy.time.TimeDelta(populate_test_days, format='jd')
+        window_embargo = astropy.time.TimeDelta(window_days, format='jd')
+        # First test that the populate code works
+        for center_time in center_time_populate_list:
+            assert time_list.any() <  center_time - window_populate, \
+                "populate_test_butler failed, there are files before the window"
+            assert time_list.any() >  center_time + window_populate, \
+                "populate_test_butler failed, there are files after the window"
+        # Now test if move_embargo_args works
+        assert time_list.any() > now_time_embargo - window_embargo, \
+            "you moved files that are still under embargo"
+        
+        print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         
         
         
