@@ -12,16 +12,16 @@ class TestContents(unittest.TestCase):
         # Info about things you are populating the fake_from butler with
         # including the window (+/-) of files you're moving there
         # and the center times of the file windows
-        populate_test_days = 35
-        center_time_populate_test_1 = '2022-04-18T00:00:00.000'
-        center_time_populate_test_2 = '2022-01-31T00:00:00.000'
+        populate_test_days = 5
+        center_time_populate_test_1 = '2022-09-14T00:00:00.000'
+        center_time_populate_test_2 = '2022-10-31T00:00:00.000'
         center_time_populate_list = [center_time_populate_test_1, center_time_populate_test_2]
         # Info about the files that will be moved using the package
         # from the fake_from to the fake_to butler
         # move_embargo_args SHOULD move files that are five days before
         # the now_time_embargo to the fake_to butler
-        embargo_days = 30
-        now_time_embargo = '2022-01-31T00:00:00.000'
+        embargo_days = 2
+        now_time_embargo = '2022-09-14T00:00:00.000'
         # First step is to remove/prune the data in the fake repos:
         for repo in ['fake_from', 'fake_to']:
             butler = Butler(repo)
