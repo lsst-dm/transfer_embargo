@@ -36,6 +36,7 @@ def populate_fake_butler(from_repo, to_repo, time, window_days, verbose=False):
     # than the embargo period of 30 days
     window = astropy.time.TimeDelta(window_days, format='jd')
     time_astropy = astropy.time.Time(time)
+    # second part is an open bracket, goes down to seconds
     timespan = Timespan(time_astropy - window, time_astropy + window)
     within_window = []
     times = []
@@ -43,12 +44,7 @@ def populate_fake_butler(from_repo, to_repo, time, window_days, verbose=False):
                                                           collections=collections,
                                                           where="exposure.timespan OVERLAPS timespan",
                                                           bind={"timespan": timespan})):
-        end_time = dt.timespan.end
-        print('is it getting anything?', end_time)
-        if (time_astropy - window < end_time) and (time_astropy + window > end_time):
-            within_window.append(dt.id)
-            times.append(end_time)
-            print(end_time)
+        within_window.append(dt.id)
     if verbose:
         print(f'moving {len(within_window)} data refs')
     # Query the DataIds after embargo period
