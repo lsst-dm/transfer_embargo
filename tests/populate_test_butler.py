@@ -46,14 +46,22 @@ def populate_fake_butler(from_repo, to_repo, time, window_days, verbose=False):
                                                           bind={"timespan": timespan})):
         within_window.append(dt.id)
     if verbose:
-        print(f'moving {len(within_window)} data refs')
+        print(f'trying to move {len(within_window)} data refs')
     # Query the DataIds after embargo period
     datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=collections,
                                          where="exposure.id IN (exposure_ids)",
                                          bind={"exposure_ids": within_window})
+    if verbose:
+        print(f'beginning the move from {from_repo} to {to_repo}')
+    # FIX
+    import logging
+    obj = logging.getLogger('lsst.daf.butler').setLevel('DEBUG')
+    
     dest.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
                        skip_missing=True, register_dataset_types=True,
                        transfer_dimensions=True)
+    if verbose:
+        print('all files have supposedly been moved')
 
 
 def main():
