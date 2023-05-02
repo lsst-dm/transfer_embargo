@@ -1,6 +1,6 @@
 import argparse
 import astropy.time
-from lsst.daf.butler import Butler, Tiemspan
+from lsst.daf.butler import Butler, Timespan
 
 # Moving from argparese to click
 
@@ -22,20 +22,17 @@ def parse_args():
     parser.add_argument(
         "-t", "--torepo", type=str, default='/home/j/jarugula/scratch',
         required=True, help="Repository to which data is transferred. Input str")
-    parser.add_argument("-d", "--embargodays", type=int, required=True, default=30,
-                        help="Embargo time period in days. Input int")
+    parser.add_argument("-h", "--embargohours", type=int, required=True, default=1,
+                        help="Embargo time period in hours. Input int")
     parser.add_argument("--instrument", type=str, required=True, default='LATISS',
                         help="Instrument. Input str")
     parser.add_argument("--datasettype", type=str, required=False, default='raw',
                         help="Dataset type. Input str")
     parser.add_argument("--collections", type=str, required=False, default='LATISS/raw/all',
                         help="Data Collections. Input str")
-    parser.add_argument("--detector", type=int, required=False, default=0,
-                        help="Detector number. Input int")
-    parser.add_argument("--band", type=str, required=False, default='g',
-                        help="Band. Input str")
-    parser.add_argument("--exposure", type=int, required=False, default=2022091400696,
-                        help="Exposure id. Input int")
+    parser.add_argument("--nowtime", type=str, required=False, default='now',
+                        help="Now time, if left blank it will \
+                        use astropy.time.Time.now, can be altered for testing purposes")
 
     return parser.parse_args()
 
@@ -51,26 +48,18 @@ if __name__ == "__main__":
     collections = namespace.collections
 
     # Dataset to move
-    # dataID must include
-    if not [x for x in (namespace.instrument, namespace.detector, namespace.band) if x is None]:
-        dataId = {'instrument': namespace.instrument, 'detector': namespace.detector,
-                  'band': namespace.band}
-    elif not [x for x in (namespace.instrument,
-                          namespace.detector,
-                          namespace.band,
-                          namespace.exposure) if x is None]:
-        dataId = {'instrument': namespace.instrument, 'detector': namespace.detector,
-                  'band': namespace.band, 'exposure': namespace.exposure}
-    else:
-        dataId = {'instrument': namespace.instrument}
+    dataId = {'instrument': namespace.instrument}
 
     # Define embargo period
-    embargo_period = astropy.time.TimeDelta(namespace.embargodays, format='jd')
-    now = astropy.time.Time.now()
-    timespan_embargo = Timespan(now, now - embargo_period)
+    embargo_period = astropy.time.TimeDelta(namespace.embargohours*3600., format='jd')
+    if namespace.nowtime != 'now':
+        now = astropy.time.Time(namespace.nowtime, scale='tai', format='iso')
+    else:
+        now = astropy.time.Time.now()
+    timespan_embargo = Timespan(now - embargo_period, now)
 
     # The Dimensions query
-    # If now - observation_end_time_in_embargo > embargo period : move
+    # If (now - embargo period, now) does not overlap with observation time interval : move
     # Else: don't move
     # Save data Ids of these observations into a list
     after_embargo = []
@@ -79,9 +68,10 @@ if __name__ == "__main__":
                                                           collections=collections,
                                                           where="NOT exposure.timespan OVERLAPS timespan_embargo",
                                                           bind={"timespan_embargo": timespan_embargo})):
-        end_time = dt.timespan.end
-        if now - end_time > embargo_period:
-            after_embargo.append(dt.id)
+        after_embargo.append(dt.id)
+        #end_time = dt.timespan.end
+        #if now - end_time > embargo_period:
+        #    after_embargo.append(dt.id)
 
     # Query the DataIds after embargo period
     datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=collections,
