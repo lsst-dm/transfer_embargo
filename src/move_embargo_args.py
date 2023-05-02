@@ -59,18 +59,20 @@ if __name__ == "__main__":
     timespan_embargo = Timespan(now - embargo_period, now)
 
     # The Dimensions query
-    # If (now - embargo period, now) does not overlap with observation time interval: move
+    # If (now - embargo period, now) does not overlap
+    # with observation time interval: move
     # Else: don't move
     # Save data Ids of these observations into a list
     after_embargo = []
 
     for i, dt in enumerate(registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
                                                           collections=collections,
-                                                          where="NOT exposure.timespan OVERLAPS timespan_embargo",
+                                                          where="NOT exposure.timespan OVERLAPS\
+                                                          timespan_embargo",
                                                           bind={"timespan_embargo": timespan_embargo})):
         after_embargo.append(dt.id)
-        #end_time = dt.timespan.end
-        #if now - end_time >= embargo_period:
+        # end_time = dt.timespan.end
+        # if now - end_time >= embargo_period:
         #    after_embargo.append(dt.id)
 
     # Query the DataIds after embargo period
