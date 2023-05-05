@@ -2,8 +2,6 @@ import argparse
 import astropy.time
 from lsst.daf.butler import Butler, Timespan
 
-# Moving from argparese to click
-
 # remove_collection clears the collection from scratch_butler if set to True.
 REMOVE_COLLECTION = False
 
@@ -22,8 +20,8 @@ def parse_args():
     parser.add_argument(
         "-t", "--torepo", type=str, default='/home/j/jarugula/scratch',
         required=True, help="Repository to which data is transferred. Input str")
-    parser.add_argument("-h", "--embargohours", type=int, required=True, default=1,
-                        help="Embargo time period in hours. Input int")
+    parser.add_argument("--embargohours", type=float, required=True, default=80.0,
+                        help="Embargo time period in hours. Input float")
     parser.add_argument("--instrument", type=str, required=True, default='LATISS',
                         help="Instrument. Input str")
     parser.add_argument("--datasettype", type=str, required=False, default='raw',
@@ -31,8 +29,8 @@ def parse_args():
     parser.add_argument("--collections", type=str, required=False, default='LATISS/raw/all',
                         help="Data Collections. Input str")
     parser.add_argument("--nowtime", type=str, required=False, default='now',
-                        help="Now time, if left blank it will \
-                        use astropy.time.Time.now, can be altered for testing purposes")
+                        help="Now time in (ISO, TAI timescale). If left blank it will \
+                        use astropy.time.Time.now.")
 
     return parser.parse_args()
 
@@ -51,7 +49,7 @@ if __name__ == "__main__":
     dataId = {'instrument': namespace.instrument}
 
     # Define embargo period
-    embargo_period = astropy.time.TimeDelta(namespace.embargohours*3600., format='jd')
+    embargo_period = astropy.time.TimeDelta(namespace.embargohours*3600., format='sec')
     if namespace.nowtime != 'now':
         now = astropy.time.Time(namespace.nowtime, scale='tai', format='iso')
     else:
@@ -63,17 +61,24 @@ if __name__ == "__main__":
     # with observation time interval: move
     # Else: don't move
     # Save data Ids of these observations into a list
-    after_embargo = []
-
-    for i, dt in enumerate(registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
-                                                          collections=collections,
-                                                          where="NOT exposure.timespan OVERLAPS\
-                                                          timespan_embargo",
-                                                          bind={"timespan_embargo": timespan_embargo})):
-        after_embargo.append(dt.id)
-        # end_time = dt.timespan.end
-        # if now - end_time >= embargo_period:
-        #    after_embargo.append(dt.id)
+    after_embargo = [dt.id for dt in
+                     registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
+                                                    collections=collections,
+                                                    where="NOT exposure.timespan OVERLAPS\
+                                                    timespan_embargo",
+                                                    bind={"timespan_embargo": timespan_embargo})]
+    # after_embargo = []
+    # for i, dt in enumerate(registry.queryDimensionRecords('exposure',
+    #                          dataId=dataId,
+    #                          datasets=datasetType,
+    #                          collections=collections,
+    #                          where="NOT exposure.timespan\
+    #                          OVERLAPS\
+    #                          timespan_embargo",
+    #                          bind={"timespan_embargo": timespan_embargo})):
+    #     end_time = dt.timespan.end
+    #     if now - end_time >= embargo_period:
+    #        after_embargo.append(dt.id)
 
     # Query the DataIds after embargo period
     datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=collections,
