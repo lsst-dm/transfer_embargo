@@ -14,10 +14,9 @@ setup lsst_distrib
 arg_fromrepo="/repo/embargo"
 arg_torepo="/home/j/jarugula/scratch"
 arg_instrument="LATISS"
-arg_days=30
+arg_hours=1.0
 arg_dtype="raw"
 arg_coll="LATISS/raw/all"
-arg_band="g"
 
 #python move_embargo_args.py --help
-python move_embargo_args.py -fromrepo $arg_fromrepo -torepo $arg_torepo -instrument $arg_instrument -days $arg_days -dtype $arg_dtype -coll $arg_coll -band $arg_band
+python move_embargo_args.py -f $arg_fromrepo -t $arg_torepo --instrument $arg_instrument --embargohours $arg_hours --datasettype $arg_dtype --collections $arg_coll
