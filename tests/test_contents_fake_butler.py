@@ -37,7 +37,7 @@ class TestContents(unittest.TestCase):
         
         # Now populate the fake_from butler
         # using populate_test_butler
-        subprocess.call(['python', 'populate_test_butler.py', '-f','/repo/embargo','-t','fake_from','-m','2022-01-31T00:00:00.000','2022-04-18T00:00:00.000','-d', '10'])
+        subprocess.call(['python', 'populate_test_butler.py', '-f','/repo/embargo','-t','fake_from','-m','2022-01-31T00:00:00.000','2022-04-18T00:00:00.000','-d', '100'])
         #,2022-04-18T00:00:00.000
         
         # Then test to see what is in there
