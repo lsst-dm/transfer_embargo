@@ -50,7 +50,11 @@ if __name__ == "__main__":
     # Define embargo period
     embargo_period = astropy.time.TimeDelta(namespace.embargohours*3600., format='sec')
     if namespace.nowtime != 'now':
+<<<<<<< HEAD
         now = astropy.time.Time(namespace.nowtime, scale='tai', format='iso')
+=======
+        now = astropy.time.Time(namespace.nowtime)
+>>>>>>> f5e9074 (move_embargo is flake8 compliant)
     else:
         now = astropy.time.Time.now()
     timespan_embargo = Timespan(now - embargo_period, now)
@@ -59,6 +63,7 @@ if __name__ == "__main__":
     # with observation time interval: move
     # Else: don't move
     # Save data Ids of these observations into a list
+<<<<<<< HEAD
     after_embargo = [dt.id for dt in
                      registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
                                                     collections=collections,
@@ -77,6 +82,19 @@ if __name__ == "__main__":
     #     end_time = dt.timespan.end
     #     if now - end_time >= embargo_period:
     #        after_embargo.append(dt.id)
+=======
+    after_embargo = []
+
+    for i, dt in enumerate(registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
+                                                          collections=collections,
+                                                          where="NOT exposure.timespan \
+                                                          OVERLAPS timespan_embargo",
+                                                          bind={"timespan_embargo": timespan_embargo})):
+        end_time = dt.timespan.end
+        if now - end_time > embargo_period:
+            after_embargo.append(dt.id)
+
+>>>>>>> f5e9074 (move_embargo is flake8 compliant)
     # Query the DataIds after embargo period
     datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=collections,
                                          where="exposure.id IN (exposure_ids)",

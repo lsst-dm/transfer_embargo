@@ -1,10 +1,11 @@
 import argparse
 import astropy.time
 from lsst.daf.butler import Butler, Timespan
-import move_embargo_args
+
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Transferring data into fake_from butler, for use in testing')
+    parser = argparse.ArgumentParser(description='Transferring data \
+        into fake_from butler, for use in testing')
     # at least one arg in dataId needed for 'where' clause.
     parser.add_argument(
         "-f", "--fromrepo", type=str,
@@ -19,32 +20,25 @@ def parse_args():
                         help="Time window around each time list entry you want to move")
     return parser.parse_args()
 
-def populate_fake_butler(from_repo, to_repo, time, window_days, verbose = False):
+
+def populate_fake_butler(from_repo, to_repo, time, window_days, verbose=False):
     """
     Moves files to our fake butler (fake_from) from '/repo/embargo'
-    
     """
-    # Probably will have to run the main program in 
-    
     butler = Butler(from_repo)
     registry = butler.registry
     dest = Butler(to_repo, writeable=True)
-    scratch_registry = dest.registry
     datasetType = 'raw'
     collections = 'LATISS/raw/all'
     instrument = 'LATISS'
-    band = 'g'
     dataId = {'instrument': instrument}
-
-    # Define time window to be slightly larger than the embargo period of 30 days
+    # Define time window to be slightly larger
+    # than the embargo period of 30 days
     window = astropy.time.TimeDelta(window_days, format='jd')
     time_astropy = astropy.time.Time(time)
     timespan = Timespan(time_astropy - window, time_astropy + window)
-    
-    
     within_window = []
     times = []
-    
     for i, dt in enumerate(registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
                                                           collections=collections,
                                                           where="exposure.timespan OVERLAPS timespan",
@@ -55,8 +49,6 @@ def populate_fake_butler(from_repo, to_repo, time, window_days, verbose = False)
             within_window.append(dt.id)
             times.append(end_time)
             print(end_time)
-        
-        
     if verbose:
         print(f'moving {len(within_window)} data refs')
     # Query the DataIds after embargo period
@@ -64,16 +56,20 @@ def populate_fake_butler(from_repo, to_repo, time, window_days, verbose = False)
                                          where="exposure.id IN (exposure_ids)",
                                          bind={"exposure_ids": within_window})
     dest.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
-                           skip_missing=True, register_dataset_types=True,
-                           transfer_dimensions=True)
+                       skip_missing=True, register_dataset_types=True,
+                       transfer_dimensions=True)
+
 
 def main():
     namespace = parse_args()
     for time in namespace.move_times:
         print(f'moving this time {time}')
-        populate_fake_butler(namespace.fromrepo, namespace.torepo, time, namespace.window_days, verbose = True)
+        populate_fake_butler(namespace.fromrepo,
+                             namespace.torepo,
+                             time,
+                             namespace.window_days,
+                             verbose=True)
 
 
 if __name__ == '__main__':
     main()
-
