@@ -31,7 +31,6 @@ def parse_args():
     parser.add_argument("--nowtime", type=str, required=False, default='now',
                         help="Now time in (ISO, TAI timescale). If left blank it will \
                         use astropy.time.Time.now.")
-
     return parser.parse_args()
 
 
@@ -55,7 +54,6 @@ if __name__ == "__main__":
     else:
         now = astropy.time.Time.now()
     timespan_embargo = Timespan(now - embargo_period, now)
-
     # The Dimensions query
     # If (now - embargo period, now) does not overlap
     # with observation time interval: move
