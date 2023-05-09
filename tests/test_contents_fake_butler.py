@@ -30,7 +30,7 @@ class TestContents(unittest.TestCase):
             registry = butler.registry
             # There's gotta be a better way to check if this registry is empty
             id_list = []
-            for i, dt in enumerate(registry.queryDatasets(datasetType=..., 
+            for i, dt in enumerate(registry.queryDatasets(datasetType=...,
                                                           collections=...)):
                 id_list.append(dt.id)
             if len(id_list) == 0:
@@ -40,7 +40,7 @@ class TestContents(unittest.TestCase):
                 dest = Butler(repo, writeable=True)
                 # pruning data points
                 # maybe dest.prune_datasets()
-                dest.pruneDatasets(registry.queryDatasets(datasetType=..., 
+                dest.pruneDatasets(registry.queryDatasets(datasetType=...,
                                                           collections=...),
                                    purge=True, unstore=True)
         # Check that the prune worked
@@ -50,10 +50,10 @@ class TestContents(unittest.TestCase):
             registry = butler.registry
             # There's gotta be a better way to check if this registry is empty
             id_list = []
-            for i, dt in enumerate(registry.queryDatasets(datasetType=..., 
+            for i, dt in enumerate(registry.queryDatasets(datasetType=...,
                                                           collections=...)):
                 id_list.append(dt.id)
-            assert len(id_list) ==  0, "prune failed"
+            assert len(id_list) == 0, "prune failed"
         # Now populate the fake_from butler
         # using populate_test_butler
         subprocess.call(['python', 'populate_test_butler.py',
@@ -66,7 +66,7 @@ class TestContents(unittest.TestCase):
         registry = butler.registry
         # There's gotta be a better way to check if this registry is empty
         id_list = []
-        for i, dt in enumerate(registry.queryDatasets(datasetType=..., 
+        for i, dt in enumerate(registry.queryDatasets(datasetType=...,
                                                       collections=...)):
             ids = dt.id
             id_list.append(ids)
