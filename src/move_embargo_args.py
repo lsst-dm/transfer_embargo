@@ -77,7 +77,6 @@ if __name__ == "__main__":
     #     end_time = dt.timespan.end
     #     if now - end_time >= embargo_period:
     #        after_embargo.append(dt.id)
-
     # Query the DataIds after embargo period
     datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=collections,
                                          where="exposure.id IN (exposure_ids)",
