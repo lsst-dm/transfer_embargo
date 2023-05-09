@@ -56,26 +56,21 @@ class TestContents(unittest.TestCase):
             assert len(id_list) ==  0, "prune failed"
         # Now populate the fake_from butler
         # using populate_test_butler
-        num_moved = subprocess.call(['python', 'populate_test_butler.py',
+        subprocess.call(['python', 'populate_test_butler.py',
                          '-f', '/repo/embargo',
                          '-t', '/home/r/rnevin/transfer_embargo/tests/fake_from',
                          '-m', center_time_populate_test_1, center_time_populate_test_2,
                          '-d', str(populate_test_days)])
-        print(num_moved)
         # Check that the right number of files were moved
-        for repo in ['/home/r/rnevin/transfer_embargo/tests/fake_from',
-                     '/home/r/rnevin/transfer_embargo/tests/fake_to']:
-            butler = Butler(repo)
-            registry = butler.registry
-            # There's gotta be a better way to check if this registry is empty
-            id_list = []
-            for i, dt in enumerate(registry.queryDatasets(datasetType=..., 
-                                                          collections=...)):
-                ids = dt.id
-                id_list.append(ids)
-            print(repo, len(id_list))
-        
-        STOP
+        butler = Butler('/home/r/rnevin/transfer_embargo/tests/fake_from')
+        registry = butler.registry
+        # There's gotta be a better way to check if this registry is empty
+        id_list = []
+        for i, dt in enumerate(registry.queryDatasets(datasetType=..., 
+                                                      collections=...)):
+            ids = dt.id
+            id_list.append(ids)
+        print(repo, len(id_list))
         # Run the move_embargo_args code
         # with transfer='move' as an option in move_embargo_args.py
         # remove the where clause from move_embargo_args.py and current code
