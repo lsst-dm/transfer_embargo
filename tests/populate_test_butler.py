@@ -40,7 +40,6 @@ def populate_fake_butler(from_repo, to_repo, time, window_days, verbose=False):
     # second part is an open bracket, goes down to seconds
     timespan = Timespan(time_astropy - window, time_astropy + window)
     within_window = []
-    times = []
     for i, dt in enumerate(registry.queryDimensionRecords('exposure', dataId=dataId, datasets=datasetType,
                                                           collections=collections,
                                                           where="exposure.timespan OVERLAPS timespan",
@@ -55,8 +54,8 @@ def populate_fake_butler(from_repo, to_repo, time, window_days, verbose=False):
     if verbose:
         print(f'beginning the move from {from_repo} to {to_repo}')
     out = dest.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
-                       skip_missing=True, register_dataset_types=True,
-                       transfer_dimensions=True)
+                             skip_missing=True, register_dataset_types=True,
+                             transfer_dimensions=True)
     if verbose:
         print(f'{np.shape(out)} files have been moved')
 
