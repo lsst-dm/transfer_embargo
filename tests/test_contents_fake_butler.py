@@ -29,28 +29,31 @@ class TestContents(unittest.TestCase):
             butler = Butler(repo)
             registry = butler.registry
             # There's gotta be a better way to check if this registry is empty
-            time_list = []
-            for i, dt in enumerate(registry.queryDatasets(datasetType=None,
-                                                          collections=None)):
-                end_time = dt.timespan.end
-                time_list.append(end_time)
-                print(end_time)
-            if len(time_list) == 0:
+            id_list = []
+            for i, dt in enumerate(registry.queryDatasets(datasetType=...,
+                                                          collections=...)):
+                id_list.append(dt.id)
+            if len(id_list) == 0:
                 print(f'nothing in the {repo} repo')
             else:
                 print(f'pruning the {repo} repo')
                 dest = Butler(repo, writeable=True)
                 # pruning data points
                 # maybe dest.prune_datasets()
-                dest.pruneDatasets(registry.queryDatasets(datasetType=..., 
+                dest.pruneDatasets(registry.queryDatasets(datasetType=...,
                                                           collections=...),
                                    purge=True, unstore=True)
-                # pruning
-                registry.removeCollections(registry.queryCollections())
-                    
-                #registry.queryCollections(datasetType=None,
-                #                                          collections=None),
-                #                   purge=True, unstore=True)
+        # Check that the prune worked
+        for repo in ['/home/r/rnevin/transfer_embargo/tests/fake_from',
+                     '/home/r/rnevin/transfer_embargo/tests/fake_to']:
+            butler = Butler(repo)
+            registry = butler.registry
+            # There's gotta be a better way to check if this registry is empty
+            id_list = []
+            for i, dt in enumerate(registry.queryDatasets(datasetType=...,
+                                                          collections=...)):
+                id_list.append(dt.id)
+            assert len(id_list) == 0, "prune failed"
         # Now populate the fake_from butler
         # using populate_test_butler
         subprocess.call(['python', 'populate_test_butler.py',
@@ -58,20 +61,16 @@ class TestContents(unittest.TestCase):
                          '-t', '/home/r/rnevin/transfer_embargo/tests/fake_from',
                          '-m', center_time_populate_test_1, center_time_populate_test_2,
                          '-d', str(populate_test_days)])
-        #
-        for repo in ['/home/r/rnevin/transfer_embargo/tests/fake_from',
-                     '/home/r/rnevin/transfer_embargo/tests/fake_to']:
-            butler = Butler(repo)
-            registry = butler.registry
-            # There's gotta be a better way to check if this registry is empty
-            time_list = []
-            for i, dt in enumerate(registry.queryDatasets(datasetType=None,
-                                                          collections=None)):
-                end_time = dt.timespan.end
-                time_list.append(end_time)
-                print(end_time)
-        
-        STOP
+        # Check that the right number of files were moved
+        butler = Butler('/home/r/rnevin/transfer_embargo/tests/fake_from')
+        registry = butler.registry
+        # There's gotta be a better way to check if this registry is empty
+        id_list = []
+        for i, dt in enumerate(registry.queryDatasets(datasetType=...,
+                                                      collections=...)):
+            ids = dt.id
+            id_list.append(ids)
+        print(repo, len(id_list))
         # Run the move_embargo_args code
         # with transfer='move' as an option in move_embargo_args.py
         # remove the where clause from move_embargo_args.py and current code
