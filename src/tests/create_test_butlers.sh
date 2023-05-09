@@ -4,12 +4,12 @@
 # for testing.
 # you also need the lsst_distrib loaded to run this file
 # in order to run this file:
-# chmod u+x create_fake_butler.sh
-# and then ./create_fake_butler.sh
+# chmod u+x create_test_butlers.sh
+# and then ./create_test_butlers.sh
 
 setup lsst_distrib
 #run this if you need to create scratch butler
-butler create fake_from
+butler create ../../tests/data/fake_from
 
-butler create fake_to
+butler create ../../tests/data/fake_to
 
