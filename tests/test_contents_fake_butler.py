@@ -24,8 +24,8 @@ class TestContents(unittest.TestCase):
         embargo_days = 1
         now_time_embargo = '2022-09-14T00:00:00.000'
         # First step is to remove/prune the data in the fake repos:
-        for repo in ['/home/r/rnevin/transfer_embargo/tests/fake_from',
-                     '/home/r/rnevin/transfer_embargo/tests/fake_to']:
+        for repo in ['/home/r/rnevin/transfer_embargo/tests/data/fake_from',
+                     '/home/r/rnevin/transfer_embargo/tests/data/fake_to']:
             butler = Butler(repo)
             registry = butler.registry
             # There's gotta be a better way to check if this registry is empty
@@ -44,8 +44,8 @@ class TestContents(unittest.TestCase):
                                                           collections=...),
                                    purge=True, unstore=True)
         # Check that the prune worked
-        for repo in ['/home/r/rnevin/transfer_embargo/tests/fake_from',
-                     '/home/r/rnevin/transfer_embargo/tests/fake_to']:
+        for repo in ['/home/r/rnevin/transfer_embargo/tests/data/fake_from',
+                     '/home/r/rnevin/transfer_embargo/tests/data/fake_to']:
             butler = Butler(repo)
             registry = butler.registry
             # There's gotta be a better way to check if this registry is empty
@@ -58,11 +58,11 @@ class TestContents(unittest.TestCase):
         # using populate_test_butler
         subprocess.call(['python', 'populate_test_butler.py',
                          '-f', '/repo/embargo',
-                         '-t', '/home/r/rnevin/transfer_embargo/tests/fake_from',
+                         '-t', '/home/r/rnevin/transfer_embargo/tests/data/fake_from',
                          '-m', center_time_populate_test_1, center_time_populate_test_2,
                          '-d', str(populate_test_days)])
         # Check that the right number of files were moved
-        butler = Butler('/home/r/rnevin/transfer_embargo/tests/fake_from')
+        butler = Butler('/home/r/rnevin/transfer_embargo/tests/data/fake_from')
         registry = butler.registry
         # There's gotta be a better way to check if this registry is empty
         id_list = []
@@ -75,15 +75,15 @@ class TestContents(unittest.TestCase):
         # with transfer='move' as an option in move_embargo_args.py
         # remove the where clause from move_embargo_args.py and current code
         subprocess.call(['python', '../src/move_embargo_args.py',
-                         '-f', '/home/r/rnevin/transfer_embargo/tests/fake_from',
-                         '-t', '/home/r/rnevin/transfer_embargo/tests/fake_to',
+                         '-f', '/home/r/rnevin/transfer_embargo/tests/data/fake_from',
+                         '-t', '/home/r/rnevin/transfer_embargo/tests/data/fake_to',
                          '-d', str(embargo_days), '--instrument', 'LATISS',
                          '--datasettype', 'raw',
                          '--collections', 'LATISS/raw/all',
                          '--band', 'g', '--nowtime', now_time_embargo])
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # Then test to see what is in the new butler ('fake_to')
-        butler = Butler('fake_to')
+        butler = Butler('data/fake_to')
         registry = butler.registry
         time_list = []
         for i, dt in enumerate(registry.queryDatasets(datasetType=None,
