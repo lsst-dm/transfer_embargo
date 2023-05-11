@@ -9,7 +9,7 @@
 
 setup lsst_distrib
 #run this if you need to create scratch butler
-butler create ../../tests/data/fake_from
+butler create ../../tests/data/test_from
 
-butler create ../../tests/data/fake_to
+butler create ../../tests/data/test_to
 
