@@ -52,7 +52,7 @@ if __name__ == "__main__":
     if namespace.nowtime != 'now':
         now = astropy.time.Time(namespace.nowtime, scale='tai', format='iso')
     else:
-        now = astropy.time.Time.now()
+        now = astropy.time.Time.now().tai
     timespan_embargo = Timespan(now - embargo_period, now)
     # The Dimensions query
     # If (now - embargo period, now) does not overlap
