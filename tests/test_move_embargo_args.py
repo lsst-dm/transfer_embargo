@@ -40,9 +40,16 @@ class TestEmbargoArgs(unittest.TestCase):
         to the fake_to butler and test which ones moved
         """
         now_time_embargo = '2022-09-14T00:00:00.000'
+        fake_from = '/home/r/rnevin/transfer_embargo/tests/data/fake_from'
+        fake_to = '/home/r/rnevin/transfer_embargo/tests/data/fake_to'
+        # IDs that should be moved:
+        ids_moved = ['blah']
+        # IDs that should stay in the fake_from:
+        ids_remain = ['blah']
+        # Now run the package
         subprocess.call(['python', '../src/move_embargo_args.py',
-                         '-f', '/home/r/rnevin/transfer_embargo/tests/data/fake_from',
-                         '-t', '/home/r/rnevin/transfer_embargo/tests/data/fake_to',
+                         '-f', fake_from,
+                         '-t', fake_to,
                          '--embargohours', 80, '--instrument', 'LATISS',
                          '--datasettype', 'raw',
                          '--collections', 'LATISS/raw/all',
@@ -52,19 +59,32 @@ class TestEmbargoArgs(unittest.TestCase):
         # 2) If stuff is in fake_from that should be there
         # 3) If stuff remains in fake_to
         # 4) If wrong stuff was moved to fake_from
+        # 5) Could also test length of list of items but might be redundant
+        # 6) Could also test exact time on files
         
-        # how to check what is there?
-        for repo in ['/home/r/rnevin/transfer_embargo/tests/data/fake_from',
-                     '/home/r/rnevin/transfer_embargo/tests/data/fake_to']:
-            butler = Butler(repo)
-            registry = butler.registry
-            # There's gotta be a better way to check if this registry is empty
-            id_list = []
-            for i, dt in enumerate(registry.queryDatasets(datasetType=...,
-                                                          collections=...)):
-                id_list.append(dt.id)
-            assert len(id_list) == 0, "prune failed"
-        self.assertEqual(np.shape(time), np.shape(output))
+        # First test stuff in the fake_to butler
+        butler = Butler(fake_to)
+        registry = butler.registry
+        id_in = []
+        for i, dt in enumerate(registry.queryDatasets(datasetType=...,
+                                                      collections=...)):
+            id_in.append(dt.id)
+        for ID in id_moved:
+            assert ID in id_in, f"{ID} should be in {fake_to} repo but isnt :("
+        for ID in id_in:
+            assert ID in id_moved, f"{ID} should not be in {fake_to} repo but it is"
+        # Now do the same for the fake_from butler
+        butler = Butler(fake_from)
+        registry = butler.registry
+        id_in = []
+        for i, dt in enumerate(registry.queryDatasets(datasetType=...,
+                                                      collections=...)):
+            id_in.append(dt.id)
+        for ID in id_remain:
+            assert ID in id_in, f"{ID} should be in {fake_from} repo but isnt :("
+        for ID in id_in:
+            assert ID in id_remain, f"{ID} should not be in {fake_from} repo but it is"
+        
     def test_parser(self):
         """
         Test the parser without having to execute the code
