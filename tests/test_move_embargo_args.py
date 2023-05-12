@@ -30,6 +30,9 @@ class TestEmbargoArgs(unittest.TestCase):
             id_list.append(dt.id)
         for ID in ID_list:
             assert ID in id_list, f"{ID} missing from list of items in {dest} repo"
+        # Also test if theres anything there that shouldnt be:
+        for id_in in id_list:
+            assert id_in in ID_list, f"{id_in} is in {dest} repo but is not in list to be moved"
         
     def test_main(self):
         """
