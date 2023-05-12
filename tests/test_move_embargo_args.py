@@ -4,36 +4,6 @@ import subprocess
 
 
 class TestMoveEmbargoArgs(unittest.TestCase):
-    def test_populate(self):
-        """
-        Dual purpose;
-        Makes the subprocess call that populates the fake_from
-        static butler and checks it at the same time
-        """
-        # TODO enter times or IDs that we need to move
-        # I'm guessing everything will be in ID format
-        # TODO script to populate fake_from butler
-        # might be called something different than the following:
-        ID_list = ['blah']  # TODO
-        dest = '/home/r/rnevin/transfer_embargo/tests/data/fake_from'
-        subprocess.call(['python', '../src/tests/populate_test_butler.py',
-                         '-f', '/repo/embargo',
-                         '-t', dest,
-                         '-m', center_time_populate_test_1, center_time_populate_test_2,
-                         '-d', str(populate_test_days)])
-        # Test our expectation of IDs that should be in the fake_from butler
-        butler = Butler(dest)
-        registry = butler.registry
-        id_list = []
-        for i, dt in enumerate(registry.queryDatasets(datasetType=...,
-                                                      collections=...)):
-            id_list.append(dt.id)
-        for ID in ID_list:
-            assert ID in id_list, f"{ID} missing from list of items in {dest} repo"
-        # Also test if theres anything there that shouldnt be:
-        for id_in in id_list:
-            assert id_in in ID_list, f"{id_in} is in {dest} repo but is not in list to be moved"
-
     def test_main(self):
         """
         Run move_embargo_args to move some IDs from the fake_from butler
@@ -66,8 +36,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         butler = Butler(fake_to)
         registry = butler.registry
         id_in = []
-        for i, dt in enumerate(registry.queryDatasets(datasetType=...,
-                                                      collections=...)):
+        for dt in registry.queryDatasets(datasetType=...,
+                                         collections=...):
             id_in.append(dt.id)
         for ID in ids_moved:
             assert ID in id_in, f"{ID} should be in {fake_to} repo but isnt :("
@@ -77,8 +47,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         butler = Butler(fake_from)
         registry = butler.registry
         id_in = []
-        for i, dt in enumerate(registry.queryDatasets(datasetType=...,
-                                                      collections=...)):
+        for dt in registry.queryDatasets(datasetType=...,
+                                         collections=...):
             id_in.append(dt.id)
         for ID in ids_remain:
             assert ID in id_in, f"{ID} should be in {fake_from} repo but isnt :("
