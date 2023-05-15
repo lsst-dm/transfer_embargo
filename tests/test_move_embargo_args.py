@@ -9,80 +9,71 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         Run move_embargo_args to move some IDs from the fake_from butler
         to the fake_to butler and test which ones moved
         """
-        now_time_embargo = '2022-09-14T00:00:00.000'  # TODO, this is a fixed now
-        fake_from = '/home/r/rnevin/transfer_embargo/tests/data/fake_from'
-        fake_to = '/home/r/rnevin/transfer_embargo/tests/data/fake_to'
+        MOVED = False # false if copy
+        now_time_embargo = '2020-03-01 23:59:59.999999'  # TODO, this is a fixed now
+        embargo_hours = 3827088.677299/3600  # hours
+        test_from = '/home/r/rnevin/transfer_embargo/tests/data/test_from'
+        test_to = '/home/r/rnevin/transfer_embargo/tests/data/test_to'
+        
+        # clear test butler:
+        # TEMPORARY
+        butler = Butler(test_to, writeable=True)
+        butler.pruneCollection('LATISS/raw/all', purge=True, unstore=True)
+        
         # IDs that should be moved:
-        ids_moved = ['blah']
+        ids_moved = [2019111300059,
+                     2019111300061,
+                     2020011700002,
+                     2020011700003,
+                     2020011700004]
         # IDs that should stay in the fake_from:
-        ids_remain = ['blah']
+        ids_remain = [2019111300059,
+                      2019111300061,
+                      2020011700002,
+                      2020011700003,
+                      2020011700004,
+                      2020011700005,
+                      2020011700006]
         # Now run the package
         subprocess.call(['python', '../src/move_embargo_args.py',
-                         '-f', fake_from,
-                         '-t', fake_to,
-                         '--embargohours', 80, '--instrument', 'LATISS',
+                         '-f', test_from,
+                         '-t', test_to,
+                         '--embargohours', str(embargo_hours), '--instrument', 'LATISS',
                          '--datasettype', 'raw',
                          '--collections', 'LATISS/raw/all',
                          '--nowtime', now_time_embargo])
         # Things to check about what is in there:
         # 1) If stuff is in fake_to that should be there
         # 2) If stuff is in fake_from that should be there
-        # 3) If stuff remains in fake_to
-        # 4) If wrong stuff was moved to fake_from
-        # 5) Could also test length of list of items but might be redundant
-        # 6) Could also test exact time on files
-
+        # 3) If stuff remains in fake_from
+        # 4) If wrong stuff was moved to fake_to
+        # ^ We will have two modes of testing, one where 
+        # the files are copied and one where they are
+        # moved
+    
         # First test stuff in the fake_to butler
-        butler = Butler(fake_to)
+        
+        
+        
+        
+        butler = Butler(test_to)
         registry = butler.registry
-        id_in = []
-        for dt in registry.queryDatasets(datasetType=...,
-                                         collections=...):
-            id_in.append(dt.id)
+        id_in = [dt.dataId.full['exposure'] for dt in registry.queryDatasets(datasetType=...,collections=...)]
         for ID in ids_moved:
-            assert ID in id_in, f"{ID} should be in {fake_to} repo but isnt :("
+            assert ID in id_in, f"{ID} should be in {test_to} repo but isnt :("
         for ID in id_in:
-            assert ID in ids_moved, f"{ID} should not be in {fake_to} repo but it is"
-        # Now do the same for the fake_from butler
-        butler = Butler(fake_from)
+            assert ID in ids_moved, f"{ID} should not be in {test_to} repo but it is"
+        
+        # Now do the same for the test_from butler
+        butler = Butler(test_from)
         registry = butler.registry
-        id_in = []
-        for dt in registry.queryDatasets(datasetType=...,
-                                         collections=...):
-            id_in.append(dt.id)
+        id_in = [dt.dataId.full['exposure'] for dt in registry.queryDatasets(datasetType=...,collections=...)]
         for ID in ids_remain:
-            assert ID in id_in, f"{ID} should be in {fake_from} repo but isnt :("
-        for ID in id_in:
-            assert ID in ids_remain, f"{ID} should not be in {fake_from} repo but it is"
-
-    def test_parser(self):
-        """
-        Test the parser without having to execute the code
-        """
-        args = ['-f', '/repo/embargo',
-                '-t', '/home/j/jarugula/scratch',
-                '--instrument', 'LATISS',
-                '--embargohours', '80.0',
-                '--datasettype', 'raw',
-                '--collections', 'LATISS/raw/all']
-        parser = move_embargo_args.parser(args)
-        self.assertTrue(parser.long)
-        '''
-
-        #python move_embargo_args.py --help
-        #python move_embargo_args.py -fromrepo $arg_fromrepo
-            -torepo $arg_torepo
-            -instrument $arg_instrument
-            -days $arg_days
-            -dtype $arg_dtype
-        self.assertRaises(move_embargo_args())
-        self.assertRaises(move_embargo_args("-fromrepo" = arg_fromrepo,
-                                            "-torepo" = arg_torepo,
-                                            "-instrument" = arg_instrument,
-                                            "--embargohours" = arg_hours,
-                                            "-dtype" = arg_dtype))
-        '''
-
+            assert ID in id_in, f"{ID} should be in {test_from} repo but isnt :("
+        if MOVED:
+            for ID in id_in:
+                assert ID in ids_remain, f"{ID} should not be in {test_from} repo but it is"
+        
 
 if __name__ == '__main__':
     unittest.main()
