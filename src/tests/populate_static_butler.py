@@ -10,7 +10,7 @@ datasetType = 'raw'
 collections = 'LATISS/raw/all'
 dataId = {'instrument': 'LATISS'}
 
-exposure_ids = [2019111300059, 2019111300061, 2020011700002, 2020011700003, 2020011700004]
+exposure_ids = [2019111300059, 2019111300061, 2020011700002, 2020011700003, 2020011700004, 2020011700005, 2020011700006]
 
 datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=collections,
                                      where="exposure.id IN (exposure_ids)",
