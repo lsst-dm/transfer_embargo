@@ -17,8 +17,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         
         # clear test butler:
         # TEMPORARY
-        butler = Butler(test_to, writeable=True)
-        butler.pruneCollection('LATISS/raw/all', purge=True, unstore=True)
+        #butler = Butler(test_to, writeable=True)
+        #butler.pruneCollection('LATISS/raw/all', purge=True, unstore=True)
         
         # IDs that should be moved:
         ids_moved = [2019111300059,
@@ -52,10 +52,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         # moved
     
         # First test stuff in the fake_to butler
-        
-        
-        
-        
         butler = Butler(test_to)
         registry = butler.registry
         id_in = [dt.dataId.full['exposure'] for dt in registry.queryDatasets(datasetType=...,collections=...)]
