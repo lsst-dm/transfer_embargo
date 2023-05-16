@@ -2,9 +2,6 @@ import argparse
 import astropy.time
 from lsst.daf.butler import Butler, Timespan
 
-# remove_collection clears the collection from scratch_butler if set to True.
-REMOVE_COLLECTION = False
-
 # transfers data from embargo to scratch butler when set to True.
 TRANSFER = True
 
@@ -31,6 +28,9 @@ def parse_args():
     parser.add_argument("--nowtime", type=str, required=False, default='now',
                         help="Now time in (ISO, TAI timescale). If left blank it will \
                         use astropy.time.Time.now.")
+    parser.add_argument("--moveorcopy", type=str, required=False, default='copy',
+                        help="Decision to copy or move the post-embargo files. \
+                        If left blank it will copy the files.")
     return parser.parse_args()
 
 
@@ -88,6 +88,4 @@ if __name__ == "__main__":
         dest.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
                            skip_missing=True, register_dataset_types=True,
                            transfer_dimensions=True)
-    # Remove collection from scratch butler
-    if REMOVE_COLLECTION:
-        dest.pruneCollection(collections, purge=True, unstore=True)
+    
