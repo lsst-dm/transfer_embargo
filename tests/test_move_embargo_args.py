@@ -4,71 +4,74 @@ import unittest
 from lsst.daf.butler import Butler
 
 
-class TestMoveEmbargoArgs(unittest.TestCase):
-    def is_it_there(
-        self, embargo_hours, now_time_embargo, ids_remain, ids_moved, MOVED="copy"
-    ):
-        test_from = "/home/r/rnevin/transfer_embargo/tests/data/test_from"
-        test_to = "/home/r/rnevin/transfer_embargo/tests/data/test_to"
-        # Run the package
-        subprocess.call(
-            [
-                "python",
-                "../src/move_embargo_args.py",
-                "-f",
-                test_from,
-                "-t",
-                test_to,
-                "--embargohours",
-                str(embargo_hours),
-                "--instrument",
-                "LATISS",
-                "--datasettype",
-                "raw",
-                "--collections",
-                "LATISS/raw/all",
-                "--nowtime",
-                now_time_embargo,
-                "--moveorcopy",
-                MOVED,
-            ]
-        )
-        # Things to check about what is in there:
-        # 1) If stuff is in fake_to that should be there
-        # 2) If stuff is in fake_from that should be there
-        # 3) If stuff remains in fake_from
-        # 4) If wrong stuff was moved to fake_to
-        # ^ We will have two modes of testing, one where
-        # the files are copied and one where they are
-        # moved
-
-        # First test stuff in the fake_to butler
-        butler = Butler(test_to)
-        registry = butler.registry
-        id_in = [
-            dt.dataId.full["exposure"]
-            for dt in registry.queryDatasets(datasetType=..., collections=...)
+def is_it_there(
+    embargo_hours: float,
+    now_time_embargo: str,
+    ids_remain,
+    ids_moved,
+    MOVED="copy",
+):
+    test_from = "/home/r/rnevin/transfer_embargo/tests/data/test_from"
+    test_to = "/home/r/rnevin/transfer_embargo/tests/data/test_to"
+    # Run the package
+    subprocess.call(
+        [
+            "python",
+            "../src/move_embargo_args.py",
+            "-f",
+            test_from,
+            "-t",
+            test_to,
+            "--embargohours",
+            str(embargo_hours),
+            "--instrument",
+            "LATISS",
+            "--datasettype",
+            "raw",
+            "--collections",
+            "LATISS/raw/all",
+            "--nowtime",
+            now_time_embargo,
+            "--moveorcopy",
+            MOVED,
         ]
-        for ID in ids_moved:
-            assert ID in id_in, f"{ID} should be in {test_to} repo but isnt :("
+    )
+    # Things to check about what is in there:
+    # 1) If stuff is in fake_to that should be there
+    # 2) If stuff is in fake_from that should be there
+    # 3) If stuff remains in fake_from
+    # 4) If wrong stuff was moved to fake_to
+    # ^ We will have two modes of testing, one where
+    # the files are copied and one where they are
+    # moved
+
+    # First test stuff in the fake_to butler
+    butler = Butler(test_to)
+    registry = butler.registry
+    id_in = [
+        dt.dataId.full["exposure"]
+        for dt in registry.queryDatasets(datasetType=..., collections=...)
+    ]
+    for ID in ids_moved:
+        assert ID in id_in, f"{ID} should be in {test_to} repo but isnt :("
+    for ID in id_in:
+        assert ID in ids_moved, f"{ID} should not be in {test_to} repo but it is"
+
+    # Now do the same for the test_from butler
+    butler = Butler(test_from)
+    registry = butler.registry
+    id_in = [
+        dt.dataId.full["exposure"]
+        for dt in registry.queryDatasets(datasetType=..., collections=...)
+    ]
+    for ID in ids_remain:
+        assert ID in id_in, f"{ID} should be in {test_from} repo but isnt :("
+    if MOVED=='move':
         for ID in id_in:
-            assert ID in ids_moved, f"{ID} should not be in {test_to} repo but it is"
+            assert ID in ids_remain, f"{ID} should not be in {test_from} repo but it is"
 
-        # Now do the same for the test_from butler
-        butler = Butler(test_from)
-        registry = butler.registry
-        id_in = [
-            dt.dataId.full["exposure"]
-            for dt in registry.queryDatasets(datasetType=..., collections=...)
-        ]
-        for ID in ids_remain:
-            assert ID in id_in, f"{ID} should be in {test_from} repo but isnt :("
-        if MOVED is "move":
-            for ID in id_in:
-                assert (
-                    ID in ids_remain
-                ), f"{ID} should not be in {test_from} repo but it is"
 
+class TestMoveEmbargoArgs(unittest.TestCase):
     def test_main(self):
         """
         Run move_embargo_args to move some IDs from the fake_from butler
@@ -97,8 +100,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700006,
         ]
         is_it_there(
-            self, embargo_hours, now_time_embargo, ids_remain, ids_moved, MOVED="copy"
+            embargo_hours, now_time_embargo, ids_remain, ids_moved, MOVED="copy"
         )
+
+    def test_time_format_input(self):
+        with self.assertRaises(AssertionError):
+            is_it_there(80.0, 2019111300059, None, None)
 
 
 if __name__ == "__main__":
