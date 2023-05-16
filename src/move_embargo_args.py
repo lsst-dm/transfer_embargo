@@ -2,9 +2,6 @@ import argparse
 import astropy.time
 from lsst.daf.butler import Butler, Timespan
 
-# transfers data from embargo to scratch butler when set to True.
-TRANSFER = True
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Transferring data from embargo butler to another butler')
@@ -36,14 +33,14 @@ def parse_args():
 
 if __name__ == "__main__":
     namespace = parse_args()
-    # Define embargo and scratch butler
+    # Define embargo and destination butler
     butler = Butler(namespace.fromrepo)
     registry = butler.registry
     dest = Butler(namespace.torepo, writeable=True)
     scratch_registry = dest.registry
     datasetType = namespace.datasettype
     collections = namespace.collections
-
+    moveorcopy = namespace.moveorcopy
     # Dataset to move
     dataId = {'instrument': namespace.instrument}
 
@@ -65,27 +62,11 @@ if __name__ == "__main__":
                                                     where="NOT exposure.timespan OVERLAPS\
                                                     timespan_embargo",
                                                     bind={"timespan_embargo": timespan_embargo})]
-    # after_embargo = []
-    # for i, dt in enumerate(registry.queryDimensionRecords('exposure',
-    #                          dataId=dataId,
-    #                          datasets=datasetType,
-    #                          collections=collections,
-    #                          where="NOT exposure.timespan\
-    #                          OVERLAPS\
-    #                          timespan_embargo",
-    #                          bind={"timespan_embargo": timespan_embargo})):
-    #     end_time = dt.timespan.end
-    #     if now - end_time >= embargo_period:
-    #        after_embargo.append(dt.id)
     # Query the DataIds after embargo period
     datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=collections,
                                          where="exposure.id IN (exposure_ids)",
                                          bind={"exposure_ids": after_embargo})
-
-    # Copy the Dataset after embargo period from
-    # embargo butler to scratch butler.
-    if TRANSFER:
-        dest.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
-                           skip_missing=True, register_dataset_types=True,
-                           transfer_dimensions=True)
+    dest.transfer_from(butler, source_refs=datasetRefs, transfer=moveorcopy,
+                       skip_missing=True, register_dataset_types=True,
+                       transfer_dimensions=True)
     
