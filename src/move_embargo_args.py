@@ -1,4 +1,5 @@
 import argparse
+
 import astropy.time
 from lsst.daf.butler import Butler, Timespan
 
