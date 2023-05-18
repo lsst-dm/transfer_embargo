@@ -64,7 +64,7 @@ def parse_args():
     )
     parser.add_argument(
         "--move",
-        type=str,
+        type=bool,
         required=False,
         default=False,
         help="Copies if False, deletes original if True",
@@ -84,7 +84,6 @@ if __name__ == "__main__":
     move = namespace.move
     # Dataset to move
     dataId = {"instrument": namespace.instrument}
-
     # Define embargo period
     embargo_period = astropy.time.TimeDelta(
         namespace.embargohours * 3600.0, format="sec"
@@ -122,7 +121,7 @@ if __name__ == "__main__":
     dest.transfer_from(
         butler,
         source_refs=datasetRefs,
-        transfer='copy',
+        transfer="copy",
         skip_missing=True,
         register_dataset_types=True,
         transfer_dimensions=True,
