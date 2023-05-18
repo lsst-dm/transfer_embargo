@@ -1,5 +1,6 @@
 import subprocess
 import unittest
+import shutil
 
 from lsst.daf.butler import Butler
 
@@ -11,6 +12,9 @@ def is_it_there(
     ids_moved,
     move,
 ):
+    # copy these two directories (entire data directory)
+    shutil.copytree("data", "data_temp")
+    
     test_from = "/home/r/rnevin/transfer_embargo/tests/data/test_from"
     test_to = "/home/r/rnevin/transfer_embargo/tests/data/test_to"
     # Run the package
@@ -69,6 +73,9 @@ def is_it_there(
     if move:
         for ID in id_in:
             assert ID in ids_remain, f"{ID} should not be in {test_from} repo but it is"
+            
+    # Delete the directory and all its contents
+    shutil.rmtree("data_temp")
 
 
 class TestMoveEmbargoArgs(unittest.TestCase):
