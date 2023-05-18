@@ -9,7 +9,7 @@ def is_it_there(
     now_time_embargo: str,
     ids_remain,
     ids_moved,
-    MOVED="copy",
+    move,
 ):
     test_from = "/home/r/rnevin/transfer_embargo/tests/data/test_from"
     test_to = "/home/r/rnevin/transfer_embargo/tests/data/test_to"
@@ -32,8 +32,8 @@ def is_it_there(
             "LATISS/raw/all",
             "--nowtime",
             now_time_embargo,
-            "--moveorcopy",
-            MOVED,
+            "--move",
+            move,
         ]
     )
     # Things to check about what is in there:
@@ -66,18 +66,18 @@ def is_it_there(
     ]
     for ID in ids_remain:
         assert ID in id_in, f"{ID} should be in {test_from} repo but isnt :("
-    if MOVED=='move':
+    if move:
         for ID in id_in:
             assert ID in ids_remain, f"{ID} should not be in {test_from} repo but it is"
 
 
 class TestMoveEmbargoArgs(unittest.TestCase):
-    def test_main(self):
+    def test_main_move(self):
         """
         Run move_embargo_args to move some IDs from the fake_from butler
         to the fake_to butler and test which ones moved
         """
-        MOVED = "copy"  # false if copy
+        move = True
         now_time_embargo = "2020-03-01 23:59:59.999999"  # TODO, this is a fixed now
         embargo_hours = 3827088.677299 / 3600  # hours
 
@@ -99,9 +99,36 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700005,
             2020011700006,
         ]
-        is_it_there(
-            embargo_hours, now_time_embargo, ids_remain, ids_moved, MOVED="copy"
-        )
+        is_it_there(embargo_hours, now_time_embargo, ids_remain, ids_moved, move=move)
+
+    def test_main_copy(self):
+        """
+        Run move_embargo_args to move some IDs from the fake_from butler
+        to the fake_to butler and test which ones moved
+        """
+        move = False
+        now_time_embargo = "2020-03-01 23:59:59.999999"  # TODO, this is a fixed now
+        embargo_hours = 3827088.677299 / 3600  # hours
+
+        # IDs that should be moved:
+        ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+            2020011700004,
+        ]
+        # IDs that should stay in the fake_from:
+        ids_remain = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(embargo_hours, now_time_embargo, ids_remain, ids_moved, move=move)
 
     def test_time_format_input(self):
         with self.assertRaises(AssertionError):

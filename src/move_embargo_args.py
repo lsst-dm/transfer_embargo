@@ -63,12 +63,11 @@ def parse_args():
                         use astropy.time.Time.now.",
     )
     parser.add_argument(
-        "--moveorcopy",
-        type=str,
+        "--move",
+        type=bool,
         required=False,
-        default="copy",
-        help="Decision to copy or move the post-embargo files. \
-                        If left blank it will copy the files.",
+        default=False,
+        help="Copies if False, deletes original if True",
     )
     return parser.parse_args()
 
@@ -82,10 +81,9 @@ if __name__ == "__main__":
     scratch_registry = dest.registry
     datasetType = namespace.datasettype
     collections = namespace.collections
-    moveorcopy = namespace.moveorcopy
+    move = namespace.move
     # Dataset to move
     dataId = {"instrument": namespace.instrument}
-
     # Define embargo period
     embargo_period = astropy.time.TimeDelta(
         namespace.embargohours * 3600.0, format="sec"
@@ -123,8 +121,10 @@ if __name__ == "__main__":
     dest.transfer_from(
         butler,
         source_refs=datasetRefs,
-        transfer=moveorcopy,
+        transfer="copy",
         skip_missing=True,
         register_dataset_types=True,
         transfer_dimensions=True,
     )
+    if move:
+        butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
