@@ -14,7 +14,7 @@ exposure_ids = [2019111300059, 2019111300061, 2020011700002, 2020011700003, 2020
 
 datasetRefs = registry.queryDatasets(datasetType, dataId=dataId, collections=collections,
                                      where="exposure.id IN (exposure_ids)",
-                                     bind={"exposure_ids": exposure_ids})
+                                     bind={"exposure_ids": exposure_ids}).expanded()
 
 
 test_from_butler.transfer_from(butler, source_refs=datasetRefs, transfer='copy',
