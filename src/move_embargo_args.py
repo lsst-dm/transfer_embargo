@@ -119,7 +119,7 @@ if __name__ == "__main__":
         collections=collections,
         where="exposure.id IN (exposure_ids)",
         bind={"exposure_ids": after_embargo},
-    )
+    ).expanded()
     dest.transfer_from(
         butler,
         source_refs=datasetRefs,
