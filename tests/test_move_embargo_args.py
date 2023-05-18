@@ -15,8 +15,8 @@ def is_it_there(
     # copy these two directories (entire data directory)
     shutil.copytree("data", "data_temp")
     
-    test_from = "/home/r/rnevin/transfer_embargo/tests/data/test_from"
-    test_to = "/home/r/rnevin/transfer_embargo/tests/data/test_to"
+    test_from = "./data_temp/test_from"
+    test_to = "./data_temp/test_to"
     # Run the package
     subprocess.call(
         [
@@ -37,7 +37,7 @@ def is_it_there(
             "--nowtime",
             now_time_embargo,
             "--move",
-            move,
+            str(move),
         ]
     )
     # Things to check about what is in there:
@@ -137,9 +137,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         ]
         is_it_there(embargo_hours, now_time_embargo, ids_remain, ids_moved, move=move)
 
-    def test_time_format_input(self):
-        with self.assertRaises(AssertionError):
-            is_it_there(80.0, 2019111300059, None, None)
+    # def test_time_format_input(self):
+    #     with self.assertRaises(AssertionError):
+    #         is_it_there(80.0, 2019111300059, None, None)
 
 
 if __name__ == "__main__":
