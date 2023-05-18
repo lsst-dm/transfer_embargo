@@ -64,9 +64,9 @@ def parse_args():
     )
     parser.add_argument(
         "--move",
-        type=bool,
+        type=str,
         required=False,
-        default=False,
+        default="False",
         help="Copies if False, deletes original if True",
     )
     return parser.parse_args()
@@ -75,7 +75,7 @@ def parse_args():
 if __name__ == "__main__":
     namespace = parse_args()
     # Define embargo and destination butler
-    butler = Butler(namespace.fromrepo)
+    butler = Butler(namespace.fromrepo, writeable=True)
     registry = butler.registry
     dest = Butler(namespace.torepo, writeable=True)
     scratch_registry = dest.registry
@@ -126,5 +126,7 @@ if __name__ == "__main__":
         register_dataset_types=True,
         transfer_dimensions=True,
     )
-    if move:
+    if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
+    else:
+        pass
