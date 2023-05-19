@@ -64,9 +64,9 @@ def parse_args():
     )
     parser.add_argument(
         "--move",
-        type=bool,
+        type=str, 
         required=False,
-        default=False,
+        default="False",
         help="Copies if False, deletes original if True",
     )
     return parser.parse_args()
@@ -126,7 +126,8 @@ if __name__ == "__main__":
         register_dataset_types=True,
         transfer_dimensions=True,
     )
-    if move:
+    if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
     else:
         pass
+        
