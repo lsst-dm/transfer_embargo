@@ -87,37 +87,37 @@ class TestMoveEmbargoArgs(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree("data_temp", ignore_errors=True)
         
-#     def test_main_move(self):
-#         """
-#         Run move_embargo_args to move some IDs from the fake_from butler
-#         to the fake_to butler and test which ones moved
-#         """
-#         move = "True"
-#         now_time_embargo = "2020-03-01 23:59:59.999999"  # TODO, this is a fixed now
-#         embargo_hours = 3827088.677299 / 3600  # hours
+    def test_main_move(self):
+        """
+        Run move_embargo_args to move some IDs from the fake_from butler
+        to the fake_to butler and test which ones moved
+        """
+        move = "True"
+        now_time_embargo = "2020-03-01 23:59:59.999999"  # TODO, this is a fixed now
+        embargo_hours = 3827088.677299 / 3600  # hours
         
-#         test_from = "./data_temp/test_from"
-#         test_to = "./data_temp/test_to"
+        test_from = "./data_temp/test_from"
+        test_to = "./data_temp/test_to"
 
-#         # IDs that should be moved:
-#         ids_moved = [
-#             2019111300059,
-#             2019111300061,
-#             2020011700002,
-#             2020011700003,
-#             2020011700004,
-#         ]
-#         # IDs that should stay in the fake_from:
-#         ids_remain = [
-#             2019111300059,
-#             2019111300061,
-#             2020011700002,
-#             2020011700003,
-#             2020011700004,
-#             2020011700005,
-#             2020011700006,
-#         ]
-#         is_it_there(embargo_hours, now_time_embargo, ids_remain, ids_moved, test_from, test_to, move=move)
+        # IDs that should be moved:
+        ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+            2020011700004,
+            ]
+        # IDs that should stay in the fake_from:
+        ids_remain = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+            2020011700004,
+            2020011700005,
+            2020011700006,
+            ]
+        is_it_there(embargo_hours, now_time_embargo, ids_remain, ids_moved, test_from, test_to, move=move)
 
     def test_main_copy(self):
         """
@@ -151,9 +151,28 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         ]
         is_it_there(embargo_hours, now_time_embargo, ids_remain, ids_moved, test_from, test_to, move=move)
 
-    # def test_time_format_input(self):
-    #     with self.assertRaises(AssertionError):
-    #         is_it_there(80.0, 2019111300059, None, None)
+#    def test_time_format_input(self):
+#        test_from = "./data_temp/test_from"
+#        test_to = "./data_temp/test_to"
+#        ids_moved = [
+#            2019111300059,
+#            2019111300061,
+#            2020011700002,
+#            2020011700003,
+#            2020011700004,
+#        ]
+#        # IDs that should stay in the fake_from:
+#        ids_remain = [
+#            2019111300059,
+#            2019111300061,
+#            2020011700002,
+#            2020011700003,
+#            2020011700004,
+#            2020011700005,
+#            2020011700006,
+#        ]
+#        with self.assertRaises(ValueError):
+#            is_it_there(80.0, "2019111300059", ids_remain, ids_moved, test_from, test_to, move="False")
 
 
 if __name__ == "__main__":
