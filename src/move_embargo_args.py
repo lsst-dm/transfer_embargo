@@ -128,3 +128,5 @@ if __name__ == "__main__":
     )
     if move:
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
+    else:
+        pass
