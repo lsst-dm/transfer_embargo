@@ -53,7 +53,7 @@ def is_it_there(
         assert ID in ids_in_temp_to, f"{ID} should be in {temp_to} repo but isnt :("
     # check that all ids currently in the temp_to butler (ids_in_temp_to)
     # are in what we expect to move (ids_should_be_moved)
-    # this is different from the above because it will trigger if 
+    # this is different from the above because it will trigger if
     # there is anything in temp_to that wasn't expected to be there
     # whereas the above will trigger if anything that
     # should have moved is not in there
@@ -70,23 +70,21 @@ def is_it_there(
     # verifying the contents of the from butler
     # if move is on, only the ids_remain should be in temp_from butler
     if move == "True":
-        # checking that everything in temp_from butler is in the ids_remain list
+        # checking that everything in temp_from butler
+        # is in the ids_remain list
         for ID in ids_in_temp_from:
-            assert ID in ids_should_remain_after_move, f"{ID} should not be in {test_from} repo but it is"
+            assert ID in ids_should_remain_after_move, f"{ID} should not be in {temp_from} repo but it is"
         # checking that ids_remain are still in the temp_from butler
         for ID in ids_should_remain_after_move:
-            assert ID in ids_in_temp_from, f"{ID} should not be in {test_from} repo but it is"
-            
-            assert (
-                ID in ids_in_temp_from + ids_in_temp_to
-            ), f"{ID} should not be in {test_from} repo but it is"
+            assert ID in ids_in_temp_from, f"{ID} should not be in {temp_from} repo but it is"
     # otherwise, if copy
     else:
         # everything in temp_from should be either in ids_remain or ids_moved
         for ID in ids_in_temp_from:
             assert (ID in ids_should_remain_after_move + ids_should_be_moved), \
-            f"{ID} should be in either {temp_from} or {temp_to} repo but it isn't"
-        # conversely, everything in ids_remain and ids_moved should be in the temp_from butler
+                f"{ID} should be in either {temp_from} or {temp_to} repo but it isn't"
+        # conversely, everything in ids_remain and ids_moved
+        # should be in the temp_from butler
         for ID in (ids_should_remain_after_move + ids_should_be_moved):
             assert ID in ids_in_temp_from, f"{ID} should be in {temp_from} repo but it isn't"
 
