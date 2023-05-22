@@ -158,6 +158,130 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
         )
+    def test_main_move_midnight(self):
+        """
+        Run move_embargo_args to move some IDs from the fake_from butler
+        to the fake_to butler and test which ones moved
+        """
+        move = "True"
+        
+        self.now_time_embargo = "2020-03-02 00:00:00.000000"
+        self.embargo_hours = 3827088.6773 / 3600  # hours
+        # IDs that should be moved to temp_to:
+        self.ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+            2020011700004,
+        ]
+        # IDs that should stay in the temp_from:
+        self.ids_remain = [
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            self.embargo_hours,
+            self.now_time_embargo,
+            self.ids_remain,
+            self.ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+        )
+
+    def test_main_copy_midnight(self):
+        """
+        Run move_embargo_args to move some IDs from the fake_from butler
+        to the fake_to butler and test which ones moved
+        """
+        move = "False"
+        self.now_time_embargo = "2020-03-02 00:00:00.000000"
+        self.embargo_hours = 3827088.6773 / 3600  # hours
+        # IDs that should be moved to temp_to:
+        self.ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+            2020011700004,
+        ]
+        # IDs that should stay in the temp_from:
+        self.ids_remain = [
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            self.embargo_hours,
+            self.now_time_embargo,
+            self.ids_remain,
+            self.ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+        )
+    def test_main_move_midnight_precision(self):
+        """
+        Run move_embargo_args to move some IDs from the fake_from butler
+        to the fake_to butler and test which ones moved
+        """
+        move = "True"
+        
+        self.now_time_embargo = "2020-03-02 00:00:00.000000"
+        self.embargo_hours = 3827088.677301 / 3600  # hours
+        # IDs that should be moved to temp_to:
+        self.ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,  
+        ]
+        # IDs that should stay in the temp_from:
+        self.ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            self.embargo_hours,
+            self.now_time_embargo,
+            self.ids_remain,
+            self.ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+        )
+
+    def test_main_copy_midnight_precision(self):
+        """
+        Run move_embargo_args to move some IDs from the fake_from butler
+        to the fake_to butler and test which ones moved
+        """
+        move = "False"
+        self.now_time_embargo = "2020-03-02 00:00:00.000000"
+        self.embargo_hours = 3827088.677301 / 3600  # hours
+        # IDs that should be moved to temp_to:
+        self.ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,  
+        ]
+        # IDs that should stay in the temp_from:
+        self.ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            self.embargo_hours,
+            self.now_time_embargo,
+            self.ids_remain,
+            self.ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+        )
 
 
 if __name__ == "__main__":
