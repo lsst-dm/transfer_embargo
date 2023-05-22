@@ -2,6 +2,7 @@ import subprocess
 import unittest
 import shutil
 import os
+import tempfile
 
 from lsst.daf.butler import Butler
 
@@ -11,11 +12,10 @@ def is_it_there(
     now_time_embargo: str,
     ids_remain,
     ids_moved,
-    test_from, 
+    test_from,
     test_to,
     move,
 ):
-
     # Run the package
     subprocess.call(
         [
@@ -49,44 +49,54 @@ def is_it_there(
     # moved
 
     # First test stuff in the fake_to butler
-    butler = Butler(test_to)
-    registry = butler.registry
-    id_in = [
+    butler_to = Butler(test_to)
+    registry_to = butler_to.registry
+    id_in_to = [
         dt.dataId.full["exposure"]
-        for dt in registry.queryDatasets(datasetType=..., collections=...)
+        for dt in registry_to.queryDatasets(datasetType=..., collections=...)
     ]
+
     for ID in ids_moved:
-        assert ID in id_in, f"{ID} should be in {test_to} repo but isnt :("
-    for ID in id_in:
+        assert ID in id_in_to, f"{ID} should be in {test_to} repo but isnt :("
+    for ID in id_in_to:
         assert ID in ids_moved, f"{ID} should not be in {test_to} repo but it is"
 
     # Now do the same for the test_from butler
-    butler = Butler(test_from)
-    registry = butler.registry
-    id_in = [
+    butler_from = Butler(test_from)
+    registry_from = butler_from.registry
+    id_in_from = [
         dt.dataId.full["exposure"]
-        for dt in registry.queryDatasets(datasetType=..., collections=...)
+        for dt in registry_from.queryDatasets(datasetType=..., collections=...)
     ]
-    
-    if move:
-        for ID in id_in:
+
+    if move == "True":
+        for ID in id_in_from:
             assert ID in ids_remain, f"{ID} should not be in {test_from} repo but it is"
-        for ID in id_in:
-            assert ID in ids_remain, f"{ID} should not be in {test_from} repo but it is"
-    else:
-        for ID in id_in:
-            assert ID in ids_remain, f"{ID} should be in {test_from} repo but it isn't"
-            
         for ID in ids_remain:
-            assert ID in id_in, f"{ID} should be in {test_from} repo but isnt :("
+            assert (
+                ID in id_in_from + id_in_to
+            ), f"{ID} should not be in {test_from} repo but it is"
+    else:
+        for ID in id_in_from:
+            assert ID in ids_remain, f"{ID} should be in {test_from} repo but it isn't"
+        for ID in ids_remain:
+            assert ID in id_in_from, f"{ID} should be in {test_from} repo but it isn't"
 
 
 class TestMoveEmbargoArgs(unittest.TestCase):
     def setUp(self):
-        shutil.copytree("data", "data_temp")
+        temp_dir = tempfile.TemporaryDirectory()
+        temp_from_path = os.path.join(temp_dir.name, "temp_test_from")
+        temp_to_path = os.path.join(temp_dir.name, "temp_test_to")
+        shutil.copytree("data/test_from", temp_from_path)
+        shutil.copytree("data/test_to", temp_to_path)
+        self.temp_dir = temp_dir
+        self.temp_from_path = temp_from_path
+        self.temp_to_path = temp_to_path
+
     def tearDown(self):
-        shutil.rmtree("data_temp", ignore_errors=True)
-        
+        shutil.rmtree(self.temp_dir.name, ignore_errors=True)
+
     def test_main_move(self):
         """
         Run move_embargo_args to move some IDs from the fake_from butler
@@ -95,9 +105,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         move = "True"
         now_time_embargo = "2020-03-01 23:59:59.999999"  # TODO, this is a fixed now
         embargo_hours = 3827088.677299 / 3600  # hours
-        
-        test_from = "./data_temp/test_from"
-        test_to = "./data_temp/test_to"
+
+        test_from = self.temp_from_path
+        test_to = self.temp_to_path
 
         # IDs that should be moved:
         ids_moved = [
@@ -106,7 +116,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700002,
             2020011700003,
             2020011700004,
-            ]
+        ]
         # IDs that should stay in the fake_from:
         ids_remain = [
             2019111300059,
@@ -116,8 +126,16 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700004,
             2020011700005,
             2020011700006,
-            ]
-        is_it_there(embargo_hours, now_time_embargo, ids_remain, ids_moved, test_from, test_to, move=move)
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            test_from,
+            test_to,
+            move=move,
+        )
 
     def test_main_copy(self):
         """
@@ -127,9 +145,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         move = "False"
         now_time_embargo = "2020-03-01 23:59:59.999999"  # TODO, this is a fixed now
         embargo_hours = 3827088.677299 / 3600  # hours
-        
-        test_from = "./data_temp/test_from"
-        test_to = "./data_temp/test_to"
+
+        test_from = self.temp_from_path
+        test_to = self.temp_to_path
 
         # IDs that should be moved:
         ids_moved = [
@@ -149,7 +167,16 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700005,
             2020011700006,
         ]
-        is_it_there(embargo_hours, now_time_embargo, ids_remain, ids_moved, test_from, test_to, move=move)
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            test_from,
+            test_to,
+            move=move,
+        )
+
 
 #    def test_time_format_input(self):
 #        test_from = "./data_temp/test_from"
