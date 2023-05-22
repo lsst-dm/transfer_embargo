@@ -12,8 +12,8 @@ def is_it_there(
     now_time_embargo: str,
     ids_should_remain_after_move,
     ids_should_be_moved,
-    test_from,
-    test_to,
+    temp_from,
+    temp_to,
     move,
 ):
     # Run the package
@@ -72,9 +72,9 @@ def is_it_there(
     if move == "True":
         # checking that everything in temp_from butler is in the ids_remain list
         for ID in ids_in_temp_from:
-            assert ID in ids_remain, f"{ID} should not be in {test_from} repo but it is"
+            assert ID in ids_should_remain_after_move, f"{ID} should not be in {test_from} repo but it is"
         # checking that ids_remain are still in the temp_from butler
-        for ID in ids_remain:
+        for ID in ids_should_remain_after_move:
             assert ID in ids_in_temp_from, f"{ID} should not be in {test_from} repo but it is"
             
             assert (
@@ -84,10 +84,11 @@ def is_it_there(
     else:
         # everything in temp_from should be either in ids_remain or ids_moved
         for ID in ids_in_temp_from:
-            assert (ID in ids_remain + ids_moved), f"{ID} should be in either {temp_from} or {temp_to} repo but it isn't"
-        # conversely, if there's anything new in the temp_from butler
-        for ID in (ids_remain + ids_moved):
-            assert ID in ids_in_temp_from, f"{ID} should be in {test_from} repo but it isn't"
+            assert (ID in ids_should_remain_after_move + ids_should_be_moved), \
+            f"{ID} should be in either {temp_from} or {temp_to} repo but it isn't"
+        # conversely, everything in ids_remain and ids_moved should be in the temp_from butler
+        for ID in (ids_should_remain_after_move + ids_should_be_moved):
+            assert ID in ids_in_temp_from, f"{ID} should be in {temp_from} repo but it isn't"
 
 
 class TestMoveEmbargoArgs(unittest.TestCase):
@@ -103,23 +104,13 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
         now_time_embargo = "2020-03-01 23:59:59.999999"
         embargo_hours = 3827088.677299 / 3600  # hours
-        # IDs that should be moved:
+        # IDs that should be moved to temp_to:
         ids_moved = [
             2019111300059,
             2019111300061,
             2020011700002,
             2020011700003,
             2020011700004,
-        ]
-        
-        ids_remain_copy = [
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-            2020011700004,
-            2020011700005,
-            2020011700006,
         ]
         # IDs that should stay in the temp_from:
         ids_remain = [
