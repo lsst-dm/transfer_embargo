@@ -157,29 +157,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
         )
 
-    # def test_time_format_input(self):
-    #     test_from = self.temp_from_path
-    #     test_to = self.temp_to_path
-    #     ids_moved = [
-    #        2019111300059,
-    #        2019111300061,
-    #        2020011700002,
-    #        2020011700003,
-    #        2020011700004,
-    #     ]
-    #     # IDs that should stay in the fake_from:
-    #     ids_remain = [
-    #        2019111300059,
-    #        2019111300061,
-    #        2020011700002,
-    #        2020011700003,
-    #        2020011700004,
-    #        2020011700005,
-    #        2020011700006,
-    #     ]
-    #     with self.assertRaises(ValueError):
-    #         is_it_there(80.0, "2019111300059", ids_remain, ids_moved, test_from, test_to, move="False")
-
 
 if __name__ == "__main__":
     unittest.main()
