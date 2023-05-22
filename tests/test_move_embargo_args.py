@@ -10,8 +10,8 @@ from lsst.daf.butler import Butler
 def is_it_there(
     embargo_hours: float,
     now_time_embargo: str,
-    ids_remain,
-    ids_moved,
+    ids_should_remain_after_move,
+    ids_should_be_moved,
     test_from,
     test_to,
     move,
@@ -22,9 +22,9 @@ def is_it_there(
             "python",
             "../src/move_embargo_args.py",
             "-f",
-            test_from,
+            temp_from,
             "-t",
-            test_to,
+            temp_to,
             "--embargohours",
             str(embargo_hours),
             "--instrument",
@@ -39,50 +39,55 @@ def is_it_there(
             move,
         ]
     )
-    # Things to check about what is in there:
-    # 1) If stuff is in fake_to that should be there
-    # 2) If stuff is in fake_from that should be there
-    # 3) If stuff remains in fake_from
-    # 4) If wrong stuff was moved to fake_to
-    # ^ We will have two modes of testing, one where
-    # the files are copied and one where they are
-    # moved
-
-    # First test stuff in the fake_to butler
-    butler_to = Butler(test_to)
+    # first test stuff in the temp_to butler
+    butler_to = Butler(temp_to)
     registry_to = butler_to.registry
-    id_in_to = [
+    ids_in_temp_to = [
         dt.dataId.full["exposure"]
         for dt in registry_to.queryDatasets(datasetType=..., collections=...)
     ]
-    print(id_in_to)
+    # verifying the contents of the temp_to butler
+    # check that what we expect to move (ids_should_be_moved)
+    # are in the temp_to repo (ids_in_temp_to)
+    for ID in ids_should_be_moved:
+        assert ID in ids_in_temp_to, f"{ID} should be in {temp_to} repo but isnt :("
+    # check that all ids currently in the temp_to butler (ids_in_temp_to)
+    # are in what we expect to move (ids_should_be_moved)
+    # this is different from the above because it will trigger if 
+    # there is anything in temp_to that wasn't expected to be there
+    # whereas the above will trigger if anything that
+    # should have moved is not in there
+    for ID in ids_in_temp_to:
+        assert ID in ids_should_be_moved, f"{ID} should not be in {temp_to} repo but it is"
 
-    for ID in ids_moved:
-        assert ID in id_in_to, f"{ID} should be in {test_to} repo but isnt :("
-    for ID in id_in_to:
-        assert ID in ids_moved, f"{ID} should not be in {test_to} repo but it is"
-
-    # Now do the same for the test_from butler
-    butler_from = Butler(test_from)
+    # now check the temp_from butler and see what remains
+    butler_from = Butler(temp_from)
     registry_from = butler_from.registry
-    id_in_from = [
+    ids_in_temp_from = [
         dt.dataId.full["exposure"]
         for dt in registry_from.queryDatasets(datasetType=..., collections=...)
     ]
-    print(id_in_from)
-
+    # verifying the contents of the from butler
+    # if move is on, only the ids_remain should be in temp_from butler
     if move == "True":
-        for ID in id_in_from:
+        # checking that everything in temp_from butler is in the ids_remain list
+        for ID in ids_in_temp_from:
             assert ID in ids_remain, f"{ID} should not be in {test_from} repo but it is"
+        # checking that ids_remain are still in the temp_from butler
         for ID in ids_remain:
+            assert ID in ids_in_temp_from, f"{ID} should not be in {test_from} repo but it is"
+            
             assert (
-                ID in id_in_from + id_in_to
+                ID in ids_in_temp_from + ids_in_temp_to
             ), f"{ID} should not be in {test_from} repo but it is"
+    # otherwise, if copy
     else:
-        for ID in id_in_from:
-            assert ID in ids_remain, f"{ID} should be in {test_from} repo but it isn't"
-        for ID in ids_remain:
-            assert ID in id_in_from, f"{ID} should be in {test_from} repo but it isn't"
+        # everything in temp_from should be either in ids_remain or ids_moved
+        for ID in ids_in_temp_from:
+            assert (ID in ids_remain + ids_moved), f"{ID} should be in either {temp_from} or {temp_to} repo but it isn't"
+        # conversely, if there's anything new in the temp_from butler
+        for ID in (ids_remain + ids_moved):
+            assert ID in ids_in_temp_from, f"{ID} should be in {test_from} repo but it isn't"
 
 
 class TestMoveEmbargoArgs(unittest.TestCase):
@@ -106,8 +111,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700003,
             2020011700004,
         ]
-        # IDs that should stay in the fake_from:
-        ids_remain = [
+        
+        ids_remain_copy = [
             2019111300059,
             2019111300061,
             2020011700002,
@@ -116,6 +121,14 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700005,
             2020011700006,
         ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700005,
+            2020011700006,
+        ]
+        # The above is if we are running 'move',
+        # If copy, it should be both of these
+        # added together
 
         self.now_time_embargo = now_time_embargo
         self.embargo_hours = embargo_hours
