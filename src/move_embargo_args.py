@@ -64,7 +64,7 @@ def parse_args():
     )
     parser.add_argument(
         "--move",
-        type=str, 
+        type=str,
         required=False,
         default="False",
         help="Copies if False, deletes original if True",
@@ -130,4 +130,3 @@ if __name__ == "__main__":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
     else:
         pass
-        
