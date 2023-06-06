@@ -13,9 +13,17 @@ jobs:
     steps:
     - name: Checkout the repo
       uses: actions/checkout@v3
-    - name: docker build
+    - name: Setup python 3.10
+      uses: actions/setup-python@v2
+      with:
+          python-version: "3.10"
+    #- name: docker build
+    #  run: |
+    #    docker build . -f Dockerfile
+    - name: Install dependencies
       run: |
-        docker build . -f Dockerfile 
+       python -m ensurepip
+       pip install lsst-daf-butler
     - name: Test with unittest
       run: |
        cd ./tests
