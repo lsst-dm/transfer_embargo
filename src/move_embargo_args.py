@@ -118,6 +118,7 @@ if __name__ == "__main__":
         where="exposure.id IN (exposure_ids)",
         bind={"exposure_ids": after_embargo},
     ).expanded()
+    print('dataid in butler:', [dt.dataId.full["exposure"] for dt in datasetRefs])
     dest.transfer_from(
         butler,
         source_refs=datasetRefs,
@@ -126,6 +127,8 @@ if __name__ == "__main__":
         register_dataset_types=True,
         transfer_dimensions=True,
     )
+    print('dataid in dest:', [dt.dataId.full["exposure"]
+        for dt in scratch_registry.queryDatasets(datasetType=..., collections=...)])
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
     else:
