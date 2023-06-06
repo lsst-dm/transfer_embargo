@@ -30,9 +30,11 @@ jobs:
        curl -OL https://ls.st/lsstinstall 
        chmod u+x lsstinstall 
        ./lsstinstall -T "w_2023_19"
-       source loadLSST.sh
-       mamba activate lsst-scipipe-6.0.0
+       # source loadLSST.sh
+       source "/home/runner/work/transfer_embargo/transfer_embargo/tests/loadLSST.sh"
+       # mamba activate lsst-scipipe-6.0.0
        eups distrib install -t "w_2023_19" daf_butler
+       setup -t w_2023_19 daf_butler
        # eups distrib install -t "w_2023_19" lsst_distrib
        python test_move_embargo_args.py
     #- name: Test with unittest
