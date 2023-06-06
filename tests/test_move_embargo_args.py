@@ -46,6 +46,7 @@ def is_it_there(
         dt.dataId.full["exposure"]
         for dt in registry_to.queryDatasets(datasetType=..., collections=...)
     ]
+    print(ids_in_temp_to)
     # verifying the contents of the temp_to butler
     # check that what we expect to move (ids_should_be_moved)
     # are in the temp_to repo (ids_in_temp_to)

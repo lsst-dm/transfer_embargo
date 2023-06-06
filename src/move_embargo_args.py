@@ -129,13 +129,6 @@ if __name__ == "__main__":
         cli_log = CliLog.initLog(longlog=True)
         CliLog.setLogLevels([("", "VERBOSE")])
     out = dest.transfer_from(
-        butler,
-        source_refs=datasetRefs,
-        transfer="copy",
-        skip_missing=True,
-        register_dataset_types=True,
-        transfer_dimensions=True,
-    )
     print("out from transfer_from", out)
     print(
         "dataid in dest:",
