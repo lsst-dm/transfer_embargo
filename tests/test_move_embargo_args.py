@@ -3,8 +3,13 @@ import unittest
 import shutil
 import os
 import tempfile
+import lsst.utils.logging
+#import logging
+import sys
 
 from lsst.daf.butler import Butler
+#from lsst.utils.logging import VERBOSE
+
 
 
 def is_it_there(
@@ -16,6 +21,16 @@ def is_it_there(
     temp_to,
     move,
 ):
+    #logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    #root_logger = logging.getLogger()
+    
+    
+    
+    logger = lsst.utils.logging.getLogger(__name__)
+    logger.setLevel(lsst.utils.logging.VERBOSE)
+    
+    print('logger', logger)
+
     # Run the package
     subprocess.call(
         [
