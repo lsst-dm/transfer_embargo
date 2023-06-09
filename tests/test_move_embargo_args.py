@@ -4,12 +4,13 @@ import shutil
 import os
 import tempfile
 import lsst.utils.logging
-#import logging
+
+# import logging
 import sys
 
 from lsst.daf.butler import Butler
-#from lsst.utils.logging import VERBOSE
 
+# from lsst.utils.logging import VERBOSE
 
 
 def is_it_there(
@@ -21,15 +22,13 @@ def is_it_there(
     temp_to,
     move,
 ):
-    #logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    #root_logger = logging.getLogger()
-    
-    
-    
+    # logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    # root_logger = logging.getLogger()
+
     logger = lsst.utils.logging.getLogger(__name__)
     logger.setLevel(lsst.utils.logging.VERBOSE)
-    
-    print('logger', logger)
+
+    print("logger", logger)
 
     # Run the package
     subprocess.call(
@@ -65,17 +64,10 @@ def is_it_there(
     # verifying the contents of the temp_to butler
     # check that what we expect to move (ids_should_be_moved)
     # are in the temp_to repo (ids_in_temp_to)
-    for ID in ids_should_be_moved:
-        assert ID in ids_in_temp_to, f"{ID} should be in {temp_to} repo but isnt :("
-    # check that all ids currently in the temp_to butler (ids_in_temp_to)
-    # are in what we expect to move (ids_should_be_moved)
-    # this is different from the above because it will trigger if
-    # there is anything in temp_to that wasn't expected to be there
-    # whereas the above will trigger if anything that
-    # should have moved is not in there
-    for ID in ids_in_temp_to:
-        assert ID in ids_should_be_moved, f"{ID} should not be in {temp_to} repo but it is"
-
+    assert sorted(ids_should_be_moved) == sorted(
+        ids_in_temp_to
+    ), f"{ids_should_be_moved} should be in {temp_to} repo but isnt :(, \
+        what is in it is: {ids_in_temp_to}"
     # now check the temp_from butler and see what remains
     butler_from = Butler(temp_from)
     registry_from = butler_from.registry
@@ -88,21 +80,17 @@ def is_it_there(
     if move == "True":
         # checking that everything in temp_from butler
         # is in the ids_remain list
-        for ID in ids_in_temp_from:
-            assert ID in ids_should_remain_after_move, f"{ID} should not be in {temp_from} repo but it is"
-        # checking that ids_remain are still in the temp_from butler
-        for ID in ids_should_remain_after_move:
-            assert ID in ids_in_temp_from, f"{ID} should not be in {temp_from} repo but it is"
+        assert sorted(ids_in_temp_from) == sorted(
+            ids_should_remain_after_move
+        ), f"move is {move} and {ids_in_temp_from} does not match what should be in \
+            {temp_from}, which is {ids_should_remain_after_move}"
     # otherwise, if copy
     else:
         # everything in temp_from should be either in ids_remain or ids_moved
-        for ID in ids_in_temp_from:
-            assert (ID in ids_should_remain_after_move + ids_should_be_moved), \
-                f"{ID} should be in either {temp_from} or {temp_to} repo but it isn't"
-        # conversely, everything in ids_remain and ids_moved
-        # should be in the temp_from butler
-        for ID in (ids_should_remain_after_move + ids_should_be_moved):
-            assert ID in ids_in_temp_from, f"{ID} should be in {temp_from} repo but it isn't"
+        assert sorted(ids_in_temp_from) == sorted(
+            ids_should_remain_after_move + ids_should_be_moved
+        ), f"move is {move} and {ids_in_temp_from} should be in either \
+                {temp_from} or {temp_to} repo but it isn't"
 
 
 class TestMoveEmbargoArgs(unittest.TestCase):
