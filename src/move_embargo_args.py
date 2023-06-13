@@ -2,7 +2,7 @@ import argparse
 
 import astropy.time
 from lsst.daf.butler import Butler, Timespan
-
+from lsst.daf.butler.cli.cliLog import CliLog
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -11,34 +11,30 @@ def parse_args():
 
     # at least one arg in dataId needed for 'where' clause.
     parser.add_argument(
-        "-f",
-        "--fromrepo",
+        "fromrepo",
         type=str,
-        required=True,
+        nargs='?',
         default="/repo/embargo",
         help="Butler Repository path from which data is transferred. Input str. Default = '/repo/embargo'",
     )
     parser.add_argument(
-        "-t",
-        "--torepo",
+        "torepo",
         type=str,
-        default="/home/j/jarugula/scratch",
-        required=True,
         help="Repository to which data is transferred. Input str",
+    )
+    parser.add_argument(
+        "instrument",
+        type=str,
+        nargs='?',
+        default="LATISS",
+        help="Instrument. Input str",
     )
     parser.add_argument(
         "--embargohours",
         type=float,
-        required=True,
+        required=False,
         default=80.0,
         help="Embargo time period in hours. Input float",
-    )
-    parser.add_argument(
-        "--instrument",
-        type=str,
-        required=True,
-        default="LATISS",
-        help="Instrument. Input str",
     )
     parser.add_argument(
         "--datasettype",
@@ -68,6 +64,13 @@ def parse_args():
         required=False,
         default="False",
         help="Copies if False, deletes original if True",
+    )
+    parser.add_argument(
+        "--log",
+        type=str,
+        required=False,
+        default="False",
+        help="No logging if False, longlog if True",
     )
     return parser.parse_args()
 
@@ -121,6 +124,9 @@ if __name__ == "__main__":
         bind={"exposure_ids": after_embargo},
     ).expanded()
     print("dataid in butler:", [dt.dataId.full["exposure"] for dt in datasetRefs])
+    if namespace.log:
+        cli_log = CliLog.initLog(longlog=True)
+        CliLog.setLogLevels([('','DEBUG')])
     dest.transfer_from(
         butler,
         source_refs=datasetRefs,

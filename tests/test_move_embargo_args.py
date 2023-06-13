@@ -3,11 +3,8 @@ import unittest
 import shutil
 import os
 import tempfile
-import lsst.utils.logging
-import logging
-from lsst.daf.butler import Butler
 
-# from lsst.utils.logging import VERBOSE
+from lsst.daf.butler import Butler
 
 
 def is_it_there(
@@ -18,35 +15,18 @@ def is_it_there(
     temp_from,
     temp_to,
     move,
+    log,
 ):
-    # logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    # root_logger = logging.getLogger()
-
-    logger = lsst.utils.logging.getLogger("lsst.daf.butler")
-    #
-    logging.basicConfig(
-        filename="example.log", filemode="w", level=lsst.utils.logging.VERBOSE
-    )
-
-    logger.setLevel(lsst.utils.logging.VERBOSE)
-    logging.warning("is this working?")
-    # level=logging.DEBUG
-
-    print("logger", logger)
-
     # Run the package
     subprocess.call(
         [
             "python",
             "../src/move_embargo_args.py",
-            "-f",
             temp_from,
-            "-t",
             temp_to,
+            "LATISS",
             "--embargohours",
             str(embargo_hours),
-            "--instrument",
-            "LATISS",
             "--datasettype",
             "raw",
             "--collections",
@@ -55,6 +35,8 @@ def is_it_there(
             now_time_embargo,
             "--move",
             move,
+            "--log",
+            log,
         ]
     )
     # first test stuff in the temp_to butler
@@ -131,6 +113,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         self.embargo_hours = embargo_hours
         self.ids_moved = ids_moved
         self.ids_remain = ids_remain
+        self.log = "True"
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
@@ -149,6 +132,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_from_path,
             self.temp_to_path,
             move=move,
+            log=self.log,
         )
 
     def test_main_copy(self):
@@ -165,6 +149,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_from_path,
             self.temp_to_path,
             move=move,
+            log=self.log,
         )
 
     def test_main_move_midnight(self):
@@ -196,6 +181,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_from_path,
             self.temp_to_path,
             move=move,
+            log=self.log,
         )
 
     def test_main_copy_midnight(self):
@@ -227,6 +213,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_from_path,
             self.temp_to_path,
             move=move,
+            log=self.log,
         )
 
     def test_main_move_midnight_precision(self):
@@ -258,6 +245,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_from_path,
             self.temp_to_path,
             move=move,
+            log=self.log,
         )
 
     def test_main_copy_midnight_precision(self):
@@ -289,6 +277,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_from_path,
             self.temp_to_path,
             move=move,
+            log=self.log,
         )
 
 
