@@ -13,31 +13,31 @@ jobs:
     steps:
     - name: Checkout the repo
       uses: actions/checkout@v3
-    #- name: Setup python 3.10
-    #  uses: actions/setup-python@v2
-    #  with:
-    #      python-version: "3.10"
+    - name: Setup python 3.10
+      uses: actions/setup-python@v2
+      with:
+          python-version: "3.10"
     #- name: docker build
     #  run: |
     #    docker build . -f Dockerfile
-    #- name: Install dependencies
-    #  run: |
-    #   python -m ensurepip
-    #   python -m pip install lsst-daf-butler
-    - name: install lsstinstall
+    - name: Install dependencies
       run: |
-       cd ./tests
-       curl -OL https://ls.st/lsstinstall 
-       chmod u+x lsstinstall 
-       ./lsstinstall -T "w_2023_19"
-       source loadLSST.sh
-       # mamba activate lsst-scipipe-6.0.0
-       eups distrib install -t "w_2023_19" daf_butler
-       setup -t w_2023_19 daf_butler
-       # eups distrib install -t "w_2023_19" lsst_distrib
-       python test_move_embargo_args.py
-    #- name: Test with unittest
+       python -m ensurepip
+       python -m pip install lsst-daf-butler
+    #- name: install lsstinstall
     #  run: |
-       # mamba activate lsst-scipipe-6.0.0
     #   cd ./tests
+    #   curl -OL https://ls.st/lsstinstall 
+    #   chmod u+x lsstinstall 
+    #   ./lsstinstall -T "w_2023_19"
+    #   source loadLSST.sh
+    #   # mamba activate lsst-scipipe-6.0.0
+    #   eups distrib install -t "w_2023_19" daf_butler
+    #   setup -t w_2023_19 daf_butler
+    #   # eups distrib install -t "w_2023_19" lsst_distrib
     #   python test_move_embargo_args.py
+    - name: Test with pytest
+      run: |
+       # mamba activate lsst-scipipe-6.0.0
+       cd ./tests
+       python test_move_embargo_args.py
