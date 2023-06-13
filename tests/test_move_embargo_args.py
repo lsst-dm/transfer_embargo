@@ -5,7 +5,7 @@ import os
 import tempfile
 import lsst.utils.logging
 
-# import logging
+import logging
 import sys
 
 from lsst.daf.butler import Butler
@@ -25,8 +25,15 @@ def is_it_there(
     # logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     # root_logger = logging.getLogger()
 
-    logger = lsst.utils.logging.getLogger(__name__)
+    logger = lsst.utils.logging.getLogger("lsst.daf.butler")
+    # 
+    logging.basicConfig(
+        filename="example.log", filemode="w", level=lsst.utils.logging.VERBOSE
+    )
+    
     logger.setLevel(lsst.utils.logging.VERBOSE)
+    logging.warning("is this working?")
+    # level=logging.DEBUG
 
     print("logger", logger)
 

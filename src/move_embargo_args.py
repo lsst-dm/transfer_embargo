@@ -75,7 +75,8 @@ def parse_args():
 if __name__ == "__main__":
     namespace = parse_args()
     # Define embargo and destination butler
-    butler = Butler(namespace.fromrepo, writeable=True)
+    # If move is true, then you'll need write permissions from the fromrepo (embargo)
+    butler = Butler(namespace.fromrepo, writeable=namespace.move)
     registry = butler.registry
     dest = Butler(namespace.torepo, writeable=True)
     scratch_registry = dest.registry
@@ -136,5 +137,4 @@ if __name__ == "__main__":
     )
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
-    else:
-        pass
+
