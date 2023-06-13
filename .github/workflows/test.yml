@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - main
+    - tickets/DM-39572
     tags:
     - v*
   pull_request:
@@ -13,10 +14,10 @@ jobs:
     steps:
     - name: Checkout the repo
       uses: actions/checkout@v3
-    #- name: Setup python 3.10
-    #  uses: actions/setup-python@v2
-    #  with:
-    #      python-version: "3.10"
+    - name: Setup python 3.10
+      uses: actions/setup-python@v2
+      with:
+          python-version: "3.10"
     #- name: docker build
     #  run: |
     #    docker build . -f Dockerfile
@@ -24,8 +25,9 @@ jobs:
       run: |
        python -m ensurepip
        python -m pip install lsst-daf-butler
-       # pip install flake8
-       # python -m pip install pytest
+       pip install pytest-flake8
+    #   pip install flake8
+    #   python -m pip install pytest
     #- name: install lsstinstall
     #  run: |
     #   cd ./tests

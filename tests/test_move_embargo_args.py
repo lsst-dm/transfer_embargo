@@ -3,14 +3,8 @@ import unittest
 import shutil
 import os
 import tempfile
-import lsst.utils.logging
-
-# import logging
-import sys
 
 from lsst.daf.butler import Butler
-
-# from lsst.utils.logging import VERBOSE
 
 
 def is_it_there(
@@ -23,14 +17,6 @@ def is_it_there(
     move,
     log,
 ):
-    # logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-    # root_logger = logging.getLogger()
-
-    logger = lsst.utils.logging.getLogger(__name__)
-    logger.setLevel(lsst.utils.logging.VERBOSE)
-
-    print("logger", logger)
-
     # Run the package
     subprocess.call(
         [
@@ -60,7 +46,6 @@ def is_it_there(
         dt.dataId.full["exposure"]
         for dt in registry_to.queryDatasets(datasetType=..., collections=...)
     ]
-    print(ids_in_temp_to)
     # verifying the contents of the temp_to butler
     # check that what we expect to move (ids_should_be_moved)
     # are in the temp_to repo (ids_in_temp_to)
@@ -100,12 +85,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         temp_to_path = os.path.join(temp_dir.name, "temp_test_to")
         shutil.copytree("data/test_from", temp_from_path)
         os.system("chmod u+x create_testto_butler.sh")
-        subprocess.call(
-            [
-                "./create_testto_butler.sh",
-                temp_to_path,
-            ]
-        )
+        subprocess.call(["./create_testto_butler.sh",
+                         temp_to_path,
+                        ])
         self.temp_dir = temp_dir
         self.temp_from_path = temp_from_path
         self.temp_to_path = temp_to_path
@@ -138,7 +120,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         # The above is if we are running 'move',
         # If copy, it should be both of these
         # added together
-
         is_it_there(
             embargo_hours,
             now_time_embargo,
@@ -174,7 +155,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         # The above is if we are running 'move',
         # If copy, it should be both of these
         # added together
-
         is_it_there(
             embargo_hours,
             now_time_embargo,

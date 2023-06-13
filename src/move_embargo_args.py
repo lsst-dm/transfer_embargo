@@ -125,11 +125,18 @@ if __name__ == "__main__":
         bind={"exposure_ids": after_embargo},
     ).expanded()
     print("dataid in butler:", [dt.dataId.full["exposure"] for dt in datasetRefs])
-    if namespace.log:
-        cli_log = CliLog.initLog(longlog=True)
-        CliLog.setLogLevels([("", "VERBOSE")])
+    #if namespace.log == 'True':
+    cli_log = CliLog.initLog(longlog=True)
+    CliLog.setLogLevels([(None, "DEBUG")])
     out = dest.transfer_from(
-    print("out from transfer_from", out)
+        butler,
+        source_refs=datasetRefs,
+        transfer="copy",
+        skip_missing=True,
+        register_dataset_types=True,
+        transfer_dimensions=True,
+    )
+    print('out from transfer_from', out)
     print(
         "dataid in dest:",
         [
@@ -139,4 +146,3 @@ if __name__ == "__main__":
     )
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
-
