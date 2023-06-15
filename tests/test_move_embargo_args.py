@@ -46,7 +46,6 @@ def is_it_there(
         dt.dataId.full["exposure"]
         for dt in registry_to.queryDatasets(datasetType=..., collections=...)
     ]
-    print(ids_in_temp_to)
     # verifying the contents of the temp_to butler
     # check that what we expect to move (ids_should_be_moved)
     # are in the temp_to repo (ids_in_temp_to)
@@ -85,7 +84,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         temp_from_path = os.path.join(temp_dir.name, "temp_test_from")
         temp_to_path = os.path.join(temp_dir.name, "temp_test_to")
         shutil.copytree("data/test_from", temp_from_path)
-        shutil.copytree("data/test_to", temp_to_path)
+        os.system("chmod u+x create_testto_butler.sh")
+        subprocess.call(["./create_testto_butler.sh",
+                         temp_to_path,
+                        ])
         self.temp_dir = temp_dir
         self.temp_from_path = temp_from_path
         self.temp_to_path = temp_to_path
@@ -113,7 +115,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         self.embargo_hours = embargo_hours
         self.ids_moved = ids_moved
         self.ids_remain = ids_remain
-        self.log = "True"
+        self.log = "False"
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)

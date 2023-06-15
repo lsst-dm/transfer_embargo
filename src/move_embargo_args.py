@@ -4,6 +4,7 @@ import astropy.time
 from lsst.daf.butler import Butler, Timespan
 from lsst.daf.butler.cli.cliLog import CliLog
 
+
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Transferring data from embargo butler to another butler"
@@ -13,7 +14,7 @@ def parse_args():
     parser.add_argument(
         "fromrepo",
         type=str,
-        nargs='?',
+        nargs="?",
         default="/repo/embargo",
         help="Butler Repository path from which data is transferred. Input str. Default = '/repo/embargo'",
     )
@@ -25,7 +26,7 @@ def parse_args():
     parser.add_argument(
         "instrument",
         type=str,
-        nargs='?',
+        nargs="?",
         default="LATISS",
         help="Instrument. Input str",
     )
@@ -126,8 +127,8 @@ if __name__ == "__main__":
     print("dataid in butler:", [dt.dataId.full["exposure"] for dt in datasetRefs])
     if namespace.log:
         cli_log = CliLog.initLog(longlog=True)
-        CliLog.setLogLevels([('','DEBUG')])
-    dest.transfer_from(
+        CliLog.setLogLevels([("", "VERBOSE")])
+    out = dest.transfer_from(
         butler,
         source_refs=datasetRefs,
         transfer="copy",
@@ -135,6 +136,7 @@ if __name__ == "__main__":
         register_dataset_types=True,
         transfer_dimensions=True,
     )
+    print('out from transfer_from', out)
     print(
         "dataid in dest:",
         [
