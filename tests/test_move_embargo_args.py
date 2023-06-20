@@ -83,7 +83,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         temp_dir = tempfile.TemporaryDirectory()
         temp_from_path = os.path.join(temp_dir.name, "temp_test_from")
         temp_to_path = os.path.join(temp_dir.name, "temp_test_to")
-        shutil.copytree("data/test_from", temp_from_path)
+        shutil.copytree("./data/test_from", temp_from_path)
         os.system("chmod u+x create_testto_butler.sh")
         subprocess.call(["./create_testto_butler.sh",
                          temp_to_path,
@@ -130,6 +130,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
             log=self.log,
         )
+        #os.system("sqlite3 "+self.temp_from_path+"/gen3.sqlite3")
 
     def test_main_copy(self):
         """
@@ -293,7 +294,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
             log=self.log,
         )
-
 
 if __name__ == "__main__":
     unittest.main()

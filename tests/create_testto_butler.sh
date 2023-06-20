@@ -11,3 +11,4 @@
 #run this if you need to create scratch butler
 
 butler create $1
+# butler create $2

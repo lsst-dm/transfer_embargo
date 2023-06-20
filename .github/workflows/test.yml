@@ -25,7 +25,7 @@ jobs:
       run: |
        python -m ensurepip
        python -m pip install lsst-daf-butler
-       pip install pytest-flake8
+    #   pip install pytest-flake8
     #   pip install flake8
     #   python -m pip install pytest
     #- name: install lsstinstall
@@ -44,13 +44,5 @@ jobs:
       run: |
        # mamba activate lsst-scipipe-6.0.0
        cd ./tests
-       curl -OL https://ls.st/lsstinstall 
-       chmod u+x lsstinstall 
-       ./lsstinstall -T "w_2023_19"
-       source loadLSST.sh
-       # mamba activate lsst-scipipe-6.0.0
-       eups distrib install -t "w_2023_19" daf_butler
-       setup -t w_2023_19 daf_butler
-       # eups distrib install -t "w_2023_19" lsst_distrib
        python test_move_embargo_args.py
-       # pytest test_move_embargo_args.py --log-cli-level 11
+       # pytest -s test_move_embargo_args.py --log-cli-level 11
