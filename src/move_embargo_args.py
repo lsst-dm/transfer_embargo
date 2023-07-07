@@ -82,8 +82,8 @@ if __name__ == "__main__":
     # If move is true, then you'll need write
     # permissions from the fromrepo (embargo)
     butler = Butler(namespace.fromrepo, writeable=namespace.move)
-    print('temp from path:', namespace.fromrepo)
-    print('temp to path:', namespace.torepo)
+    print("temp from path:", namespace.fromrepo)
+    print("temp to path:", namespace.torepo)
     registry = butler.registry
     dest = Butler(namespace.torepo, writeable=True)
     scratch_registry = dest.registry
@@ -126,21 +126,9 @@ if __name__ == "__main__":
         where="exposure.id IN (exposure_ids)",
         bind={"exposure_ids": after_embargo},
     ).expanded()
-    #if namespace.log == 'True':
-    cli_log = CliLog.initLog(longlog=True)
-    CliLog.setLogLevels([(None, "DEBUG")])
-    print('Butler:', butler)
-    print(
-        "Butler URI:",
-            [butler.getURI(datasetType,dataId=dt.dataId.full, collections=collections)
-            for dt in datasetRefs],
-    )
-    print(
-        "Does Butler URI exist?:",
-            [butler.getURI(datasetType,dataId=dt.dataId.full, collections=collections).exists()
-            for dt in datasetRefs],
-    )
-    print("dataid in butler:", [dt.dataId.full["exposure"] for dt in datasetRefs])
+    if namespace.log == "True":
+        cli_log = CliLog.initLog(longlog=True)
+        CliLog.setLogLevels([(None, "DEBUG")])
     out = dest.transfer_from(
         butler,
         source_refs=datasetRefs,
@@ -148,14 +136,6 @@ if __name__ == "__main__":
         skip_missing=True,
         register_dataset_types=True,
         transfer_dimensions=True,
-    )
-    print('out from transfer_from', out)
-    print(
-        "dataid in dest:",
-        [
-            dt.dataId.full["exposure"]
-            for dt in scratch_registry.queryDatasets(datasetType=..., collections=...)
-        ],
     )
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
