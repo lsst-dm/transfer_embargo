@@ -94,7 +94,20 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         self.temp_dir = temp_dir
         self.temp_from_path = temp_from_path
         self.temp_to_path = temp_to_path
+        # The above is if we are running 'move',
+        # If copy, it should be both of these
+        # added together
+        self.log = "False"
 
+    def tearDown(self):
+        shutil.rmtree(self.temp_dir.name, ignore_errors=True)
+
+    def test_main_move(self):
+        """
+        Run move_embargo_args to move some IDs from the fake_from butler
+        to the fake_to butler and test which ones moved
+        """
+        move = "True"
         now_time_embargo = "2020-03-01 23:59:59.999999"
         embargo_hours = 3827088.677299 / 3600  # hours
         # IDs that should be moved to temp_to:
@@ -110,14 +123,11 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700005,
             2020011700006,
         ]
-        # The above is if we are running 'move',
-        # If copy, it should be both of these
-        # added together
         is_it_there(
-            self.embargo_hours,
-            self.now_time_embargo,
-            self.ids_remain,
-            self.ids_moved,
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -146,14 +156,11 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700005,
             2020011700006,
         ]
-        # The above is if we are running 'move',
-        # If copy, it should be both of these
-        # added together
         is_it_there(
-            self.embargo_hours,
-            self.now_time_embargo,
-            self.ids_remain,
-            self.ids_moved,
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -166,10 +173,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         to the fake_to butler and test which ones moved
         """
         move = "True"
-        self.now_time_embargo = "2020-03-02 00:00:00.000000"
-        self.embargo_hours = 3827088.6773 / 3600  # hours
+        now_time_embargo = "2020-03-02 00:00:00.000000"
+        embargo_hours = 3827088.6773 / 3600  # hours
         # IDs that should be moved to temp_to:
-        self.ids_moved = [
+        ids_moved = [
             2019111300059,
             2019111300061,
             2020011700002,
@@ -177,15 +184,15 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700004,
         ]
         # IDs that should stay in the temp_from:
-        self.ids_remain = [
+        ids_remain = [
             2020011700005,
             2020011700006,
         ]
         is_it_there(
-            self.embargo_hours,
-            self.now_time_embargo,
-            self.ids_remain,
-            self.ids_moved,
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -198,10 +205,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         to the fake_to butler and test which ones moved
         """
         move = "False"
-        self.now_time_embargo = "2020-03-02 00:00:00.000000"
-        self.embargo_hours = 3827088.6773 / 3600  # hours
+        now_time_embargo = "2020-03-02 00:00:00.000000"
+        embargo_hours = 3827088.6773 / 3600  # hours
         # IDs that should be moved to temp_to:
-        self.ids_moved = [
+        ids_moved = [
             2019111300059,
             2019111300061,
             2020011700002,
@@ -209,15 +216,15 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700004,
         ]
         # IDs that should stay in the temp_from:
-        self.ids_remain = [
+        ids_remain = [
             2020011700005,
             2020011700006,
         ]
         is_it_there(
-            self.embargo_hours,
-            self.now_time_embargo,
-            self.ids_remain,
-            self.ids_moved,
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -230,26 +237,26 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         to the fake_to butler and test which ones moved
         """
         move = "True"
-        self.now_time_embargo = "2020-03-02 00:00:00.000000"
-        self.embargo_hours = 3827088.677301 / 3600  # hours
+        now_time_embargo = "2020-03-02 00:00:00.000000"
+        embargo_hours = 3827088.677301 / 3600  # hours
         # IDs that should be moved to temp_to:
-        self.ids_moved = [
+        ids_moved = [
             2019111300059,
             2019111300061,
             2020011700002,
             2020011700003,
         ]
         # IDs that should stay in the temp_from:
-        self.ids_remain = [
+        ids_remain = [
             2020011700004,
             2020011700005,
             2020011700006,
         ]
         is_it_there(
-            self.embargo_hours,
-            self.now_time_embargo,
-            self.ids_remain,
-            self.ids_moved,
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -262,26 +269,26 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         to the fake_to butler and test which ones moved
         """
         move = "False"
-        self.now_time_embargo = "2020-03-02 00:00:00.000000"
-        self.embargo_hours = 3827088.677301 / 3600  # hours
+        now_time_embargo = "2020-03-02 00:00:00.000000"
+        embargo_hours = 3827088.677301 / 3600  # hours
         # IDs that should be moved to temp_to:
-        self.ids_moved = [
+        ids_moved = [
             2019111300059,
             2019111300061,
             2020011700002,
             2020011700003,
         ]
         # IDs that should stay in the temp_from:
-        self.ids_remain = [
+        ids_remain = [
             2020011700004,
             2020011700005,
             2020011700006,
         ]
         is_it_there(
-            self.embargo_hours,
-            self.now_time_embargo,
-            self.ids_remain,
-            self.ids_moved,
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
