@@ -1,22 +1,9 @@
 from lsst.daf.butler import Butler
-import argparse
-
-# def parse_args():
-#     parser = argparse.ArgumentParser(
-#         description="Transferring data from main to test_from butler"
-#     )
-#     parser.add_argument(
-#         "fromrepo",
-#         type=str,
-#         help="Repository to which data is transferred. Input str",
-#     )
-#     return parser.parse_args()
 
 if __name__ == "__main__":
     # namespace = parse_args()
     butler = Butler("/repo/main")
     registry = butler.registry
-    #test_from_butler = Butler(namespace.fromrepo, writeable=True)
     test_from_butler = Butler("../../tests/data/test_from", writeable=True)
     test_from_butler_registry = test_from_butler.registry
 
@@ -42,7 +29,6 @@ if __name__ == "__main__":
         bind={"exposure_ids": exposure_ids},
     ).expanded()
 
-
     test_from_butler.transfer_from(
         butler,
         source_refs=datasetRefs,
@@ -52,10 +38,6 @@ if __name__ == "__main__":
         transfer_dimensions=True,
     )
 
-    test_datasetRefs = test_from_butler_registry.queryDatasets(datasetType=..., collections=...)
-    print(
-            "Butler URI in test_from:",
-                [test_from_butler.getURI(datasetType,dataId=dt.dataId.full, collections=collections)
-                for dt in test_datasetRefs],
-        )
-
+    test_datasetRefs = test_from_butler_registry.queryDatasets(
+        datasetType=..., collections=...
+    )
