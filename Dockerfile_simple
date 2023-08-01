@@ -1,0 +1,2 @@
+# Dockerfile
+RUN echo 'Hi its me, Im the problem its me'
