@@ -295,5 +295,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
         )
 
+
 if __name__ == "__main__":
     unittest.main()
