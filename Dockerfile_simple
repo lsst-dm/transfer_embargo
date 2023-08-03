@@ -1,2 +1,6 @@
 # Dockerfile
+COPY ./src /opt/lsst/transfer_embargo
+WORKDIR /opt/lsst/transfer_embargo
+
+FROM python:3.9
 RUN echo 'Hi its me, Im the problem its me'
