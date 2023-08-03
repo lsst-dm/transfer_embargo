@@ -21,6 +21,8 @@ jobs:
     - name: docker build
       run: |
         docker build . -f Dockerfile_simple
+    - name: Log in to Github container registry
+      run: echo "${{ secrets.GITHUB_TOKEN }}" |docker login ghcr.io -u $ --password-stdin
     - name: Install dependencies
       run: |
        python -m ensurepip
