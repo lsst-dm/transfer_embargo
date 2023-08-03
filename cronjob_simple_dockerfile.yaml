@@ -9,6 +9,31 @@ spec:
     spec:
       template:
         spec:
+          config:
+          - apiVersion: v1
+              kind: PersistentVolumeClaim
+              metadata:
+                name: sdf-group-rubin
+                namespace: devel-transfer-embargo
+              spec:
+                storageClassName: sdf-group-rubin
+                accessModes:
+                  - ReadWriteMany
+                resources:
+                  requests:
+                    storage: 1Gi
+        - apiVersion: v1
+              kind: PersistentVolumeClaim
+              metadata:
+                name: sdf-data-rubin
+                namespace: devel-transfer-embargo
+              spec:
+                storageClassName: sdf-data-rubin
+                accessModes:
+                  - ReadWriteMany
+                resources:
+                  requests:
+                    storage: 1Gi
           containers:
           - name: hello
             image: "ghcr.io/lsst-dm/transfer_embargo/Dockerfile_simple"
@@ -23,9 +48,11 @@ spec:
             - name: sdf-data-rubin
               mountPath: /sdf/data/rubin
           volumes:
-            - name: sdf-group-rubin
-              emptyDir: {}
-            - name: sdf-data-rubin
-              emptyDir: {}
+          - name: sdf-group-rubin
+          persistentVolumeClaim:
+            claimName: sdf-group-rubin
+          - name: sdf-data-rubin
+          persistentVolumeClaim:
+            claimName: sdf-data-rubin
           restartPolicy: OnFailure
 
