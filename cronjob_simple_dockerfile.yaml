@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hello
+  namespace: devel-transfer-embargo
+spec:
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hello
+            image: "ghcr.io/lsst-dm/transfer_embargo/Dockerfile_simple"
+            imagePullPolicy: IfNotPresent
+            command:
+            - /bin/sh
+            - -c
+            - date; echo Hello from the Kubernetes cluster
+            volumeMounts:
+            - name: sdf-group-rubin
+              mountPath: /sdf/group/rubin
+            - name: sdf-data-rubin
+              mountPath: /sdf/data/rubin
+          volumes:
+            - name: sdf-group-rubin
+              emptyDir: {}
+            - name: sdf-data-rubin
+              emptyDir: {}
+          restartPolicy: OnFailure
+
