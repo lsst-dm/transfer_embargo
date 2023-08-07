@@ -9,7 +9,7 @@ on:
   pull_request:
 
 env:
-  PROGRAM_NAME: embargo-butler-enqueue
+  PROGRAM_NAME: transfer-embargo
   
 jobs:
   test:

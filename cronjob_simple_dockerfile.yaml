@@ -38,7 +38,7 @@ spec:
         spec:
           containers:
             - name: transfer-embargo-container
-              image: "ghcr.io/lsst-dm/transfer_embargo/Dockerfile_simple"
+              image: "ghcr.io/lsst-dm/transfer-embargo/Dockerfile_simple"
               imagePullPolicy: IfNotPresent
               command:
                 - /bin/sh
