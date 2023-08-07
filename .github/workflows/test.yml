@@ -8,6 +8,9 @@ on:
     - v*
   pull_request:
 
+env:
+  PROGRAM_NAME: embargo-butler-enqueue
+  
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -20,9 +23,18 @@ jobs:
           python-version: "3.10"
     - name: docker build
       run: |
-        docker build . -f Dockerfile_simple
+        docker build . -f Dockerfile_simple \
+        -- tag $PROGRAM_NAME
     - name: Log in to Github container registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" |docker login ghcr.io -u $ --password-stdin
+    - name: Push images
+      run: |
+        PROGRAM_ID=ghcr.io/${{ github.repository_owner }}/$PROGRAM_NAME
+        VERSION=latest
+        echo VERSION=$VERSION
+        echo PROGRAM_ID=$PROGRAM_ID
+        docker tag $PROGRAM_NAME $PROGRAM_ID:$VERSION
+        docker push $PROGRAM_ID:$VERSION
     - name: Install dependencies
       run: |
        python -m ensurepip
