@@ -1,4 +1,8 @@
 # Dockerfile
+
+FROM lsstsqre/newinstall:latest
+USER lsst
+
 COPY ./src /opt/lsst/transfer_embargo
 WORKDIR /opt/lsst/transfer_embargo
 
@@ -10,8 +14,6 @@ FROM python:3.9
 
 
 
-FROM lsstsqre/newinstall:latest
-USER lsst
 RUN source loadLSST.bash && mamba install rucio-clients
 RUN source loadLSST.bash && eups distrib install -t "w_2023_21" obs_lsst
 
