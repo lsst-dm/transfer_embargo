@@ -33,7 +33,7 @@ jobs:
     
     - name: docker build
       run: |
-        docker build . -f Dockerfile_simple \
+        docker build . -f Dockerfile \
         --tag $PROGRAM_NAME
 
     - name: Log in to Github container registry
