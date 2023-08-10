@@ -23,4 +23,20 @@ CMD ["python", "-m", "pip", "install", "lsst-daf-butler"]
 #python -m ensurepip
 #python -m pip install lsst-daf-butler
 
-# CMD ["python", "./move_embargo_scratch.py"]
+
+# Define the environment variables
+ARG FROMREPO="/repo/embargo"
+ARG TOREPO="/repo/main"
+RUN echo "The fromrepo value is $FROMREPO, the torepo value is $TOREPO"
+ARG INSTRUMENT="LATISS"
+ARG EMBARGO_HRS=80
+ARG MOVE="True"
+
+CMD ["python", "./move_embargo_scratch.py", FROMREPO, TOREPO, INSTRUMENT, "--embargohours", EMBARGO_HRS, "--move", MOVE]
+#["python", "../src/move_embargo_args.py", temp_from, temp_to,
+#"LATISS","--embargohours", str(embargo_hours),
+#"--datasettype","raw",
+#"--collections","LATISS/raw/all",
+#"--nowtime",now_time_embargo,
+#"--move",move,
+#"--log",log]
