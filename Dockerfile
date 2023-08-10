@@ -12,10 +12,11 @@ FROM python:3.9
 
 # RUN setup lsst_distrib -t w_2023_19
 
+RUN pip install lsst-daf
 
 
-RUN source loadLSST.bash && mamba install rucio-clients
-RUN source loadLSST.bash && eups distrib install -t "w_2023_21" obs_lsst
+#RUN source loadLSST.bash && mamba install rucio-clients
+#RUN source loadLSST.bash && eups distrib install -t "w_2023_21" obs_lsst
 
 # RUN pip install -r requirements.txt
 
