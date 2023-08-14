@@ -38,7 +38,7 @@ spec:
         spec:
           containers:
             - name: transfer-embargo-container
-              image: "ghcr.io/lsst-dm/transfer-embargo:latest"
+              image: "ghcr.io/lsst-dm/transfer-embargo-helloworld:latest"
               imagePullPolicy: Always
               command:
                 - /bin/sh
