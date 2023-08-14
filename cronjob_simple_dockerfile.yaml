@@ -42,7 +42,7 @@ spec:
               imagePullPolicy: Always
               env:
               - name: NUM
-                value: 5 
+                value: "5" 
               # command:
               #   - /bin/sh
               #   - -c
