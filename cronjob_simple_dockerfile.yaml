@@ -28,7 +28,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: test-transfer-embargo
+  name: transfer-embargo-helloworld
   namespace: devel-transfer-embargo
 spec:
   schedule: "* * * * *"
