@@ -40,10 +40,13 @@ spec:
             - name: transfer-embargo-container
               image: "ghcr.io/lsst-dm/transfer-embargo-helloworld:latest"
               imagePullPolicy: Always
-              command:
-                - /bin/sh
-                - -c
-                - date; echo Hello from the Kubernetes cluster
+              env:
+              - name: NUM
+                value: 5 
+              # command:
+              #   - /bin/sh
+              #   - -c
+              #   - date; -ls; echo Hello from the Kubernetes cluster
               volumeMounts:
                 - name: sdf-group-rubin
                   mountPath: /sdf/group/rubin

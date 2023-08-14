@@ -23,8 +23,4 @@ if __name__ == "__main__":
     print("input arg: ", namespace.num)
     print("output from arg: ", simple_function(namespace.num))
     
-
-# with open('./helloworld_output.txt', 'w') as f:
-#     f.write(str(simple_function(2)))
-# f.close()
     

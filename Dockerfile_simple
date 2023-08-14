@@ -6,7 +6,9 @@ ADD helloworld.py .
 
 CMD ["python", "-m", "pip", "install", "argparse"]
 
-CMD ["python", "-u", "./helloworld.py", "--num", "4"]
+# CMD ["python", "-u", "./helloworld.py", "--num", "$NUM"]
+
+CMD ["/bin/sh", "-c", "python ./helloworld.py --num $NUM"]
 
 # CMD echo 'Hi its me, Im the problem its me'
 
