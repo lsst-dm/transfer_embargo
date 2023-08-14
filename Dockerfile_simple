@@ -4,7 +4,9 @@ FROM python:3.10
 
 ADD helloworld.py .
 
-CMD ["python", "-u", "./helloworld.py"]
+CMD ["python", "-m", "pip", "install", "argparse"]
+
+CMD ["python", "-u", "./helloworld.py", "--num", "4"]
 
 # CMD echo 'Hi its me, Im the problem its me'
 
