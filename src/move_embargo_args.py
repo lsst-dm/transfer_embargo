@@ -137,5 +137,12 @@ if __name__ == "__main__":
         register_dataset_types=True,
         transfer_dimensions=True,
     )
+    # print IDs in temp_to
+    ids_in_temp_to = [
+        dt.dataId.full["exposure"]
+        for dt in scratch_registry.queryDatasets(datasetType=..., collections=...)
+    ]
+    print(ids_in_temp_to)
+    
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
