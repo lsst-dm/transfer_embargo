@@ -12,7 +12,7 @@ FROM python:3.9
 
 # RUN setup lsst_distrib -t w_2023_19
 
-RUN pip install lsst-daf-butler tempfile 
+RUN pip install lsst-daf-butler temp 
 
 
 #RUN source loadLSST.bash && mamba install rucio-clients
