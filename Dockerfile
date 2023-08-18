@@ -26,7 +26,7 @@ RUN pip install lsst-daf-butler
 # python -m ensurepip
 # python -m pip install lsst-daf-butler
 
-ADD ./src/move_embargo_args.py .
+# ADD ./src/move_embargo_args.py .
 
 ARG FROMREPO="./tests_docker/temp_from"
 ARG TOREPO="./tests_docker/temp_to"
