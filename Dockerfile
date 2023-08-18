@@ -33,8 +33,8 @@ ARG TOREPO="./tests_docker/temp_to"
 
 RUN echo "The fromrepo value is $FROMREPO, the torepo value is $TOREPO"
 
-# ENV FROMREPO $FROMREPO
-# ENV FROMREPO $FROMREPO
+ENV FROMREPO $FROMREPO
+ENV FROMREPO $FROMREPO
 
 CMD ["/bin/sh", "-c", "mkdir $FROMREPO $TOREPO"]
 CMD ["/bin/sh", "-c", "cp -r ../tests/data/test_from $FROMREPO"]
@@ -43,13 +43,13 @@ CMD ["/bin/sh", "-c", "chmod u+x ./tests_docker/create_testto_butler.sh"]
 CMD ["/bin/sh", "-c", "./tests_docker/create_testto_butler.sh $TOREPO"]
 
 # Define the environment variables
-# ARG INSTRUMENT="LATISS"
-# ARG EMBARGO_HRS="80"
-# ARG MOVE="True"
+ARG INSTRUMENT="LATISS"
+ARG EMBARGO_HRS="80"
+ARG MOVE="True"
 
-# ENV INSTRUMENT $INSTRUMENT
-# ENV EMBARGO_HRS $EMBARGO_HRS
-# ENV MOVE $MOVE
+ENV INSTRUMENT $INSTRUMENT
+ENV EMBARGO_HRS $EMBARGO_HRS
+ENV MOVE $MOVE
 
 CMD ["/bin/sh", "-c", "python ./src/move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
 # CMD ["python", "./src/move_embargo_args.py", FROMREPO, TOREPO, INSTRUMENT, "--embargohours", EMBARGO_HRS, "--move", MOVE]
