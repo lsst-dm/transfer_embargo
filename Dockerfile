@@ -3,8 +3,8 @@
 FROM lsstsqre/newinstall:latest
 USER lsst
 
-COPY ./src /opt/lsst/transfer_embargo
-WORKDIR /opt/lsst/transfer_embargo
+# COPY ./src /opt/lsst/transfer_embargo
+# WORKDIR /opt/lsst/transfer_embargo
 
 FROM python:3.9
 
@@ -12,7 +12,7 @@ FROM python:3.9
 
 # RUN setup lsst_distrib -t w_2023_19
 
-RUN pip install lsst-daf-butler temp 
+RUN pip install lsst-daf-butler  
 
 
 # RUN source loadLSST.bash && mamba install rucio-clients
