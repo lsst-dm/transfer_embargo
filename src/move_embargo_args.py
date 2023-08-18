@@ -81,9 +81,9 @@ if __name__ == "__main__":
     # Define embargo and destination butler
     # If move is true, then you'll need write
     # permissions from the fromrepo (embargo)
-    butler = Butler(namespace.fromrepo, writeable=namespace.move)
     print("temp from path:", namespace.fromrepo)
     print("temp to path:", namespace.torepo)
+    butler = Butler(namespace.fromrepo, writeable=namespace.move)
     registry = butler.registry
     dest = Butler(namespace.torepo, writeable=True)
     scratch_registry = dest.registry
@@ -129,6 +129,14 @@ if __name__ == "__main__":
     if namespace.log == "True":
         cli_log = CliLog.initLog(longlog=True)
         CliLog.setLogLevels([(None, "DEBUG")])
+        
+    # print IDs in temp_from before transfer    
+    ids_in_temp_from = [
+        dt.dataId.full["exposure"]
+        for dt in registry.queryDatasets(datasetType=..., collections=...)
+    ]
+    print("Data Ids in temp_from before transfer: ", ids_in_temp_from)
+    
     out = dest.transfer_from(
         butler,
         source_refs=datasetRefs,
@@ -137,12 +145,20 @@ if __name__ == "__main__":
         register_dataset_types=True,
         transfer_dimensions=True,
     )
+    
+    # print IDs in temp_from after transfer    
+    ids_in_temp_from = [
+        dt.dataId.full["exposure"]
+        for dt in registry.queryDatasets(datasetType=..., collections=...)
+    ]
+    print("Data Ids in temp_from after transfer: ", ids_in_temp_from)
+    
     # print IDs in temp_to
     ids_in_temp_to = [
         dt.dataId.full["exposure"]
         for dt in scratch_registry.queryDatasets(datasetType=..., collections=...)
     ]
-    print(ids_in_temp_to)
+    print("Data Ids in temp_to: ", ids_in_temp_to)
     
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
