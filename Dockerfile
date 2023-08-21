@@ -10,6 +10,7 @@ COPY tests_docker/ /opt/lsst/transfer_embargo
 COPY tests/data/test_from/ /opt/lsst/transfer_embargo
 WORKDIR /opt/lsst/transfer_embargo
 
+RUN ls -la /opt/lsst/transfer_embargo/
 RUN ls -la /opt/lsst/transfer_embargo/src/*
 RUN ls -la /opt/lsst/transfer_embargo/tests_docker/*
 
