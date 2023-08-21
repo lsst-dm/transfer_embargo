@@ -52,7 +52,15 @@ ENV MOVE "True"
 #ENV EMBARGO_HRS $EMBARGO_HRS
 #ENV MOVE $MOVE
 
-CMD ["/bin/sh", "-c", "mkdir $FROMREPO $TOREPO; cp -r . $FROMREPO; chmod u+x create_testto_butler.sh; create_testto_butler.sh $TOREPO; python move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
+#cp -r ../tests/data/test_from $FROMREPO
+
+#mkdir $FROMREPO/LATTIS
+#cp -r LATTIS $FROMREPO/LATTIS
+#cp butler.yaml $FROMREPO
+#cp gen3.sqlite3 $FROMREPO
+
+
+CMD ["/bin/sh", "-c", "mkdir $FROMREPO $TOREPO; mkdir $FROMREPO/LATTIS; cp -r LATTIS/* $FROMREPO/LATTIS/; cp butler.yaml $FROMREPO; cp gen3.sqlite3 $FROMREPO; chmod u+x create_testto_butler.sh; create_testto_butler.sh $TOREPO; python move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
 
 # CMD ["python", "./src/move_embargo_args.py", FROMREPO, TOREPO, INSTRUMENT, "--embargohours", EMBARGO_HRS, "--move", MOVE]
 # ["python", "../src/move_embargo_args.py", temp_from, temp_to,
