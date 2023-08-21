@@ -5,14 +5,13 @@
 
 FROM python:3.11
 
-#COPY src/ /opt/lsst/transfer_embargo
-#COPY tests_docker/ /opt/lsst/transfer_embargo
-#COPY tests/data/test_from/ /opt/lsst/transfer_embargo
-#WORKDIR /opt/lsst/transfer_embargo
-WORKDIR ./
+COPY src/ /opt/lsst/transfer_embargo
+COPY tests_docker/ /opt/lsst/transfer_embargo
+COPY tests/data/test_from/ /opt/lsst/transfer_embargo
+WORKDIR /opt/lsst/transfer_embargo
 
-#RUN ls -la /opt/lsst/transfer_embargo
-RUN ls -la ./
+RUN ls -la /opt/lsst/transfer_embargo/src/*
+RUN ls -la /opt/lsst/transfer_embargo/tests_docker/*
 
 
 
@@ -29,8 +28,6 @@ RUN pip install lsst-daf-butler
 
 # RUN pip install -r requirements.txt
 
-# CMD ["python", "-m", "ensurepip"]
-# CMD ["python", "-m", "pip", "install", "lsst-daf-butler"]
 # this is from the test.yml file
 # python -m ensurepip
 # python -m pip install lsst-daf-butler
