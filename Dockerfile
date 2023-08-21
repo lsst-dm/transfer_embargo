@@ -6,7 +6,12 @@
 FROM python:3.11
 
 COPY ./src /opt/lsst/transfer_embargo
+COPY ./tests_docker /opt/lsst/transfer_embargo
+COPY ./tests/data/test_from /opt/lsst/transfer_embargo
 WORKDIR /opt/lsst/transfer_embargo
+
+
+
 
 # ADD move_embargo_scratch.py .
 
@@ -45,7 +50,7 @@ ENV INSTRUMENT $INSTRUMENT
 ENV EMBARGO_HRS $EMBARGO_HRS
 ENV MOVE $MOVE
 
-CMD ["/bin/sh", "-c", "mkdir $FROMREPO $TOREPO; cp -r ../tests/data/test_from $FROMREPO; chmod u+x ./tests_docker/create_testto_butler.sh; ./tests_docker/create_testto_butler.sh $TOREPO; python ./src/move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
+CMD ["/bin/sh", "-c", "mkdir $FROMREPO $TOREPO; cp -r ./tests/data/test_from $FROMREPO; chmod u+x ./tests_docker/create_testto_butler.sh; ./tests_docker/create_testto_butler.sh $TOREPO; python ./src/move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
 
 # CMD ["python", "./src/move_embargo_args.py", FROMREPO, TOREPO, INSTRUMENT, "--embargohours", EMBARGO_HRS, "--move", MOVE]
 # ["python", "../src/move_embargo_args.py", temp_from, temp_to,
