@@ -11,8 +11,8 @@ COPY tests/data/test_from/ /opt/lsst/transfer_embargo
 WORKDIR /opt/lsst/transfer_embargo
 
 RUN ls -la /opt/lsst/transfer_embargo/
-RUN ls -la /opt/lsst/transfer_embargo/src/*
-RUN ls -la /opt/lsst/transfer_embargo/tests_docker/*
+#RUN ls -la /opt/lsst/transfer_embargo/src/*
+#RUN ls -la /opt/lsst/transfer_embargo/tests_docker/*
 
 
 
@@ -35,8 +35,8 @@ RUN pip install lsst-daf-butler
 
 # ADD ./src/move_embargo_args.py .
 
-ENV FROMREPO "tests_docker/temp_from"
-ENV TOREPO "tests_docker/temp_to"
+ENV FROMREPO "temp_from"
+ENV TOREPO "temp_to"
 
 RUN echo "The fromrepo value is $FROMREPO, the torepo value is $TOREPO"
 
@@ -52,7 +52,7 @@ ENV MOVE "True"
 #ENV EMBARGO_HRS $EMBARGO_HRS
 #ENV MOVE $MOVE
 
-CMD ["/bin/sh", "-c", "mkdir $FROMREPO $TOREPO; cp -r tests/data/test_from $FROMREPO; chmod u+x tests_docker/create_testto_butler.sh; tests_docker/create_testto_butler.sh $TOREPO; python src/move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
+CMD ["/bin/sh", "-c", "mkdir $FROMREPO $TOREPO; cp -r . $FROMREPO; chmod u+x create_testto_butler.sh; create_testto_butler.sh $TOREPO; python move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
 
 # CMD ["python", "./src/move_embargo_args.py", FROMREPO, TOREPO, INSTRUMENT, "--embargohours", EMBARGO_HRS, "--move", MOVE]
 # ["python", "../src/move_embargo_args.py", temp_from, temp_to,
