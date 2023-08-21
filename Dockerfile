@@ -5,9 +5,9 @@
 
 FROM python:3.11
 
-COPY src /opt/lsst/transfer_embargo
-COPY tests_docker /opt/lsst/transfer_embargo
-COPY tests/data/test_from /opt/lsst/transfer_embargo
+COPY src/ /opt/lsst/transfer_embargo
+COPY tests_docker/ /opt/lsst/transfer_embargo
+COPY tests/data/test_from/ /opt/lsst/transfer_embargo
 WORKDIR /opt/lsst/transfer_embargo
 
 
