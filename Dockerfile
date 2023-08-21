@@ -3,8 +3,8 @@
 FROM lsstsqre/newinstall:latest
 USER lsst
 
-# COPY ./src /opt/lsst/transfer_embargo
-# WORKDIR /opt/lsst/transfer_embargo
+COPY ./src /opt/lsst/transfer_embargo
+WORKDIR /opt/lsst/transfer_embargo
 
 FROM python:3.9
 
