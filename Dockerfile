@@ -1,12 +1,12 @@
 # Dockerfile
 
-FROM lsstsqre/newinstall:latest
-USER lsst
+#FROM lsstsqre/newinstall:latest
+#USER lsst
+
+FROM python:3.11
 
 COPY ./src /opt/lsst/transfer_embargo
 WORKDIR /opt/lsst/transfer_embargo
-
-FROM python:3.9
 
 # ADD move_embargo_scratch.py .
 
