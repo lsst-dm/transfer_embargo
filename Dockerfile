@@ -49,8 +49,8 @@ RUN pip install lsst-daf-butler
 
 # ADD ./src/move_embargo_args.py .
 
-ENV FROMREPO "temp_from"
-ENV TOREPO "temp_to"
+ENV FROMREPO "tests_docker/temp_from"
+ENV TOREPO "tests_docker/temp_to"
 
 RUN echo "The fromrepo value is $FROMREPO, the torepo value is $TOREPO"
 
@@ -62,20 +62,17 @@ ENV INSTRUMENT "LATISS"
 ENV EMBARGO_HRS "80"
 ENV MOVE "True"
 
-#ENV INSTRUMENT $INSTRUMENT
-#ENV EMBARGO_HRS $EMBARGO_HRS
-#ENV MOVE $MOVE
 
-#cp -r ../tests/data/test_from $FROMREPO
 
-#mkdir $FROMREPO/LATTIS
-#cp -r LATTIS $FROMREPO/LATTIS
-#cp butler.yaml $FROMREPO
-#cp gen3.sqlite3 $FROMREPO
-
+# tests_docker currently only has the create_testto_butler.sh
+# file in it and needs to have all fo the files from
+# the python testing (transfer_embargo/tests/data/test_from/)
 
 # Create necessary directories and run commands
-CMD ["/bin/sh", "-c", "mkdir -p $FROMREPO/LATISS $TOREPO; cp -r src/LATISS/* $FROMREPO/LATISS/; cp tests_docker/butler.yaml $FROMREPO; cp tests_docker/gen3.sqlite3 $FROMREPO; chmod u+x create_testto_butler.sh; ./create_testto_butler.sh $TOREPO; python src/move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
+CMD ["/bin/sh", "-c", "mkdir -p $FROMREPO/LATISS $TOREPO; cp -r tests/data/test_from/* $FROMREPO/; chmod u+x tests_docker/create_testto_butler.sh; ./tests_docker/create_testto_butler.sh $TOREPO; python src/move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
+
+
+RUN ls -R /opt/lsst/transfer_embargo/tests_docker/
 
 #CMD ["/bin/sh", "-c", "mkdir $FROMREPO $TOREPO; mkdir $FROMREPO/LATISS; cp -r LATISS/* $FROMREPO/LATISS/; cp butler.yaml $FROMREPO; cp gen3.sqlite3 $FROMREPO; chmod u+x create_testto_butler.sh; create_testto_butler.sh $TOREPO; python move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
 
@@ -87,5 +84,3 @@ CMD ["/bin/sh", "-c", "mkdir -p $FROMREPO/LATISS $TOREPO; cp -r src/LATISS/* $FR
 # "--nowtime",now_time_embargo,
 # "--move",move,
 # "--log",log]
-
-# CMD ["/bin/sh", "-c", "rm -rf $FROMREPO $TOREPO"]
