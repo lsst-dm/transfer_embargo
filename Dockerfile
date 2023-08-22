@@ -5,15 +5,28 @@
 
 FROM python:3.11
 
-COPY src/ /opt/lsst/transfer_embargo
-COPY tests_docker/ /opt/lsst/transfer_embargo
-COPY tests/data/test_from/ /opt/lsst/transfer_embargo
+#COPY src/ /opt/lsst/transfer_embargo
+#COPY tests_docker/ /opt/lsst/transfer_embargo
+#COPY tests/data/test_from/ /opt/lsst/transfer_embargo
+#WORKDIR /opt/lsst/transfer_embargo
+
+#RUN ls -la /opt/lsst/transfer_embargo/
+#RUN ls -R /opt/lsst/transfer_embargo/LATISS/
+
+
+# Copy source code and test files
+COPY src/ /opt/lsst/transfer_embargo/src/
+COPY tests_docker/ /opt/lsst/transfer_embargo/tests_docker/
+COPY tests/data/test_from/ /opt/lsst/transfer_embargo/tests/data/test_from/
+
+# Set the working directory
 WORKDIR /opt/lsst/transfer_embargo
 
+# List files for debugging
 RUN ls -la /opt/lsst/transfer_embargo/
-RUN ls -R /opt/lsst/transfer_embargo/LATISS/
-#RUN ls -la /opt/lsst/transfer_embargo/src/*
-#RUN ls -la /opt/lsst/transfer_embargo/tests_docker/*
+RUN ls -R /opt/lsst/transfer_embargo/src/
+RUN ls -R /opt/lsst/transfer_embargo/tests_docker/
+RUN ls -R /opt/lsst/transfer_embargo/tests/data/test_from/
 
 
 
@@ -61,7 +74,10 @@ ENV MOVE "True"
 #cp gen3.sqlite3 $FROMREPO
 
 
-CMD ["/bin/sh", "-c", "mkdir $FROMREPO $TOREPO; mkdir $FROMREPO/LATTIS; cp -r LATTIS/* $FROMREPO/LATTIS/; cp butler.yaml $FROMREPO; cp gen3.sqlite3 $FROMREPO; chmod u+x create_testto_butler.sh; create_testto_butler.sh $TOREPO; python move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
+# Create necessary directories and run commands
+CMD ["/bin/sh", "-c", "mkdir -p $FROMREPO/LATISS $TOREPO; cp -r src/LATISS/* $FROMREPO/LATISS/; cp tests_docker/butler.yaml $FROMREPO; cp tests_docker/gen3.sqlite3 $FROMREPO; chmod u+x create_testto_butler.sh; ./create_testto_butler.sh $TOREPO; python src/move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
+
+#CMD ["/bin/sh", "-c", "mkdir $FROMREPO $TOREPO; mkdir $FROMREPO/LATISS; cp -r LATISS/* $FROMREPO/LATISS/; cp butler.yaml $FROMREPO; cp gen3.sqlite3 $FROMREPO; chmod u+x create_testto_butler.sh; create_testto_butler.sh $TOREPO; python move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
 
 # CMD ["python", "./src/move_embargo_args.py", FROMREPO, TOREPO, INSTRUMENT, "--embargohours", EMBARGO_HRS, "--move", MOVE]
 # ["python", "../src/move_embargo_args.py", temp_from, temp_to,
