@@ -15,7 +15,7 @@ FROM python:3.11
 
 
 # Copy source code and test files
-COPY src/move_embargo_args.py /opt/lsst/transfer_embargo/src/move_embargo_args.py
+COPY src/ /opt/lsst/transfer_embargo/src/
 COPY tests_docker/ /opt/lsst/transfer_embargo/tests_docker/
 COPY tests/data/test_from/ /opt/lsst/transfer_embargo/tests/data/test_from/
 
@@ -27,8 +27,6 @@ RUN ls -la /opt/lsst/transfer_embargo/
 RUN ls -R /opt/lsst/transfer_embargo/src/
 RUN ls -R /opt/lsst/transfer_embargo/tests_docker/
 RUN ls -R /opt/lsst/transfer_embargo/tests/data/test_from/
-
-
 
 
 # ADD move_embargo_scratch.py .
@@ -47,26 +45,23 @@ RUN pip install lsst-daf-butler
 # python -m ensurepip
 # python -m pip install lsst-daf-butler
 
-# ADD ./src/move_embargo_args.py .
-
-
 
 # Define the environment variables
 ENV FROMREPO "tests_docker/temp_from"
 ENV TOREPO "tests_docker/temp_to"
 ENV INSTRUMENT "LATISS"
-ENV EMBARGO_HRS "80"
+ENV NOW "2020-03-01 23:59:59.999999"
+ENV EMBARGO_HRS "3827088.677299 / 3600"
 ENV MOVE "True"
 
 RUN echo "The fromrepo value is $FROMREPO, the torepo value is $TOREPO"
 
-
-
-
 # tests_docker currently only has the create_testto_butler.sh
 # file in it and needs to have all fo the files from
 # the python testing (transfer_embargo/tests/data/test_from/)
-CMD ["/bin/sh", "-c", "mkdir -p $FROMREPO/LATISS $TOREPO; cp -r tests/data/test_from/* $FROMREPO/; chmod u+x tests_docker/create_testto_butler.sh; ./tests_docker/create_testto_butler.sh $TOREPO; python src/move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours $EMBARGO_HRS --move $MOVE"]
+
+# Create necessary directories and run commands
+CMD ["/bin/sh", "-c", "mkdir -p $FROMREPO/LATISS $TOREPO; cp -r tests/data/test_from/* $FROMREPO/; chmod u+x tests_docker/create_testto_butler.sh; ./tests_docker/create_testto_butler.sh $TOREPO; python src/move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --embargohours --nowtime $NOW $EMBARGO_HRS --move $MOVE"]
 
 
 RUN ls -R /opt/lsst/transfer_embargo/tests_docker/
