@@ -51,7 +51,7 @@ ENV FROMREPO "tests_docker/temp_from"
 ENV TOREPO "tests_docker/temp_to"
 ENV INSTRUMENT "LATISS"
 ENV NOW "2020-03-01 23:59:59.999999"
-ENV EMBARGO_HRS "3827088.677299 / 3600"
+ENV EMBARGO_HRS "1063"
 ENV MOVE "True"
 
 RUN echo "The fromrepo value is $FROMREPO, the torepo value is $TOREPO"
@@ -61,7 +61,7 @@ RUN echo "The fromrepo value is $FROMREPO, the torepo value is $TOREPO"
 # the python testing (transfer_embargo/tests/data/test_from/)
 
 # Create necessary directories and run commands
-CMD ["/bin/sh", "-c", "mkdir -p $FROMREPO/LATISS $TOREPO; cp -r tests/data/test_from/* $FROMREPO/; chmod u+x tests_docker/create_testto_butler.sh; ./tests_docker/create_testto_butler.sh $TOREPO; python src/move_embargo_args.py $FROMREPO $TOREPO $INSTRUMENT --nowtime $NOW --embargohours $EMBARGO_HRS --move $MOVE"]
+CMD ["/bin/sh", "-c", "mkdir -p $FROMREPO/LATISS $TOREPO; cp -r tests/data/test_from/* $FROMREPO/; chmod u+x tests_docker/create_testto_butler.sh; ./tests_docker/create_testto_butler.sh $TOREPO; python src/move_embargo_args.py "$FROMREPO" "$TOREPO" "$INSTRUMENT" --nowtime "$NOW" --embargohours "$EMBARGO_HRS" --move "$MOVE""]
 
 
 RUN ls -R /opt/lsst/transfer_embargo/tests_docker/

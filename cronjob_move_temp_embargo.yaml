@@ -44,11 +44,11 @@ spec:
               - name: FROMREPO
                 value: "./tests_docker/temp_from"
               - name: TOREPO
-                value:
+                value: "./tests_docker/temp_to"
               - name: INSTRUMENT
                 value: "LATISS"
               - name: EMBARGO_HRS
-                value: "3827088.677299 / 3600"
+                value: "1063"
               # - name: datasettype
               #   value: "raw"
               # - name: collection
