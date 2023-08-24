@@ -51,7 +51,7 @@ ENV FROMREPO "tests_docker/temp_from"
 ENV TOREPO "tests_docker/temp_to"
 ENV INSTRUMENT "LATISS"
 ENV NOW "2020-03-01 23:59:59.999999"
-ENV EMBARGO_HRS "1063.0"
+ENV EMBARGO_HRS 1063.0
 ENV MOVE "True"
 
 RUN echo "The fromrepo value is $FROMREPO, the torepo value is $TOREPO"
