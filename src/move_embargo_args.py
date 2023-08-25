@@ -90,10 +90,6 @@ if __name__ == "__main__":
     datasetType = namespace.datasettype
     collections = namespace.collections
     move = namespace.move
-    if move:
-        transfer = "move"
-    else:
-        transfer = "copy"
     # Dataset to move
     dataId = {"instrument": namespace.instrument}
     # Define embargo period
@@ -133,38 +129,36 @@ if __name__ == "__main__":
     if namespace.log == "True":
         cli_log = CliLog.initLog(longlog=True)
         CliLog.setLogLevels([(None, "DEBUG")])
-        
-    # print IDs in temp_from before transfer    
+
+    # print IDs in temp_from before transfer
     ids_in_temp_from = [
         dt.dataId.full["exposure"]
         for dt in registry.queryDatasets(datasetType=..., collections=...)
     ]
-    print("temp_from", registry)
     print("Data Ids in temp_from before transfer: ", ids_in_temp_from)
-    print("transfer is ", transfer)
     out = dest.transfer_from(
         butler,
         source_refs=datasetRefs,
-        transfer=transfer,
+        transfer="copy",
         skip_missing=True,
         register_dataset_types=True,
         transfer_dimensions=True,
     )
-    
-    # print IDs in temp_from after transfer    
+
+    if move == "True":
+        butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
+
+    # print IDs in temp_from after transfer
     ids_in_temp_from = [
         dt.dataId.full["exposure"]
         for dt in registry.queryDatasets(datasetType=..., collections=...)
     ]
-    
+
     print("Data Ids in temp_from after transfer: ", ids_in_temp_from)
-    
+
     # print IDs in temp_to
     ids_in_temp_to = [
         dt.dataId.full["exposure"]
         for dt in scratch_registry.queryDatasets(datasetType=..., collections=...)
     ]
     print("Data Ids in temp_to: ", ids_in_temp_to)
-    
-    if move == "True":
-        butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
