@@ -90,6 +90,10 @@ if __name__ == "__main__":
     datasetType = namespace.datasettype
     collections = namespace.collections
     move = namespace.move
+    if move:
+        transfer = "move"
+    else:
+        transfer = "copy"
     # Dataset to move
     dataId = {"instrument": namespace.instrument}
     # Define embargo period
@@ -140,7 +144,7 @@ if __name__ == "__main__":
     out = dest.transfer_from(
         butler,
         source_refs=datasetRefs,
-        transfer="copy",
+        transfer=transfer,
         skip_missing=True,
         register_dataset_types=True,
         transfer_dimensions=True,
