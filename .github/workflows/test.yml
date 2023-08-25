@@ -23,14 +23,14 @@ jobs:
       with:
           python-version: "3.10"
     
-    #- name: Install dependencies
-    #  run: |
-    #   python -m ensurepip
-    #   python -m pip install lsst-daf-butler
-    #- name: Test with pytest
-    #  run: |
-    #   cd ./tests
-    #   python test_move_embargo_args.py
+    - name: Install dependencies
+      run: |
+       python -m ensurepip
+       python -m pip install lsst-daf-butler
+    - name: Test with pytest
+      run: |
+       cd ./tests
+       python test_move_embargo_args.py
     
     - name: docker build
       # run: |
