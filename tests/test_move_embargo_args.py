@@ -62,6 +62,8 @@ def is_it_there(
     ]
     # verifying the contents of the from butler
     # if move is on, only the ids_remain should be in temp_from butler
+    print('ids_in_temp_from', ids_in_temp_from)
+    print('ids that should remain', ids_should_remain_after_move)
     if move == "True":
         # checking that everything in temp_from butler
         # is in the ids_remain list
