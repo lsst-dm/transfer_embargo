@@ -60,8 +60,10 @@ def is_it_there(
         dt.dataId.full["exposure"]
         for dt in registry_from.queryDatasets(datasetType=..., collections=...)
     ]
+    
     # verifying the contents of the from butler
     # if move is on, only the ids_remain should be in temp_from butler
+    print('temp from', temp_from, registry_from)
     print('ids_in_temp_from', ids_in_temp_from)
     print('ids that should remain', ids_should_remain_after_move)
     if move == "True":

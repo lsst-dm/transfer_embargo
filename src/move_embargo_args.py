@@ -139,8 +139,9 @@ if __name__ == "__main__":
         dt.dataId.full["exposure"]
         for dt in registry.queryDatasets(datasetType=..., collections=...)
     ]
+    print("temp_from", registry)
     print("Data Ids in temp_from before transfer: ", ids_in_temp_from)
-    
+    print("transfer is ", transfer)
     out = dest.transfer_from(
         butler,
         source_refs=datasetRefs,
@@ -155,6 +156,7 @@ if __name__ == "__main__":
         dt.dataId.full["exposure"]
         for dt in registry.queryDatasets(datasetType=..., collections=...)
     ]
+    
     print("Data Ids in temp_from after transfer: ", ids_in_temp_from)
     
     # print IDs in temp_to
