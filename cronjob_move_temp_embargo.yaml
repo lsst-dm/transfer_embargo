@@ -57,6 +57,16 @@ spec:
                 value: "2020-03-01 23:59:59.999999"
               - name: MOVE
                 value: "True"
+              - name: PGPASSWORD
+                valueFrom:
+                    secretKeyRef:
+                      name: db-env
+                      key: pg_password
+              - name: PGUSER
+                valueFrom:
+                    secretKeyRef:
+                      name: db-env
+                      key: pg_user
               # - name: log
               #   value:
               # - name: S3_ENDPOINT_URL
