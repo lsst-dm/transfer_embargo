@@ -56,19 +56,17 @@ spec:
               - name: NOW
                 value: "2020-03-01 23:59:59.999999"
               - name: MOVE
-                value: "True"
-              - name: PGPASSWORD
-                valueFrom:
-                    secretKeyRef:
-                      name: db-env
-                      key: pg_password
-              - name: PGUSER
-                valueFrom:
-                    secretKeyRef:
-                      name: db-env
-                      key: pg_user
-              # - name: log
-              #   value:
+                value: "False"
+              # - name: PGPASSWORD
+              #   valueFrom:
+              #       secretKeyRef:
+              #         name: db-env
+              #         key: pg_password
+              # - name: PGUSER
+              #   valueFrom:
+              #       secretKeyRef:
+              #         name: db-env
+              #         key: pg_user
               # - name: S3_ENDPOINT_URL
               #   value: http://s3dfrgw.slac.stanford.edu
               # - name: AWS_ACCESS_KEY_ID
