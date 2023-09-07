@@ -33,7 +33,8 @@ WORKDIR /opt/lsst/transfer_embargo
 
 # RUN setup lsst_distrib -t w_2023_19
 
-RUN pip install lsst-daf-butler  
+RUN pip install lsst-daf-butler
+RUN pip install psycopg2
 
 
 # RUN source loadLSST.bash && mamba install rucio-clients
