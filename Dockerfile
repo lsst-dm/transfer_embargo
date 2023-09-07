@@ -23,10 +23,10 @@ COPY tests/data/test_from/ /opt/lsst/transfer_embargo/tests/data/test_from/
 WORKDIR /opt/lsst/transfer_embargo
 
 # List files for debugging
-RUN ls -la /opt/lsst/transfer_embargo/
-RUN ls -R /opt/lsst/transfer_embargo/src/
-RUN ls -R /opt/lsst/transfer_embargo/tests_docker/
-RUN ls -R /opt/lsst/transfer_embargo/tests/data/test_from/
+# RUN ls -la /opt/lsst/transfer_embargo/
+# RUN ls -R /opt/lsst/transfer_embargo/src/
+# RUN ls -R /opt/lsst/transfer_embargo/tests_docker/
+# RUN ls -R /opt/lsst/transfer_embargo/tests/data/test_from/
 
 
 # ADD move_embargo_scratch.py .
@@ -61,7 +61,9 @@ RUN echo "The fromrepo value is $FROMREPO, the torepo value is $TOREPO"
 # the python testing (transfer_embargo/tests/data/test_from/)
 
 # Create necessary directories and run commands
-CMD ["/bin/sh", "-c", "mkdir -p $FROMREPO/LATISS $TOREPO; cp -r tests/data/test_from/* $FROMREPO/; chmod u+x tests_docker/create_testto_butler.sh; ./tests_docker/create_testto_butler.sh $TOREPO; python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --move \"$MOVE\""]
+# CMD ["/bin/sh", "-c", "mkdir -p $FROMREPO/LATISS $TOREPO; cp -r tests/data/test_from/* $FROMREPO/; chmod u+x tests_docker/create_testto_butler.sh; ./tests_docker/create_testto_butler.sh $TOREPO; python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --move \"$MOVE\""]
+
+CMD ["/bin/sh", "-c", "mkdir -p $TOREPO; chmod u+x tests_docker/create_testto_butler.sh; ./tests_docker/create_testto_butler.sh $TOREPO; python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --move \"$MOVE\""]
 
 
 RUN ls -R /opt/lsst/transfer_embargo/tests_docker/
