@@ -35,6 +35,7 @@ WORKDIR /opt/lsst/transfer_embargo
 
 RUN pip install lsst-daf-butler
 RUN pip install psycopg2
+RUn pip install botocore
 
 
 # RUN source loadLSST.bash && mamba install rucio-clients
