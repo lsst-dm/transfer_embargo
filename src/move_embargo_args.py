@@ -133,7 +133,9 @@ if __name__ == "__main__":
     # print IDs in temp_from before transfer
     ids_in_temp_from = [
         dt.dataId.full["exposure"]
-        for dt in registry.queryDatasets(datasetType=..., collections=...)
+        for dt in registry.queryDatasets(
+            datasetType=datasetType, collections=collections
+        )
     ]
     print("Data Ids in temp_from before transfer: ", ids_in_temp_from)
     out = dest.transfer_from(
@@ -151,7 +153,9 @@ if __name__ == "__main__":
     # print IDs in temp_from after transfer
     ids_in_temp_from = [
         dt.dataId.full["exposure"]
-        for dt in registry.queryDatasets(datasetType=..., collections=...)
+        for dt in registry.queryDatasets(
+            datasetType=datasetType, collections=collections
+        )
     ]
 
     print("Data Ids in temp_from after transfer: ", ids_in_temp_from)
@@ -159,6 +163,8 @@ if __name__ == "__main__":
     # print IDs in temp_to
     ids_in_temp_to = [
         dt.dataId.full["exposure"]
-        for dt in scratch_registry.queryDatasets(datasetType=..., collections=...)
+        for dt in scratch_registry.queryDatasets(
+            datasetType=datasetType, collections=collections
+        )
     ]
     print("Data Ids in temp_to: ", ids_in_temp_to)
