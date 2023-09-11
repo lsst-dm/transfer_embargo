@@ -106,7 +106,7 @@ if __name__ == "__main__":
     # with observation time interval: move
     # Else: don't move
     # Save data Ids of these observations into a list
-    after_embargo = [
+    outside_embargo = [
         dt.id
         for dt in registry.queryDimensionRecords(
             "exposure",
@@ -124,20 +124,11 @@ if __name__ == "__main__":
         dataId=dataId,
         collections=collections,
         where="exposure.id IN (exposure_ids)",
-        bind={"exposure_ids": after_embargo},
+        bind={"exposure_ids": outside_embargo},
     ).expanded()
     if namespace.log == "True":
         cli_log = CliLog.initLog(longlog=True)
         CliLog.setLogLevels([(None, "DEBUG")])
-
-    # print IDs in temp_from before transfer
-    ids_in_temp_from = [
-        dt.dataId.full["exposure"]
-        for dt in registry.queryDatasets(
-            datasetType=datasetType, collections=collections
-        )
-    ]
-    print("Data Ids in temp_from before transfer: ", ids_in_temp_from)
     out = dest.transfer_from(
         butler,
         source_refs=datasetRefs,
@@ -146,25 +137,5 @@ if __name__ == "__main__":
         register_dataset_types=True,
         transfer_dimensions=True,
     )
-
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
-
-    # print IDs in temp_from after transfer
-    ids_in_temp_from = [
-        dt.dataId.full["exposure"]
-        for dt in registry.queryDatasets(
-            datasetType=datasetType, collections=collections
-        )
-    ]
-
-    print("Data Ids in temp_from after transfer: ", ids_in_temp_from)
-
-    # print IDs in temp_to
-    ids_in_temp_to = [
-        dt.dataId.full["exposure"]
-        for dt in scratch_registry.queryDatasets(
-            datasetType=datasetType, collections=collections
-        )
-    ]
-    print("Data Ids in temp_to: ", ids_in_temp_to)
