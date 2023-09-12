@@ -136,8 +136,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         )
         # os.system("sqlite3 "+self.temp_from_path+"/gen3.sqlite3")
 
-
-'''
     def test_main_copy(self):
         """
         Run move_embargo_args to move some IDs from the fake_from butler
@@ -297,7 +295,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
             log=self.log,
         )
-'''
+
 
 if __name__ == "__main__":
     unittest.main()
