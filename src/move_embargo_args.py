@@ -101,10 +101,12 @@ if __name__ == "__main__":
     else:
         now = astropy.time.Time.now().tai
     # the timespan object defines a "forbidden" region of time
-    # starting at the nowtime minus the embargo period 
+    # starting at the nowtime minus the embargo period
     # and terminating in anything in the future
     # this forbidden timespan will be de-select
     # for moving any exposure that overlaps with it
+    # documentation here:
+    # https://community.lsst.org/t/constructing-a-where-for-query-dimension-records/6478
     timespan_embargo = Timespan(now - embargo_period, None)
     # The Dimensions query
     # If (now - embargo period, now) does not overlap

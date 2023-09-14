@@ -103,6 +103,100 @@ class TestMoveEmbargoArgs(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
+    def test_nothing_moves(self):
+        """
+        Nothing should move when the embargo hours falls right on
+        the oldest exposure
+        """
+        move = "True"
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 5596964.255774 / 3600.0
+        # IDs that should be moved to temp_to:
+        ids_moved = []
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+            log=self.log,
+        )
+
+    def test_after_now_01(self):
+        """
+        Verify that exposures after now are not being moved
+        when the nowtime is right in the middle of the exposures
+        """
+        move = "True"
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 0.1  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+            log=self.log,
+        )
+
+    def test_after_now_05(self):
+        """
+        Verify that
+        """
+        move = "True"
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 0.5  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            2019111300059,
+            2019111300061,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700002,
+            2020011700003,
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+            log=self.log,
+        )
+
     def test_main_move(self):
         """
         Run move_embargo_args to move some IDs from the fake_from butler
