@@ -100,7 +100,12 @@ if __name__ == "__main__":
         now = astropy.time.Time(namespace.nowtime, scale="tai", format="iso")
     else:
         now = astropy.time.Time.now().tai
-    timespan_embargo = Timespan(now - embargo_period, now)
+    # the timespan object defines a "forbidden" region of time
+    # starting at the nowtime minus the embargo period 
+    # and terminating in anything in the future
+    # this forbidden timespan will be de-select
+    # for moving any exposure that overlaps with it
+    timespan_embargo = Timespan(now - embargo_period, None)
     # The Dimensions query
     # If (now - embargo period, now) does not overlap
     # with observation time interval: move
