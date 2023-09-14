@@ -133,6 +133,11 @@ if __name__ == "__main__":
         where="exposure.id IN (exposure_ids)",
         bind={"exposure_ids": outside_embargo},
     ).expanded()
+    ids_to_move = [
+        dt.dataId.full["exposure"]
+        for dt in datasetRefs
+    ]
+    print("ids to move: ", ids_to_move)
     if namespace.log == "True":
         cli_log = CliLog.initLog(longlog=True)
         CliLog.setLogLevels([(None, "DEBUG")])
@@ -144,5 +149,10 @@ if __name__ == "__main__":
         register_dataset_types=True,
         transfer_dimensions=True,
     )
+    ids_moved = [
+        dt.dataId.full["exposure"]
+        for dt in scratch_registry.queryDatasets(datasetType=datasetType, collections=collections)
+    ]
+    print("ids moved: ", ids_moved)
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
