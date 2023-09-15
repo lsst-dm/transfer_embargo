@@ -100,11 +100,12 @@ if __name__ == "__main__":
         now = astropy.time.Time.now().tai
 
     if namespace.log == "True":
+        import logging
         CliLog.initLog(longlog=True)
-        #CliLog.setLogLevels([(None, "INFO")])
-        #logger.info("to path: %s", namespace.torepo)
-        logging.info("from path: %s", namespace.fromrepo)
-        logging.info("to path: %s", namespace.torepo)
+        logger = logging.getLogger("lsst.transfer.embargo")
+        #logger.info("Some log message")
+        logger.info("from path: %s", namespace.fromrepo)
+        logger.info("to path: %s", namespace.torepo)
     # the timespan object defines a "forbidden" region of time
     # starting at the nowtime minus the embargo period
     # and terminating in anything in the future
