@@ -81,8 +81,6 @@ if __name__ == "__main__":
     # Define embargo and destination butler
     # If move is true, then you'll need write
     # permissions from the fromrepo (embargo)
-    print("temp from path:", namespace.fromrepo)
-    print("temp to path:", namespace.torepo)
     butler = Butler(namespace.fromrepo, writeable=namespace.move)
     registry = butler.registry
     dest = Butler(namespace.torepo, writeable=True)
@@ -100,6 +98,14 @@ if __name__ == "__main__":
         now = astropy.time.Time(namespace.nowtime, scale="tai", format="iso")
     else:
         now = astropy.time.Time.now().tai
+
+    if namespace.log == "True":
+        cli_log = CliLog.initLog(longlog=True)
+        CliLog.setLogLevels([(None, "DEBUG")])
+    # print("temp from path:", namespace.fromrepo)
+    # print("temp to path:", namespace.torepo)
+    cli_log.info("from path: ", namespace.fromrepo)
+    cli_log.info("to path: ", namespace.torepo)
     # the timespan object defines a "forbidden" region of time
     # starting at the nowtime minus the embargo period
     # and terminating in anything in the future
@@ -133,14 +139,9 @@ if __name__ == "__main__":
         where="exposure.id IN (exposure_ids)",
         bind={"exposure_ids": outside_embargo},
     ).expanded()
-    ids_to_move = [
-        dt.dataId.full["exposure"]
-        for dt in datasetRefs
-    ]
-    print("ids to move: ", ids_to_move)
-    if namespace.log == "True":
-        cli_log = CliLog.initLog(longlog=True)
-        CliLog.setLogLevels([(None, "DEBUG")])
+    ids_to_move = [dt.dataId.full["exposure"] for dt in datasetRefs]
+    cli_log.info("ids to move: ", ids_to_move)
+    # print("ids to move: ", ids_to_move)
     out = dest.transfer_from(
         butler,
         source_refs=datasetRefs,
@@ -151,8 +152,11 @@ if __name__ == "__main__":
     )
     ids_moved = [
         dt.dataId.full["exposure"]
-        for dt in scratch_registry.queryDatasets(datasetType=datasetType, collections=collections)
+        for dt in scratch_registry.queryDatasets(
+            datasetType=datasetType, collections=collections
+        )
     ]
-    print("ids moved: ", ids_moved)
+    cli_log.info("ids moved: ", ids_moved)
+    # print("ids moved: ", ids_moved)
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
