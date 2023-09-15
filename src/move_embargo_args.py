@@ -100,10 +100,11 @@ if __name__ == "__main__":
         now = astropy.time.Time.now().tai
 
     if namespace.log == "True":
-        cli_log = CliLog.initLog(longlog=True)
-        CliLog.setLogLevels([(None, "INFO")])
-        cli_log.info("from path: ", namespace.fromrepo)
-        cli_log.info("to path: ", namespace.torepo)
+        CliLog.initLog(longlog=True)
+        #CliLog.setLogLevels([(None, "INFO")])
+        #logger.info("to path: %s", namespace.torepo)
+        logging.info("from path: %s", namespace.fromrepo)
+        logging.info("to path: %s", namespace.torepo)
     # the timespan object defines a "forbidden" region of time
     # starting at the nowtime minus the embargo period
     # and terminating in anything in the future
@@ -138,9 +139,12 @@ if __name__ == "__main__":
         bind={"exposure_ids": outside_embargo},
     ).expanded()
     if namespace.log == "True":
-        ids_to_move = [dt.dataId.full["exposure"] for dt in datasetRefs]
+        ids_to_move = [
+        dt.dataId.full["exposure"]
+        for dt in datasetRefs
+        ]
         cli_log.info("ids to move: ", ids_to_move)
-    # print("ids to move: ", ids_to_move)
+    #print("ids to move: ", ids_to_move)
     out = dest.transfer_from(
         butler,
         source_refs=datasetRefs,
@@ -152,11 +156,9 @@ if __name__ == "__main__":
     if namespace.log == "True":
         ids_moved = [
             dt.dataId.full["exposure"]
-            for dt in scratch_registry.queryDatasets(
-                datasetType=datasetType, collections=collections
-            )
+            for dt in scratch_registry.queryDatasets(datasetType=datasetType, collections=collections)
         ]
         cli_log.info("ids moved: ", ids_moved)
-        # print("ids moved: ", ids_moved)
+        #print("ids moved: ", ids_moved)
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
