@@ -56,6 +56,7 @@ ENV INSTRUMENT "LATISS"
 ENV NOW "2020-03-01 23:59:59.999999"
 ENV EMBARGO_HRS 1063.08018813861
 ENV MOVE "True"
+ENV LOG "True"
 
 RUN echo "The fromrepo value is $FROMREPO, the torepo value is $TOREPO"
 
@@ -68,7 +69,7 @@ RUN echo "The fromrepo value is $FROMREPO, the torepo value is $TOREPO"
 
 # CMD ["/bin/sh", "-c", "mkdir -p $TOREPO; chmod u+x tests_docker/create_testto_butler.sh; ./tests_docker/create_testto_butler.sh $TOREPO; python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --move \"$MOVE\""]
 
-CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --move \"$MOVE\""]
+CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --move \"$MOVE\" --log \"$LOG\""]
 
 
 RUN ls -R /opt/lsst/transfer_embargo/tests_docker/
