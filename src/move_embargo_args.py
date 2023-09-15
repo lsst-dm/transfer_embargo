@@ -3,6 +3,7 @@ import argparse
 import astropy.time
 from lsst.daf.butler import Butler, Timespan
 from lsst.daf.butler.cli.cliLog import CliLog
+import logging
 
 
 def parse_args():
@@ -100,10 +101,8 @@ if __name__ == "__main__":
         now = astropy.time.Time.now().tai
 
     if namespace.log == "True":
-        import logging
         CliLog.initLog(longlog=True)
         logger = logging.getLogger("lsst.transfer.embargo")
-        #logger.info("Some log message")
         logger.info("from path: %s", namespace.fromrepo)
         logger.info("to path: %s", namespace.torepo)
     # the timespan object defines a "forbidden" region of time
@@ -140,12 +139,8 @@ if __name__ == "__main__":
         bind={"exposure_ids": outside_embargo},
     ).expanded()
     if namespace.log == "True":
-        ids_to_move = [
-        dt.dataId.full["exposure"]
-        for dt in datasetRefs
-        ]
-        cli_log.info("ids to move: ", ids_to_move)
-    #print("ids to move: ", ids_to_move)
+        ids_to_move = [dt.dataId.full["exposure"] for dt in datasetRefs]
+        logger.info("ids to move: %s", ids_to_move)
     out = dest.transfer_from(
         butler,
         source_refs=datasetRefs,
@@ -157,9 +152,10 @@ if __name__ == "__main__":
     if namespace.log == "True":
         ids_moved = [
             dt.dataId.full["exposure"]
-            for dt in scratch_registry.queryDatasets(datasetType=datasetType, collections=collections)
+            for dt in scratch_registry.queryDatasets(
+                datasetType=datasetType, collections=collections
+            )
         ]
-        cli_log.info("ids moved: ", ids_moved)
-        #print("ids moved: ", ids_moved)
+        logger.info("ids moved: %s", ids_moved)
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
