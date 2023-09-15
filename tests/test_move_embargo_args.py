@@ -98,7 +98,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         # The above is if we are running 'move',
         # If copy, it should be both of these
         # added together
-        self.log = "False"
+        self.log = "True"
 
     def tearDown(self):
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
