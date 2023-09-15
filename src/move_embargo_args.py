@@ -101,11 +101,9 @@ if __name__ == "__main__":
 
     if namespace.log == "True":
         cli_log = CliLog.initLog(longlog=True)
-        CliLog.setLogLevels([(None, "DEBUG")])
-    # print("temp from path:", namespace.fromrepo)
-    # print("temp to path:", namespace.torepo)
-    cli_log.info("from path: ", namespace.fromrepo)
-    cli_log.info("to path: ", namespace.torepo)
+        CliLog.setLogLevels([(None, "INFO")])
+        cli_log.info("from path: ", namespace.fromrepo)
+        cli_log.info("to path: ", namespace.torepo)
     # the timespan object defines a "forbidden" region of time
     # starting at the nowtime minus the embargo period
     # and terminating in anything in the future
@@ -139,8 +137,9 @@ if __name__ == "__main__":
         where="exposure.id IN (exposure_ids)",
         bind={"exposure_ids": outside_embargo},
     ).expanded()
-    ids_to_move = [dt.dataId.full["exposure"] for dt in datasetRefs]
-    cli_log.info("ids to move: ", ids_to_move)
+    if namespace.log == "True":
+        ids_to_move = [dt.dataId.full["exposure"] for dt in datasetRefs]
+        cli_log.info("ids to move: ", ids_to_move)
     # print("ids to move: ", ids_to_move)
     out = dest.transfer_from(
         butler,
@@ -150,13 +149,14 @@ if __name__ == "__main__":
         register_dataset_types=True,
         transfer_dimensions=True,
     )
-    ids_moved = [
-        dt.dataId.full["exposure"]
-        for dt in scratch_registry.queryDatasets(
-            datasetType=datasetType, collections=collections
-        )
-    ]
-    cli_log.info("ids moved: ", ids_moved)
-    # print("ids moved: ", ids_moved)
+    if namespace.log == "True":
+        ids_moved = [
+            dt.dataId.full["exposure"]
+            for dt in scratch_registry.queryDatasets(
+                datasetType=datasetType, collections=collections
+            )
+        ]
+        cli_log.info("ids moved: ", ids_moved)
+        # print("ids moved: ", ids_moved)
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
