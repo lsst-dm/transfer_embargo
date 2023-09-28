@@ -109,7 +109,7 @@ if __name__ == "__main__":
     # starting at the nowtime minus the embargo period
     # and terminating in anything in the future
     # this forbidden timespan will be de-select
-    # for moving any exposure that overlaps with it
+    # any exposure that overlaps with it
     # documentation here:
     # https://community.lsst.org/t/constructing-a-where-for-query-dimension-records/6478
     timespan_embargo = Timespan(now - embargo_period, None)
@@ -147,13 +147,10 @@ if __name__ == "__main__":
         transfer_dimensions=True,
     )
     datasetRefs_moved = prompt_registry.queryDatasets(
-                datasetType=datasetType, collections=collections
-            )
+        datasetType=datasetType, collections=collections
+    )
     if namespace.log == "True":
-        ids_moved = [
-            dt.dataId.full["exposure"]
-            for dt in datasetRefs_moved
-        ]
+        ids_moved = [dt.dataId.full["exposure"] for dt in datasetRefs_moved]
         logger.info("ids moved: %s", ids_moved)
     if move == "True":
         butler.pruneDatasets(refs=datasetRefs_moved, unstore=True, purge=True)
