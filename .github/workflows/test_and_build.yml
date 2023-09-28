@@ -3,14 +3,12 @@ on:
   push:
     branches:
     - main
-    - tickets/DM-40268
     tags:
     - v*
   pull_request:
 
 env:
   PROGRAM_NAME: transfer-embargo
-  # PROGRAM_NAME: transfer-embargo-helloworld
   
 jobs:
   test:
@@ -18,36 +16,35 @@ jobs:
     steps:
     - name: Checkout the repo
       uses: actions/checkout@v3
-    - name: Setup python 3.10
-      uses: actions/setup-python@v2
+    - name: Setup python 3.11
+      uses: actions/setup-python@v4
       with:
-          python-version: "3.10"
-    
+          python-version: "3.11"
     - name: Install dependencies
       run: |
        python -m ensurepip
        python -m pip install lsst-daf-butler
-    - name: Test with pytest
+    - name: Run tests
       run: |
        cd ./tests
        python test_move_embargo_args.py
-    
     - name: docker build
-      # run: |
-      #   docker build . -f Dockerfile_simple \
-      #   --tag $PROGRAM_NAME
       run: |
-        docker build . -f Dockerfile \
+        docker build . \
         --tag $PROGRAM_NAME
-
     - name: Log in to Github container registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" |docker login ghcr.io -u $ --password-stdin
     - name: Push images
       run: |
         PROGRAM_ID=ghcr.io/${{ github.repository_owner }}/$PROGRAM_NAME
-        VERSION=latest
+        if [[ "${{ github.ref }}" == "refs/pull/"* ]]; then
+          VERSION=$(echo "${{ github.head_ref }}" | sed -e 's|.*/||')
+        elif [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
+          VERSION=$(echo "${{ github.ref_name }}" | sed -e 's|^v||')
+        else
+          VERSION=latest
+        fi
         echo VERSION=$VERSION
         echo PROGRAM_ID=$PROGRAM_ID
         docker tag $PROGRAM_NAME $PROGRAM_ID:$VERSION
         docker push $PROGRAM_ID:$VERSION
-
