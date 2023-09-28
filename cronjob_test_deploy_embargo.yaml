@@ -1,3 +1,6 @@
+# This file is a test deployment of the cronjob
+# the full deployment can be found:
+# https://github.com/slaclab/usdf-embargo-deploy/tree/u/beckynevin/transfer-embargo-deploy/kubernetes/overlays/summit
 # ---
 # apiVersion: v1
 # kind: PersistentVolumeClaim
@@ -92,5 +95,3 @@ spec:
               persistentVolumeClaim:
                 claimName: sdf-data-rubin
           restartPolicy: OnFailure
-
-
