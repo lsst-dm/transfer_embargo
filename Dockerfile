@@ -2,6 +2,7 @@
 FROM python:3.11
 
 # Copy source code and test files
+COPY requirements.txt /opt/lsst/transfer_embargo/
 COPY src/ /opt/lsst/transfer_embargo/src/
 COPY tests_docker/ /opt/lsst/transfer_embargo/tests_docker/
 
