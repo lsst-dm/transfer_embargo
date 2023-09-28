@@ -1,0 +1,4 @@
+lsst-daf-butler
+psycopg2
+botocore
+boto3

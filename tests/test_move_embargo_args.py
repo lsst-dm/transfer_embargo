@@ -60,6 +60,7 @@ def is_it_there(
         dt.dataId.full["exposure"]
         for dt in registry_from.queryDatasets(datasetType=..., collections=...)
     ]
+
     # verifying the contents of the from butler
     # if move is on, only the ids_remain should be in temp_from butler
     if move == "True":
@@ -80,6 +81,10 @@ def is_it_there(
 
 class TestMoveEmbargoArgs(unittest.TestCase):
     def setUp(self):
+        """
+        Performs the setup necessary to run
+        all tests
+        """
         temp_dir = tempfile.TemporaryDirectory()
         temp_from_path = os.path.join(temp_dir.name, "temp_test_from")
         temp_to_path = os.path.join(temp_dir.name, "temp_test_to")
@@ -97,10 +102,109 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         # The above is if we are running 'move',
         # If copy, it should be both of these
         # added together
-        self.log = "False"
+        self.log = "True"
 
     def tearDown(self):
+        """
+        Removes all test files created by tests
+        """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
+
+    def test_nothing_moves(self):
+        """
+        Nothing should move when the embargo hours falls right on
+        the oldest exposure
+        """
+        move = "True"
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 5596964.255774 / 3600.0
+        # IDs that should be moved to temp_to:
+        ids_moved = []
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+            log=self.log,
+        )
+
+    def test_after_now_01(self):
+        """
+        Verify that exposures after now are not being moved
+        when the nowtime is right in the middle of the exposures
+        """
+        move = "True"
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 0.1  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+            log=self.log,
+        )
+
+    def test_after_now_05(self):
+        """
+        Verify that exposures after now are not being moved
+        when the nowtime is right in the middle of the exposures
+        for a slightly longer embargo period (0.5 hours)
+        """
+        move = "True"
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 0.5  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            2019111300059,
+            2019111300061,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700002,
+            2020011700003,
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+            log=self.log,
+        )
 
     def test_main_move(self):
         """
@@ -133,7 +237,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
             log=self.log,
         )
-        # os.system("sqlite3 "+self.temp_from_path+"/gen3.sqlite3")
 
     def test_main_copy(self):
         """

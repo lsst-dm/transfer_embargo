@@ -3,6 +3,7 @@ import argparse
 import astropy.time
 from lsst.daf.butler import Butler, Timespan
 from lsst.daf.butler.cli.cliLog import CliLog
+import logging
 
 
 def parse_args():
@@ -82,11 +83,9 @@ if __name__ == "__main__":
     # If move is true, then you'll need write
     # permissions from the fromrepo (embargo)
     butler = Butler(namespace.fromrepo, writeable=namespace.move)
-    print("temp from path:", namespace.fromrepo)
-    print("temp to path:", namespace.torepo)
     registry = butler.registry
     dest = Butler(namespace.torepo, writeable=True)
-    scratch_registry = dest.registry
+    prompt_registry = dest.registry
     datasetType = namespace.datasettype
     collections = namespace.collections
     move = namespace.move
@@ -100,13 +99,26 @@ if __name__ == "__main__":
         now = astropy.time.Time(namespace.nowtime, scale="tai", format="iso")
     else:
         now = astropy.time.Time.now().tai
-    timespan_embargo = Timespan(now - embargo_period, now)
+
+    if namespace.log == "True":
+        CliLog.initLog(longlog=True)
+        logger = logging.getLogger("lsst.transfer.embargo")
+        logger.info("from path: %s", namespace.fromrepo)
+        logger.info("to path: %s", namespace.torepo)
+    # the timespan object defines a "forbidden" region of time
+    # starting at the nowtime minus the embargo period
+    # and terminating in anything in the future
+    # this forbidden timespan will be de-select
+    # any exposure that overlaps with it
+    # documentation here:
+    # https://community.lsst.org/t/constructing-a-where-for-query-dimension-records/6478
+    timespan_embargo = Timespan(now - embargo_period, None)
     # The Dimensions query
     # If (now - embargo period, now) does not overlap
     # with observation time interval: move
     # Else: don't move
     # Save data Ids of these observations into a list
-    after_embargo = [
+    outside_embargo = [
         dt.id
         for dt in registry.queryDimensionRecords(
             "exposure",
@@ -124,11 +136,8 @@ if __name__ == "__main__":
         dataId=dataId,
         collections=collections,
         where="exposure.id IN (exposure_ids)",
-        bind={"exposure_ids": after_embargo},
+        bind={"exposure_ids": outside_embargo},
     ).expanded()
-    if namespace.log == "True":
-        cli_log = CliLog.initLog(longlog=True)
-        CliLog.setLogLevels([(None, "DEBUG")])
     out = dest.transfer_from(
         butler,
         source_refs=datasetRefs,
@@ -137,5 +146,11 @@ if __name__ == "__main__":
         register_dataset_types=True,
         transfer_dimensions=True,
     )
+    datasetRefs_moved = prompt_registry.queryDatasets(
+        datasetType=datasetType, collections=collections
+    )
+    if namespace.log == "True":
+        ids_moved = [dt.dataId.full["exposure"] for dt in datasetRefs_moved]
+        logger.info("ids moved: %s", ids_moved)
     if move == "True":
-        butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
+        butler.pruneDatasets(refs=datasetRefs_moved, unstore=True, purge=True)
