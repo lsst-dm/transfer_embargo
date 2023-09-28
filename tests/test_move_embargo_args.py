@@ -81,6 +81,10 @@ def is_it_there(
 
 class TestMoveEmbargoArgs(unittest.TestCase):
     def setUp(self):
+        """
+        Performs the setup necessary to run
+        all tests
+        """
         temp_dir = tempfile.TemporaryDirectory()
         temp_from_path = os.path.join(temp_dir.name, "temp_test_from")
         temp_to_path = os.path.join(temp_dir.name, "temp_test_to")
@@ -101,6 +105,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         self.log = "True"
 
     def tearDown(self):
+        """
+        Removes all test files created by tests
+        """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
     def test_nothing_moves(self):
@@ -168,7 +175,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     def test_after_now_05(self):
         """
-        Verify that
+        Verify that exposures after now are not being moved
+        when the nowtime is right in the middle of the exposures
+        for a slightly longer embargo period (0.5 hours)
         """
         move = "True"
         now_time_embargo = "2020-01-17 16:55:11.322700"
@@ -228,7 +237,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
             log=self.log,
         )
-        # os.system("sqlite3 "+self.temp_from_path+"/gen3.sqlite3")
 
     def test_main_copy(self):
         """
