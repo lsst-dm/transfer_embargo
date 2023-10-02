@@ -85,7 +85,7 @@ if __name__ == "__main__":
     butler = Butler(namespace.fromrepo, writeable=namespace.move)
     registry = butler.registry
     dest = Butler(namespace.torepo, writeable=True)
-    prompt_registry = dest.registry
+    scratch_registry = dest.registry
     datasetType = namespace.datasettype
     collections = namespace.collections
     move = namespace.move
@@ -109,7 +109,7 @@ if __name__ == "__main__":
     # starting at the nowtime minus the embargo period
     # and terminating in anything in the future
     # this forbidden timespan will be de-select
-    # any exposure that overlaps with it
+    # for moving any exposure that overlaps with it
     # documentation here:
     # https://community.lsst.org/t/constructing-a-where-for-query-dimension-records/6478
     timespan_embargo = Timespan(now - embargo_period, None)
@@ -118,39 +118,79 @@ if __name__ == "__main__":
     # with observation time interval: move
     # Else: don't move
     # Save data Ids of these observations into a list
-    outside_embargo = [
-        dt.id
-        for dt in registry.queryDimensionRecords(
-            "exposure",
+
+    if any(
+        dim in ["exposure", "visit"]
+        for dim in [
+            d.name for d in registry.queryDatasetTypes(datasetType)[0].dimensions
+        ]
+    ):
+        outside_embargo = [
+            dt.id
+            for dt in registry.queryDimensionRecords(
+                "exposure",
+                dataId=dataId,
+                datasets=datasetType,
+                collections=collections,
+                where="NOT exposure.timespan OVERLAPS\
+                                                        timespan_embargo",
+                bind={"timespan_embargo": timespan_embargo},
+            )
+        ]
+        # Query the DataIds after embargo period
+        datasetRefs = registry.queryDatasets(
+            datasetType,
             dataId=dataId,
-            datasets=datasetType,
             collections=collections,
-            where="NOT exposure.timespan OVERLAPS\
-                                                    timespan_embargo",
-            bind={"timespan_embargo": timespan_embargo},
+            where="exposure.id IN (exposure_ids)",
+            bind={"exposure_ids": outside_embargo},
+        ).expanded()
+
+        if namespace.log == "True":
+            ids_to_move = [dt.dataId.full["exposure"] for dt in datasetRefs]
+            logger.info("ids to move: %s", ids_to_move)
+        out = dest.transfer_from(
+            butler,
+            source_refs=datasetRefs,
+            transfer="copy",
+            skip_missing=True,
+            register_dataset_types=True,
+            transfer_dimensions=True,
         )
-    ]
-    # Query the DataIds after embargo period
-    datasetRefs = registry.queryDatasets(
-        datasetType,
-        dataId=dataId,
-        collections=collections,
-        where="exposure.id IN (exposure_ids)",
-        bind={"exposure_ids": outside_embargo},
-    ).expanded()
-    out = dest.transfer_from(
-        butler,
-        source_refs=datasetRefs,
-        transfer="copy",
-        skip_missing=True,
-        register_dataset_types=True,
-        transfer_dimensions=True,
-    )
-    datasetRefs_moved = prompt_registry.queryDatasets(
-        datasetType=datasetType, collections=collections
-    )
-    if namespace.log == "True":
-        ids_moved = [dt.dataId.full["exposure"] for dt in datasetRefs_moved]
-        logger.info("ids moved: %s", ids_moved)
+        if namespace.log == "True":
+            ids_moved = [
+                dt.dataId.full["exposure"]
+                for dt in scratch_registry.queryDatasets(
+                    datasetType=datasetType, collections=collections
+                )
+            ]
+            logger.info("ids moved: %s", ids_moved)
+    else:
+        datasetRefs = registry.queryDatasets(
+            datasetType=datasetType,
+            collections=collections,
+            where="ingest_date <= timespan_embargo_begin",
+            bind={"timespan_embargo_begin": timespan_embargo.begin},
+        )
+        if namespace.log == "True":
+            ids_to_move = [dt.id for dt in datasetRefs]
+            logger.info("ids to move: %s", ids_to_move)
+        out = dest.transfer_from(
+            butler,
+            source_refs=datasetRefs,
+            transfer="copy",
+            skip_missing=True,
+            register_dataset_types=True,
+            transfer_dimensions=True,
+        )
+        if namespace.log == "True":
+            ids_moved = [
+                dt.id
+                for dt in scratch_registry.queryDatasets(
+                    datasetType=datasetType, collections=collections
+                )
+            ]
+            logger.info("ids moved: %s", ids_moved)
+
     if move == "True":
-        butler.pruneDatasets(refs=datasetRefs_moved, unstore=True, purge=True)
+        butler.pruneDatasets(refs=datasetRefs, unstore=True, purge=True)
