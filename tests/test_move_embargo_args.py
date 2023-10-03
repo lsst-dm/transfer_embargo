@@ -16,6 +16,9 @@ def is_it_there(
     temp_to,
     move,
     log,
+    datasettype: str = "raw",
+    collections: str = "LATISS/raw/all",
+    
 ):
     # Run the package
     subprocess.call(
@@ -28,9 +31,11 @@ def is_it_there(
             "--embargohours",
             str(embargo_hours),
             "--datasettype",
-            "raw",
+            #"raw",
+            datasettype,
             "--collections",
-            "LATISS/raw/all",
+            #"LATISS/raw/all",
+            collections,
             "--nowtime",
             now_time_embargo,
             "--move",
@@ -79,6 +84,7 @@ def is_it_there(
                 {temp_from} or {temp_to} repo but it isn't"
 
 
+
 class TestMoveEmbargoArgs(unittest.TestCase):
     def setUp(self):
         """
@@ -110,6 +116,43 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
+    # test the other datatypes:
+    # first goodseeingdeepcoadd
+    def test_goodseeingdeepcoadd(self):
+        """
+        Run move_embargo_args to move a different datatype.
+        """
+        move = "True"
+        now_time_embargo = ""
+        embargo_hours =   # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+            log=self.log,
+            datasettype="goodseeingdeepcoadd",
+            collections="LATISS/raw/all",
+        )
+
+    # next test calexp are moved
+    
     def test_nothing_moves(self):
         """
         Nothing should move when the embargo hours falls right on
