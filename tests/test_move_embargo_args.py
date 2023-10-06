@@ -47,10 +47,21 @@ def is_it_there(
     # first test stuff in the temp_to butler
     butler_to = Butler(temp_to)
     registry_to = butler_to.registry
-    ids_in_temp_to = [
-        dt.dataId.full["exposure"]
-        for dt in registry_to.queryDatasets(datasetType=..., collections=...)
-    ]
+    if any(
+        dim in ["exposure", "visit"]
+        for dim in [
+            d.name for d in registry.queryDatasetTypes(datasettype)[0].dimensions
+        ]
+    ):
+        ids_in_temp_to = [
+            dt.dataId.full["exposure"]
+            for dt in registry_to.queryDatasets(datasetType=..., collections=...)
+        ]
+    else:
+        datasetRefs = registry_to.queryDatasets(
+            datasetType=datasettype,
+            collections=collections)
+        ids_in_temp_to = [dt.id for dt in datasetRefs]
     # verifying the contents of the temp_to butler
     # check that what we expect to move (ids_should_be_moved)
     # are in the temp_to repo (ids_in_temp_to)
