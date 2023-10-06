@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - main
+    - issue/failing_test_workflow_dockerfile
     tags:
     - v*
   pull_request:
