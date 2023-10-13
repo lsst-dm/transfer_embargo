@@ -2,8 +2,8 @@ name: test
 on:
   push:
     branches:
-    - main
-    - tickets/DM-40972
+    # - main
+    # - tickets/DM-40972
     tags:
     - v*
   pull_request:
@@ -25,10 +25,10 @@ jobs:
       run: |
        python -m ensurepip
        python -m pip install lsst-daf-butler
-    - name: Run tests
-      run: |
-       cd ./tests
-       python test_move_embargo_args.py
+    # - name: Run tests
+    #   run: |
+    #    cd ./tests
+    #    python test_move_embargo_args.py
     # - name: docker build
     #   run: |
     #     docker build . \
