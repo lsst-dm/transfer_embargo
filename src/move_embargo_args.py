@@ -4,6 +4,7 @@ import astropy.time
 from lsst.daf.butler import Butler, Timespan
 from lsst.daf.butler.cli.cliLog import CliLog
 import logging
+import json
 
 
 def parse_args():
@@ -40,7 +41,7 @@ def parse_args():
     )
     parser.add_argument(
         "--datasettype",
-        type=list,
+        type=str,
         required=False,
         default="raw",
         help="Dataset type. Input str",
@@ -86,7 +87,9 @@ if __name__ == "__main__":
     registry = butler.registry
     dest = Butler(namespace.torepo, writeable=True)
     scratch_registry = dest.registry
-    datasetTypeList = namespace.datasettype
+    
+    # but convert this into an actual list, it is currently a string
+    datasetTypeList = json.loads(namespace.datasettype)
     collections = namespace.collections
     move = namespace.move
     # Dataset to move
@@ -121,6 +124,8 @@ if __name__ == "__main__":
     datalist_exposure = []
     datalist_ingest = []
     for dtype in datasetTypeList:
+        print('dtype here', dtype)
+        print(registry.queryDatasetTypes(dtype))
         if any(
             dim in ["exposure", "visit"]
             for dim in [
@@ -130,6 +135,7 @@ if __name__ == "__main__":
             datalist_exposure.append(dtype)
         else:
             datalist_ingest.append(dtype)
+    #d.name for d in registry.queryDatasetTypes(dtype)[0].dimensions
     print('datalist_exposure', datalist_exposure)
     print('datalist_ingest', datalist_ingest)
     
