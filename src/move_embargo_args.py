@@ -124,7 +124,7 @@ if __name__ == "__main__":
         if any(
             dim in ["exposure", "visit"]
             for dim in [
-                d.name for d in registry.queryDatasetTypes(datasetType)[0].dimensions
+                d.name for d in registry.queryDatasetTypes(dtype)[0].dimensions
             ]
         ):
             datalist_exposure.append(dtype)

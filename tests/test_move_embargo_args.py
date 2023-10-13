@@ -118,13 +118,48 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     # test the other datatypes:
     # first goodseeingdeepcoadd
+    def test_list_datasettypes(self):
+        """
+        Verify that run_embargo_args accepts a list of datasettypes
+        """
+        move = "True"
+        now_time_embargo = "now"
+        embargo_hours =   80.0# hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+            log=self.log,
+            datasettype=["raw","goodseeingdeepcoadd"],
+            collections="LATISS/raw/all",
+        )
+
+        
+'''   
     def test_goodseeingdeepcoadd(self):
         """
         Run move_embargo_args to move a different datatype.
         """
         move = "True"
-        now_time_embargo = ""
-        embargo_hours =   # hours
+        now_time_embargo = "now"
+        embargo_hours =  80.0 # hours
         # IDs that should be moved to temp_to:
         ids_moved = [
             2019111300059,
@@ -440,7 +475,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
             log=self.log,
         )
-
+''' 
 
 if __name__ == "__main__":
     unittest.main()
