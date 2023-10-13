@@ -147,7 +147,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
-            datasettype=["raw","goodseeingdeepcoadd"],
+            datasettype='["raw", "goodSeeingCoadd", "calexp"]',
             collections="LATISS/raw/all",
         )
 
