@@ -129,13 +129,14 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     # test the other datatypes:
     # first goodseeingdeepcoadd
-    def test_goodseeingdeepcoadd(self):
+    def test_list_datatypes(self):
         """
-        Run move_embargo_args to move a different datatype.
+        Test that move_embargo_args runs for a list
+        of input datatypes
         """
-        move = "True"
-        now_time_embargo = ""
-        embargo_hours =   # hours
+        move = "False"
+        now_time_embargo = "now"
+        embargo_hours =  80.0 # hours
         # IDs that should be moved to temp_to:
         ids_moved = [
             2019111300059,
@@ -158,7 +159,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
-            datasettype="goodseeingdeepcoadd",
+            datasettype=["goodseeingdeepcoadd","raw"],
             collections="LATISS/raw/all",
         )
 
