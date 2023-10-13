@@ -3,7 +3,7 @@ on:
   push:
     branches:
     - main
-    - tickets/DM-40972
+    #- tickets/DM-40972
     tags:
     - v*
   pull_request:
