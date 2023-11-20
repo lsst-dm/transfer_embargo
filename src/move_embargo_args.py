@@ -74,6 +74,13 @@ def parse_args():
         default="False",
         help="No logging if False, longlog if True",
     )
+    parser.add_argument(
+        "--desturiprefix",
+        type=str,
+        required=False,
+        default="False",
+        help="Define dest uri if you need to run ingest for raws",
+    )
     return parser.parse_args()
 
 
@@ -89,6 +96,7 @@ if __name__ == "__main__":
     datasetTypeList = namespace.datasettype
     collections = namespace.collections
     move = namespace.move
+    dest_uri_prefix = namespace.desturi
     # Dataset to move
     dataId = {"instrument": namespace.instrument}
     # Define embargo period
@@ -183,7 +191,7 @@ if __name__ == "__main__":
                     transfer_dimensions=True,
                 )
                 # define a new filedataset_list using URIs
-                dest_uri = lsst.resources.ResourcePath(dest_prefix)
+                dest_uri = lsst.resources.ResourcePath(dest_uri_prefix)
                 source_uri = butler.get_many_uris(datasetRefs)
                 filedataset_list = []
                 for key, value in source_uri.items():
