@@ -96,7 +96,7 @@ if __name__ == "__main__":
     datasetTypeList = namespace.datasettype
     collections = namespace.collections
     move = namespace.move
-    dest_uri_prefix = namespace.desturi
+    dest_uri_prefix = namespace.desturiprefix
     # Dataset to move
     dataId = {"instrument": namespace.instrument}
     # Define embargo period
@@ -180,6 +180,9 @@ if __name__ == "__main__":
         # so separate by dtype:
         for dtype in datalist_exposure:
             if dtype == "raw":
+                # first check that the destination uri is defined
+                assert dest_uri_prefix, f"dest_uri_prefix needs to be specified to transfer raw datatype" 
+                # now prepare for ingest
                 _ = prep_transfer.prep_for_ingest(
                     dest_registry,
                     dest_butler,
