@@ -3,6 +3,8 @@ import unittest
 import shutil
 import os
 import tempfile
+# import ast
+import json
 
 from lsst.daf.butler import Butler
 
@@ -50,21 +52,29 @@ def is_it_there(
     # first test stuff in the temp_to butler
     butler_to = Butler(temp_to)
     registry_to = butler_to.registry
-    if any(
-        dim in ["exposure", "visit"]
-        for dim in [
-            d.name for d in registry.queryDatasetTypes(datasettype)[0].dimensions
-        ]
-    ):
-        ids_in_temp_to = [
-            dt.dataId.full["exposure"]
-            for dt in registry_to.queryDatasets(datasetType=..., collections=...)
-        ]
-    else:
-        datasetRefs = registry_to.queryDatasets(
-            datasetType=datasettype,
-            collections=collections)
-        ids_in_temp_to = [dt.id for dt in datasetRefs]
+    # datasettype = ast.literal_eval(datasettype)
+    datasettype = json.loads(datasettype)
+    
+    for dtype in datasettype:
+        print(dtype)
+        print(registry_to.queryDatasetTypes(dtype))
+    
+    for dtype in datasettype:
+        if any(
+            dim in ["exposure", "visit"]
+            for dim in [
+                d.name for d in registry_to.queryDatasetTypes(dtype)[0].dimensions
+            ]
+        ):
+            ids_in_temp_to = [
+                dt.dataId.full["exposure"]
+                for dt in registry_to.queryDatasets(datasetType=..., collections=...)
+            ]
+        else:
+            datasetRefs = registry_to.queryDatasets(
+                datasetType=datasettype,
+                collections=collections)
+            ids_in_temp_to = [dt.id for dt in datasetRefs]
     # verifying the contents of the temp_to butler
     # check that what we expect to move (ids_should_be_moved)
     # are in the temp_to repo (ids_in_temp_to)
@@ -108,6 +118,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         temp_dir = tempfile.TemporaryDirectory()
         temp_from_path = os.path.join(temp_dir.name, "temp_test_from")
         temp_to_path = os.path.join(temp_dir.name, "temp_test_to")
+        temp_dest_ingest = os.path.join(temp_dir.name, "temp_dest_ingest")
         shutil.copytree("./data/test_from", temp_from_path)
         os.system("chmod u+x create_testto_butler.sh")
         subprocess.call(
@@ -119,6 +130,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         self.temp_dir = temp_dir
         self.temp_from_path = temp_from_path
         self.temp_to_path = temp_to_path
+        self.temp_dest_ingest = temp_dest_ingest
         # The above is if we are running 'move',
         # If copy, it should be both of these
         # added together
@@ -138,8 +150,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         of input datatypes
         """
         move = "False"
-        now_time_embargo = "now"
-        embargo_hours =  80.0 # hours
+        # now_time_embargo = "now"
+        # embargo_hours =  80.0 # hours
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 0.1  # hours
         # IDs that should be moved to temp_to:
         ids_moved = [
             2019111300059,
@@ -164,7 +178,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             datasettype='["raw"]',
             collections="LATISS/raw/all",
-            desturiprefix="tests/data/",
+            desturiprefix=self.temp_dest_ingest,
+            # desturiprefix="tests/data/",
         )
 '''
     # next test calexp are moved

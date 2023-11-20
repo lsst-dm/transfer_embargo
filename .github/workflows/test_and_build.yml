@@ -2,8 +2,8 @@ name: test
 on:
   push:
     branches:
-    - main
-    - tickets/DM-41032
+    # - main
+    # - tickets/DM-41032
     tags:
     - v*
   pull_request:

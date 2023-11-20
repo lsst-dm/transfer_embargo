@@ -4,6 +4,8 @@ import astropy.time
 from lsst.daf.butler import Butler, Timespan
 from lsst.daf.butler.cli.cliLog import CliLog
 import logging
+# import ast
+import json
 
 
 def parse_args():
@@ -128,6 +130,13 @@ if __name__ == "__main__":
     # Save data Ids of these observations into a list
     datalist_exposure = []
     datalist_no_exposure = []
+    
+    # datasetTypeList = ast.literal_eval(datasetTypeList)
+    # datasetTypeList = json.loads(datasetTypeList)
+    print("datasetTypeList in main:", datasetTypeList)
+    for dtype in datasetTypeList:
+        print("dtype in main: ",dtype)
+        print("dtype type in main: ", type(dtype))
     
     for dtype in datasetTypeList:
         if any(
