@@ -84,8 +84,8 @@ if __name__ == "__main__":
     # permissions from the fromrepo (embargo)
     butler = Butler(namespace.fromrepo, writeable=namespace.move)
     registry = butler.registry
-    dest = Butler(namespace.torepo, writeable=True)
-    scratch_registry = dest.registry
+    dest_butler = Butler(namespace.torepo, writeable=True)
+    dest_registry = dest_butler.registry
     datasetTypeList = namespace.datasettype
     collections = namespace.collections
     move = namespace.move
@@ -119,7 +119,7 @@ if __name__ == "__main__":
     # Else: don't move
     # Save data Ids of these observations into a list
     datalist_exposure = []
-    datalist_ingest = []
+    datalist_no_exposure = []
     for dtype in datasetTypeList:
         if any(
             dim in ["exposure", "visit"]
@@ -130,15 +130,18 @@ if __name__ == "__main__":
             datalist_exposure.append(dtype)
         else:
             # these should be the raw datasettype
-            datalist_ingest.append(dtype)
-    print('datalist_exposure', datalist_exposure)
-    print('datalist_ingest', datalist_ingest)
-    
-    # then, also move the appropriate collections
-    # around according to how the datatypes moved 
-    STOP
-        
-    if datalist_exposure: # if there is anything in the list
+            datalist_no_exposure.append(dtype)
+    if namespace.log == "True":
+        logger.info("datalist_exposure to move: %s", datalist_exposure)
+        logger.info("datalist_no_exposure to move: %s", datalist_no_exposure)
+
+    # because some dtypes don't have an exposure dimension
+    # we will need a different option to move those
+    # ie deepcoadds
+    # but first we will move all dtypes that have an
+    # exposure or visit dimension (ie calexp and raw)
+
+    if datalist_exposure:  # if there is anything in the list
         # first, run all of the exposure types through
         outside_embargo = [
             dt.id
@@ -164,37 +167,74 @@ if __name__ == "__main__":
         if namespace.log == "True":
             ids_to_move = [dt.dataId.full["exposure"] for dt in datasetRefs_exposure]
             logger.info("exposure ids to move: %s", ids_to_move)
-        out_exposure = dest.transfer_from(
-            butler,
-            source_refs=datasetRefs_exposure,
-            transfer="copy",
-            skip_missing=True,
-            register_dataset_types=True,
-            transfer_dimensions=True,
-        )
+
+        # raw dtype requires special handling for the transfer,
+        # so separate by dtype:
+        for dtype in datalist_exposure:
+            if dtype == "raw":
+                _ = prep_transfer.prep_for_ingest(
+                    dest_registry,
+                    dest_butler,
+                    registry,
+                    butler,
+                    datasetRefs_exposure,
+                    register_dataset_types=True,
+                    register_collection=True,
+                    transfer_dimensions=True,
+                )
+                # define a new filedataset_list using URIs
+                dest_uri = lsst.resources.ResourcePath(dest_prefix)
+                source_uri = butler.get_many_uris(datasetRefs)
+                filedataset_list = []
+                for key, value in source_uri.items():
+                    source_path_uri = value[0]
+                    source_path = source_path_uri.relative_to(value[0].root_uri())
+                    new_dest_uri = dest_uri.join(source_path)
+                    if os.path.exists(source_path_uri):
+                        if namespace.log == "True":
+                            logger.info("source path uri already exists")
+                    else:
+                        new_dest_uri.transfer_from(source_path_uri, transfer="copy")
+                    filedataset_list.append(
+                        lsst.daf.butler.FileDataset(new_dest_uri, key)
+                    )
+
+                # ingest to the destination butler
+                dest_butler.ingest(*filedataset_list, transfer="direct")
+            else:
+                dest_butler.transfer_from(
+                    butler,
+                    source_refs=datasetRefs_exposure,
+                    transfer="copy",
+                    skip_missing=True,
+                    register_dataset_types=True,
+                    transfer_dimensions=True,
+                )
         if namespace.log == "True":
             ids_moved = [
                 dt.dataId.full["exposure"]
-                for dt in scratch_registry.queryDatasets(
+                for dt in dest_registry.queryDatasets(
                     datasetType=datasetlist_exposure, collections=collections_exposure
                 )
             ]
             logger.info("exposure ids moved: %s", ids_moved)
-    if datalist_ingest: # if there is anything in the list
-        # now, time to move/copy all of the non-exposure
-        # datasettypes
-        datasetRefs_ingest = registry.queryDatasets(
-            datasetType=datasetlist_ingest,
-            collections=collections_ingest,
+    if datalist_no_exposure:
+        # this is for datatypes that don't have an exposure
+        # or visit dimension
+        # ie deepcoadds need to be queried using an ingest
+        # date keyword
+        datasetRefs_no_exposure = registry.queryDatasets(
+            datasetType=datasetlist_no_exposure,
+            collections=collections_no_exposure,
             where="ingest_date <= timespan_embargo_begin",
             bind={"timespan_embargo_begin": timespan_embargo.begin},
         )
         if namespace.log == "True":
-            ids_to_move = [dt.id for dt in datasetRefs_ingest]
+            ids_to_move = [dt.id for dt in datasetRefs_no_exposure]
             logger.info("ingest ids to move: %s", ids_to_move)
-        out_ingest = dest.transfer_from(
+        dest_butler.transfer_from(
             butler,
-            source_refs=datasetRefs_ingest,
+            source_refs=datasetRefs_no_exposure,
             transfer="copy",
             skip_missing=True,
             register_dataset_types=True,
@@ -203,8 +243,8 @@ if __name__ == "__main__":
         if namespace.log == "True":
             ids_moved = [
                 dt.id
-                for dt in scratch_registry.queryDatasets(
-                    datasetType=datasetlist_ingest, collections=collections_ingest
+                for dt in dest_registry.queryDatasets(
+                    datasetType=datasetlist_no_exposure, collections=collections_ingest
                 )
             ]
             logger.info("ingest ids moved: %s", ids_moved)
@@ -215,4 +255,4 @@ if __name__ == "__main__":
         if datalist_exposure:
             butler.pruneDatasets(refs=datasetRefs_exposure, unstore=True, purge=True)
         if datalist_ingest:
-            butler.pruneDatasets(refs=datasetRefs_ingest, unstore=True, purge=True)
+            butler.pruneDatasets(refs=datasetRefs_no_exposure, unstore=True, purge=True)
