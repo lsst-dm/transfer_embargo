@@ -18,6 +18,7 @@ def is_it_there(
     log,
     datasettype: str = "raw",
     collections: str = "LATISS/raw/all",
+    desturiprefix: str = "tests/data/",
     
 ):
     # Run the package
@@ -42,6 +43,8 @@ def is_it_there(
             move,
             "--log",
             log,
+            "--desturiprefix",
+            desturiprefix,
         ]
     )
     # first test stuff in the temp_to butler
@@ -159,8 +162,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
-            datasettype='["goodseeingdeepcoadd","raw"]',
+            datasettype='["raw"]',
             collections="LATISS/raw/all",
+            desturiprefix="tests/data/",
         )
 '''
     # next test calexp are moved
