@@ -53,11 +53,11 @@ def is_it_there(
     butler_to = Butler(temp_to)
     registry_to = butler_to.registry
     # datasettype = ast.literal_eval(datasettype)
-    datasettype = json.loads(datasettype)
+    # datasettype = json.loads(datasettype)
     
-    for dtype in datasettype:
-        print(dtype)
-        print(registry_to.queryDatasetTypes(dtype))
+    # for dtype in datasettype:
+    #     print(dtype)
+    #     print(registry_to.queryDatasetTypes(dtype))
     
     for dtype in datasettype:
         if any(
@@ -176,7 +176,13 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
-            datasettype='["raw"]',
+            # datasettype='["raw"]',
+            # datasettype="raw calexp",
+            # datasettype="raw" "calexp",
+            # datasettype='"raw calexp"',
+            # datasettype="raw"' '"calexp",
+            # datasettype='"raw"' '"calexp"',
+            datasettype="raw"'" "'"calexp",
             collections="LATISS/raw/all",
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",

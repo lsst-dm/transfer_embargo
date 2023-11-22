@@ -40,11 +40,18 @@ def parse_args():
         default=80.0,
         help="Embargo time period in hours. Input float",
     )
+    # parser.add_argument(
+    #     "--datasettype",
+    #     type=list,
+    #     required=False,
+    #     default="raw",
+    #     help="Dataset type. Input str",
+    # )
     parser.add_argument(
         "--datasettype",
-        type=list,
         required=False,
-        default="raw",
+        nargs='+', 
+        # default=[]
         help="Dataset type. Input str",
     )
     parser.add_argument(
@@ -134,9 +141,9 @@ if __name__ == "__main__":
     # datasetTypeList = ast.literal_eval(datasetTypeList)
     # datasetTypeList = json.loads(datasetTypeList)
     print("datasetTypeList in main:", datasetTypeList)
-    for dtype in datasetTypeList:
-        print("dtype in main: ",dtype)
-        print("dtype type in main: ", type(dtype))
+    # for dtype in datasetTypeList:
+    #     print("dtype in main: ",dtype)
+    #     print("dtype type in main: ", type(dtype))
     
     for dtype in datasetTypeList:
         if any(
