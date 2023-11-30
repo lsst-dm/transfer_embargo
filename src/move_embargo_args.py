@@ -6,6 +6,7 @@ from lsst.daf.butler.cli.cliLog import CliLog
 import logging
 # import ast
 import json
+import prep_transfer
 
 
 def parse_args():

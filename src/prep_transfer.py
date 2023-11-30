@@ -15,7 +15,7 @@ def prep_for_ingest(target_registry, target_butler,
                     source_registry, source_butler, 
                     source_refs, 
                     register_dataset_types = True, 
-                    # register_collection = True,
+                    register_collection = True,
                     transfer_dimensions=True):
     
     """
