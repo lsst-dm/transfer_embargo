@@ -141,7 +141,6 @@ if __name__ == "__main__":
     # datasetTypeList = ast.literal_eval(datasetTypeList)
     # datasetTypeList = json.loads(datasetTypeList)
     print("datasetTypeList in main:", datasetTypeList)
-    STOP
     # for dtype in datasetTypeList:
     #     print("dtype in main: ",dtype)
     #     print("dtype type in main: ", type(dtype))

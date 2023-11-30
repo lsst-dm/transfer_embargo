@@ -25,11 +25,19 @@ def is_it_there(
     desturiprefix: str = "tests/data/",
     
 ):
+    # need to check if datasettype is a single str, 
+    # make it iterable
+    iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
+    
+    '''
+    # this is all junk idk if we'll need it...
     print('datasettype', datasettype)
     resultString = ' '.join(datasettype)
     print('resultString', resultString)
     print('type', type(resultString))
-    '''
+    print('unpacking datasettype', *datasettype,
+          'unpacking resultString', *resultString)
+    
     STOP
     print('datasettype before insert into subprocess', datasettype)
     iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
@@ -50,7 +58,9 @@ def is_it_there(
             "--embargohours",
             str(embargo_hours),
             "--datasettype",
-            resultString,
+            *iterable_datasettype,
+            #resultString,
+            #"raw", "calexp",
             
             # subprocess doesn't want to accept it:
             # move_embargo_args.py: error: argument --datasettype: expected at least one argument
@@ -88,7 +98,7 @@ def is_it_there(
     #     print(dtype)
     #     print(registry_to.queryDatasetTypes(dtype))
     
-    for dtype in datasettype:
+    for dtype in iterable_datasettype:
         if any(
             dim in ["exposure", "visit"]
             for dim in [
