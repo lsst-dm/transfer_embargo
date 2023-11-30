@@ -52,14 +52,15 @@ def parse_args():
         required=False,
         nargs='+', 
         # default=[]
-        help="Dataset type. Input str",
+        help="Dataset type. Input list or str",
     )
     parser.add_argument(
         "--collections",
-        type=str,
+        #type=str,
+        nargs='+',
         required=False,
         default="LATISS/raw/all",
-        help="Data Collections. Input str",
+        help="Data Collections. Input list or str",
     )
     parser.add_argument(
         "--nowtime",
@@ -136,7 +137,9 @@ if __name__ == "__main__":
     # Else: don't move
     # Save data Ids of these observations into a list
     datalist_exposure = []
+    collections_exposure = []
     datalist_no_exposure = []
+    collections_no_exposure = []
     
     # datasetTypeList = ast.literal_eval(datasetTypeList)
     # datasetTypeList = json.loads(datasetTypeList)
@@ -145,7 +148,7 @@ if __name__ == "__main__":
     #     print("dtype in main: ",dtype)
     #     print("dtype type in main: ", type(dtype))
     
-    for dtype in datasetTypeList:
+    for i, dtype in enumerate(datasetTypeList):
         if any(
             dim in ["exposure", "visit"]
             for dim in [
@@ -153,13 +156,19 @@ if __name__ == "__main__":
             ]
         ):
             datalist_exposure.append(dtype)
+            collections_exposure.append(collections[i])
         else:
             # these should be the raw datasettype
             datalist_no_exposure.append(dtype)
+            collections_no_exposure.append(collections[i])
+            
+    # sort out which dtype goes into which list
     if namespace.log == "True":
         logger.info("datalist_exposure to move: %s", datalist_exposure)
         logger.info("datalist_no_exposure to move: %s", datalist_no_exposure)
 
+    print('datalist_exposure', datalist_exposure)
+    print('datalist_no_exposure', datalist_no_exposure)
     # because some dtypes don't have an exposure dimension
     # we will need a different option to move those
     # ie deepcoadds
@@ -173,7 +182,7 @@ if __name__ == "__main__":
             for dt in registry.queryDimensionRecords(
                 "exposure",
                 dataId=dataId,
-                datasets=datasetlist_exposure,
+                datasets=datalist_exposure,
                 collections=collections_exposure,
                 where="NOT exposure.timespan OVERLAPS\
                                                         timespan_embargo",
@@ -182,7 +191,7 @@ if __name__ == "__main__":
         ]
         # Query the DataIds after embargo period
         datasetRefs_exposure = registry.queryDatasets(
-            datasetlist_exposure,
+            datalist_exposure,
             dataId=dataId,
             collections=collections_exposure,
             where="exposure.id IN (exposure_ids)",

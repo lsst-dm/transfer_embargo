@@ -20,14 +20,15 @@ def is_it_there(
     temp_to,
     move,
     log,
-    datasettype: Union[list,str], #: str = "raw",
-    collections: str = "LATISS/raw/all",
+    datasettype: Union[list,str] = "raw",
+    collections: Union[list,str] = "LATISS/raw/all",
     desturiprefix: str = "tests/data/",
     
 ):
     # need to check if datasettype is a single str, 
     # make it iterable
     iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
+    iterable_collections = utils.iteration.ensure_iterable(collections)
     
     '''
     # this is all junk idk if we'll need it...
@@ -77,7 +78,7 @@ def is_it_there(
             
             "--collections",
             #"LATISS/raw/all",
-            collections,
+            *iterable_collections,
             "--nowtime",
             now_time_embargo,
             "--move",
@@ -222,8 +223,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             # datasettype="raw"' '"calexp",
             # datasettype='"raw"' '"calexp"',
             # datasettype="raw"'" "'"calexp",
-            datasettype=["raw","calexp"],
-            collections="LATISS/raw/all",
+            datasettype=["raw","raw"],
+            collections=["LATISS/raw/all","LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         )
