@@ -5,6 +5,8 @@ import os
 import tempfile
 # import ast
 import json
+import lsst.utils as utils
+from typing import Union
 
 from lsst.daf.butler import Butler
 
@@ -18,11 +20,25 @@ def is_it_there(
     temp_to,
     move,
     log,
-    datasettype: str = "raw",
+    datasettype: Union[list,str], #: str = "raw",
     collections: str = "LATISS/raw/all",
     desturiprefix: str = "tests/data/",
     
 ):
+    print('datasettype', datasettype)
+    resultString = ' '.join(datasettype)
+    print('resultString', resultString)
+    print('type', type(resultString))
+    '''
+    STOP
+    print('datasettype before insert into subprocess', datasettype)
+    iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
+    print('iterable datasettype', iterable_datasettype)
+    print('star iterable', *iterable_datasettype)
+    unpack_list = [*iterable_datasettype]
+    print('unpacked list', unpack_list)
+    STOP
+    '''
     # Run the package
     subprocess.call(
         [
@@ -34,8 +50,21 @@ def is_it_there(
             "--embargohours",
             str(embargo_hours),
             "--datasettype",
-            #"raw",
-            datasettype,
+            resultString,
+            
+            # subprocess doesn't want to accept it:
+            # move_embargo_args.py: error: argument --datasettype: expected at least one argument
+            # *iterable_datasettype,
+            
+            # doesn't like the generator type:
+            # TypeError: expected str, bytes or os.PathLike object, not generator
+            #iterable_datasettype,
+            
+            # this separates out into: ['r', 'a', 'w', ',', 'c', 'a', 'l', 'e', 'x', 'p']:
+            # *datasettype,
+            
+            # "raw", "calexp", ## THIS WORKS
+            
             "--collections",
             #"LATISS/raw/all",
             collections,
@@ -182,7 +211,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             # datasettype='"raw calexp"',
             # datasettype="raw"' '"calexp",
             # datasettype='"raw"' '"calexp"',
-            datasettype="raw"'" "'"calexp",
+            # datasettype="raw"'" "'"calexp",
+            datasettype=["raw","calexp"],
             collections="LATISS/raw/all",
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
