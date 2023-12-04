@@ -7,6 +7,8 @@ import logging
 # import ast
 import json
 import prep_transfer
+import lsst
+import os
 
 
 def parse_args():
@@ -222,13 +224,13 @@ if __name__ == "__main__":
                 )
                 # define a new filedataset_list using URIs
                 dest_uri = lsst.resources.ResourcePath(dest_uri_prefix)
-                source_uri = butler.get_many_uris(datasetRefs)
+                source_uri = butler.get_many_uris(datasetRefs_exposure)
                 filedataset_list = []
                 for key, value in source_uri.items():
                     source_path_uri = value[0]
                     source_path = source_path_uri.relative_to(value[0].root_uri())
                     new_dest_uri = dest_uri.join(source_path)
-                    if os.path.exists(source_path_uri):
+                    if os.path.exists(source_path):
                         if namespace.log == "True":
                             logger.info("source path uri already exists")
                     else:
@@ -238,6 +240,7 @@ if __name__ == "__main__":
                     )
 
                 # ingest to the destination butler
+                print('going to ingest these filedataset_list:', *filedataset_list)
                 dest_butler.ingest(*filedataset_list, transfer="direct")
             else:
                 dest_butler.transfer_from(
