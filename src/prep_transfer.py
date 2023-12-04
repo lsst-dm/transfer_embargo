@@ -157,6 +157,7 @@ def prep_for_ingest(target_registry, target_butler,
             "" if n_refs == 1 else "s",
             datasetType.name,
             run,))
+        '''
         # Assume we are using UUIDs and the source refs will match
         # those imported.
         imported_refs = target_registry._importDatasets(refs_to_import)
@@ -165,5 +166,5 @@ def prep_for_ingest(target_registry, target_butler,
         
         # assert len(source_refs) == n_imported
         print("Imported %d datasets into destination butler" % (n_imported))
-        
-    return _
+        '''
+    return 
