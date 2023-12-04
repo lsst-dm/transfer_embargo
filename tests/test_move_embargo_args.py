@@ -216,15 +216,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
-            # datasettype='["raw"]',
-            # datasettype="raw calexp",
-            # datasettype="raw" "calexp",
-            # datasettype='"raw calexp"',
-            # datasettype="raw"' '"calexp",
-            # datasettype='"raw"' '"calexp"',
-            # datasettype="raw"'" "'"calexp",
-            datasettype=["raw","raw"],
-            collections=["LATISS/raw/all","LATISS/raw/all"],
+            #datasettype=["raw","raw"],
+            datasettype=["raw"],
+            collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         )
@@ -236,7 +230,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         Nothing should move when the embargo hours falls right on
         the oldest exposure
         """
-        move = "True"
+        move = "False"
         now_time_embargo = "2020-01-17 16:55:11.322700"
         embargo_hours = 5596964.255774 / 3600.0
         # IDs that should be moved to temp_to:
@@ -267,7 +261,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         Verify that exposures after now are not being moved
         when the nowtime is right in the middle of the exposures
         """
-        move = "True"
+        move = "False"
         now_time_embargo = "2020-01-17 16:55:11.322700"
         embargo_hours = 0.1  # hours
         # IDs that should be moved to temp_to:
@@ -300,7 +294,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         when the nowtime is right in the middle of the exposures
         for a slightly longer embargo period (0.5 hours)
         """
-        move = "True"
+        move = "False"
         now_time_embargo = "2020-01-17 16:55:11.322700"
         embargo_hours = 0.5  # hours
         # IDs that should be moved to temp_to:
@@ -332,7 +326,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         Run move_embargo_args to move some IDs from the fake_from butler
         to the fake_to butler and test which ones moved
         """
-        move = "True"
+        move = "False"
         now_time_embargo = "2020-03-01 23:59:59.999999"
         embargo_hours = 3827088.677299 / 3600  # hours
         # IDs that should be moved to temp_to:
@@ -396,7 +390,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         Run move_embargo_args to move some IDs from the fake_from butler
         to the fake_to butler and test which ones moved
         """
-        move = "True"
+        move = "False"
         now_time_embargo = "2020-03-02 00:00:00.000000"
         embargo_hours = 3827088.6773 / 3600  # hours
         # IDs that should be moved to temp_to:
@@ -460,7 +454,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         Run move_embargo_args to move some IDs from the fake_from butler
         to the fake_to butler and test which ones moved
         """
-        move = "True"
+        move = "False"
         now_time_embargo = "2020-03-02 00:00:00.000000"
         embargo_hours = 3827088.677301 / 3600  # hours
         # IDs that should be moved to temp_to:
