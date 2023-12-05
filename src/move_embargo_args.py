@@ -4,6 +4,7 @@ import astropy.time
 from lsst.daf.butler import Butler, Timespan
 from lsst.daf.butler.cli.cliLog import CliLog
 import logging
+
 # import ast
 import json
 import prep_transfer
@@ -53,14 +54,14 @@ def parse_args():
     parser.add_argument(
         "--datasettype",
         required=False,
-        nargs='+', 
+        nargs="+",
         # default=[]
         help="Dataset type. Input list or str",
     )
     parser.add_argument(
         "--collections",
-        #type=str,
-        nargs='+',
+        # type=str,
+        nargs="+",
         required=False,
         default="LATISS/raw/all",
         help="Data Collections. Input list or str",
@@ -143,20 +144,11 @@ if __name__ == "__main__":
     collections_exposure = []
     datalist_no_exposure = []
     collections_no_exposure = []
-    
-    # datasetTypeList = ast.literal_eval(datasetTypeList)
-    # datasetTypeList = json.loads(datasetTypeList)
-    print("datasetTypeList in main:", datasetTypeList)
-    # for dtype in datasetTypeList:
-    #     print("dtype in main: ",dtype)
-    #     print("dtype type in main: ", type(dtype))
-    
+
     for i, dtype in enumerate(datasetTypeList):
         if any(
             dim in ["exposure", "visit"]
-            for dim in [
-                d.name for d in registry.queryDatasetTypes(dtype)[0].dimensions
-            ]
+            for dim in [d.name for d in registry.queryDatasetTypes(dtype)[0].dimensions]
         ):
             datalist_exposure.append(dtype)
             collections_exposure.append(collections[i])
@@ -164,14 +156,12 @@ if __name__ == "__main__":
             # these should be the raw datasettype
             datalist_no_exposure.append(dtype)
             collections_no_exposure.append(collections[i])
-            
+
     # sort out which dtype goes into which list
     if namespace.log == "True":
         logger.info("datalist_exposure to move: %s", datalist_exposure)
         logger.info("datalist_no_exposure to move: %s", datalist_no_exposure)
 
-    print('datalist_exposure', datalist_exposure)
-    print('datalist_no_exposure', datalist_no_exposure)
     # because some dtypes don't have an exposure dimension
     # we will need a different option to move those
     # ie deepcoadds
@@ -210,7 +200,9 @@ if __name__ == "__main__":
         for dtype in datalist_exposure:
             if dtype == "raw":
                 # first check that the destination uri is defined
-                assert dest_uri_prefix, f"dest_uri_prefix needs to be specified to transfer raw datatype" 
+                assert (
+                    dest_uri_prefix
+                ), f"dest_uri_prefix needs to be specified to transfer raw datatype"
                 # now prepare for ingest
                 _ = prep_transfer.prep_for_ingest(
                     dest_registry,
@@ -240,7 +232,6 @@ if __name__ == "__main__":
                     )
 
                 # ingest to the destination butler
-                print('going to ingest these filedataset_list:', *filedataset_list)
                 dest_butler.ingest(*filedataset_list, transfer="direct")
             else:
                 dest_butler.transfer_from(
@@ -255,7 +246,7 @@ if __name__ == "__main__":
             ids_moved = [
                 dt.dataId.full["exposure"]
                 for dt in dest_registry.queryDatasets(
-                    datasetType=datasetlist_exposure, collections=collections_exposure
+                    datasetType=datalist_exposure, collections=collections_exposure
                 )
             ]
             logger.info("exposure ids moved: %s", ids_moved)

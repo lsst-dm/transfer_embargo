@@ -3,6 +3,7 @@ import unittest
 import shutil
 import os
 import tempfile
+
 # import ast
 import json
 import lsst.utils as utils
@@ -20,17 +21,16 @@ def is_it_there(
     temp_to,
     move,
     log,
-    datasettype: Union[list,str] = "raw",
-    collections: Union[list,str] = "LATISS/raw/all",
+    datasettype: Union[list, str] = "raw",
+    collections: Union[list, str] = "LATISS/raw/all",
     desturiprefix: str = "tests/data/",
-    
 ):
-    # need to check if datasettype is a single str, 
+    # need to check if datasettype is a single str,
     # make it iterable
     iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
     iterable_collections = utils.iteration.ensure_iterable(collections)
-    
-    '''
+
+    """
     # this is all junk idk if we'll need it...
     print('datasettype', datasettype)
     resultString = ' '.join(datasettype)
@@ -47,7 +47,7 @@ def is_it_there(
     unpack_list = [*iterable_datasettype]
     print('unpacked list', unpack_list)
     STOP
-    '''
+    """
     # Run the package
     subprocess.call(
         [
@@ -60,24 +60,19 @@ def is_it_there(
             str(embargo_hours),
             "--datasettype",
             *iterable_datasettype,
-            #resultString,
-            #"raw", "calexp",
-            
+            # resultString,
+            # "raw", "calexp",
             # subprocess doesn't want to accept it:
             # move_embargo_args.py: error: argument --datasettype: expected at least one argument
             # *iterable_datasettype,
-            
             # doesn't like the generator type:
             # TypeError: expected str, bytes or os.PathLike object, not generator
-            #iterable_datasettype,
-            
+            # iterable_datasettype,
             # this separates out into: ['r', 'a', 'w', ',', 'c', 'a', 'l', 'e', 'x', 'p']:
             # *datasettype,
-            
             # "raw", "calexp", ## THIS WORKS
-            
             "--collections",
-            #"LATISS/raw/all",
+            # "LATISS/raw/all",
             *iterable_collections,
             "--nowtime",
             now_time_embargo,
@@ -94,11 +89,11 @@ def is_it_there(
     registry_to = butler_to.registry
     # datasettype = ast.literal_eval(datasettype)
     # datasettype = json.loads(datasettype)
-    
+
     # for dtype in datasettype:
     #     print(dtype)
     #     print(registry_to.queryDatasetTypes(dtype))
-    
+
     for dtype in iterable_datasettype:
         if any(
             dim in ["exposure", "visit"]
@@ -106,47 +101,50 @@ def is_it_there(
                 d.name for d in registry_to.queryDatasetTypes(dtype)[0].dimensions
             ]
         ):
+            print(
+                "dtype with exposure or visit info: ",
+            )
             ids_in_temp_to = [
                 dt.dataId.full["exposure"]
                 for dt in registry_to.queryDatasets(datasetType=..., collections=...)
             ]
         else:
             datasetRefs = registry_to.queryDatasets(
-                datasetType=datasettype,
-                collections=collections)
+                datasetType=datasettype, collections=collections
+            )
             ids_in_temp_to = [dt.id for dt in datasetRefs]
-    # verifying the contents of the temp_to butler
-    # check that what we expect to move (ids_should_be_moved)
-    # are in the temp_to repo (ids_in_temp_to)
-    assert sorted(ids_should_be_moved) == sorted(
-        ids_in_temp_to
-    ), f"{ids_should_be_moved} should be in {temp_to} repo but isnt :(, \
-        what is in it is: {ids_in_temp_to}"
-    # now check the temp_from butler and see what remains
-    butler_from = Butler(temp_from)
-    registry_from = butler_from.registry
-    ids_in_temp_from = [
-        dt.dataId.full["exposure"]
-        for dt in registry_from.queryDatasets(datasetType=..., collections=...)
-    ]
 
-    # verifying the contents of the from butler
-    # if move is on, only the ids_remain should be in temp_from butler
-    if move == "True":
-        # checking that everything in temp_from butler
-        # is in the ids_remain list
-        assert sorted(ids_in_temp_from) == sorted(
-            ids_should_remain_after_move
-        ), f"move is {move} and {ids_in_temp_from} does not match what should be in \
-            {temp_from}, which is {ids_should_remain_after_move}"
-    # otherwise, if copy
-    else:
-        # everything in temp_from should be either in ids_remain or ids_moved
-        assert sorted(ids_in_temp_from) == sorted(
-            ids_should_remain_after_move + ids_should_be_moved
-        ), f"move is {move} and {ids_in_temp_from} should be in either \
-                {temp_from} or {temp_to} repo but it isn't"
+        # verifying the contents of the temp_to butler
+        # check that what we expect to move (ids_should_be_moved)
+        # are in the temp_to repo (ids_in_temp_to)
+        assert sorted(ids_should_be_moved) == sorted(
+            ids_in_temp_to
+        ), f"{ids_should_be_moved} should be in {temp_to} repo but isnt :(, \
+            what is in it is: {ids_in_temp_to}"
+        # now check the temp_from butler and see what remains
+        butler_from = Butler(temp_from)
+        registry_from = butler_from.registry
+        ids_in_temp_from = [
+            dt.dataId.full["exposure"]
+            for dt in registry_from.queryDatasets(datasetType=..., collections=...)
+        ]
 
+        # verifying the contents of the from butler
+        # if move is on, only the ids_remain should be in temp_from butler
+        if move == "True":
+            # checking that everything in temp_from butler
+            # is in the ids_remain list
+            assert sorted(ids_in_temp_from) == sorted(
+                ids_should_remain_after_move
+            ), f"move is {move} and {ids_in_temp_from} does not match what should be in \
+                {temp_from}, which is {ids_should_remain_after_move}"
+        # otherwise, if copy
+        else:
+            # everything in temp_from should be either in ids_remain or ids_moved
+            assert sorted(ids_in_temp_from) == sorted(
+                ids_should_remain_after_move + ids_should_be_moved
+            ), f"move is {move} and {ids_in_temp_from} should be in either \
+                    {temp_from} or {temp_to} repo but it isn't"
 
 
 class TestMoveEmbargoArgs(unittest.TestCase):
@@ -216,12 +214,14 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
-            #datasettype=["raw","raw"],
+            # datasettype=["raw","raw"],
             datasettype=["raw"],
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         )
+
+
 '''
     # next test calexp are moved
     
@@ -255,6 +255,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
             log=self.log,
         )
+
 
     def test_after_now_01(self):
         """
@@ -319,6 +320,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
+            datasettype=["raw"],
+            collections=["LATISS/raw/all"],
+            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_main_move(self):
