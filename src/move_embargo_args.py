@@ -203,6 +203,10 @@ if __name__ == "__main__":
                 assert (
                     dest_uri_prefix
                 ), f"dest_uri_prefix needs to be specified to transfer raw datatype"
+                # change the umask for the raw datatype before you do the transfer
+                #current_umask = os.umask(0)
+                #print('current umask', current_umask)
+                os.umask(0o222)
                 # now prepare for ingest
                 _ = prep_transfer.prep_for_ingest(
                     dest_registry,
