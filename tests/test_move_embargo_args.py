@@ -222,7 +222,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         )
 
 
-'''
+
     # next test calexp are moved
     
     def test_nothing_moves(self):
@@ -516,7 +516,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
             log=self.log,
         )
-'''
+
 
 if __name__ == "__main__":
     unittest.main()
