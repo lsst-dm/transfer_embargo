@@ -206,8 +206,9 @@ if __name__ == "__main__":
                 # change the umask for the raw datatype before you do the transfer
                 #current_umask = os.umask(0)
                 #print('current umask', current_umask)
-                os.umask(0o222)
+                # os.umask(0o222)
                 # now prepare for ingest
+                '''
                 _ = prep_transfer.prep_for_ingest(
                     dest_registry,
                     dest_butler,
@@ -218,6 +219,7 @@ if __name__ == "__main__":
                     register_collection=True,
                     transfer_dimensions=True,
                 )
+                '''
                 # define a new filedataset_list using URIs
                 dest_uri = lsst.resources.ResourcePath(dest_uri_prefix)
                 source_uri = butler.get_many_uris(datasetRefs_exposure)
