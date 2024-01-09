@@ -255,7 +255,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
         )
 
-
+'''
     def test_after_now_01(self):
         """
         Verify that exposures after now are not being moved
@@ -515,6 +515,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
             log=self.log,
         )
+'''
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ import logging
 
 # import ast
 import json
-import prep_transfer
+# import prep_transfer
 import lsst
 import os
 
@@ -236,8 +236,14 @@ if __name__ == "__main__":
                     filedataset_list.append(
                         lsst.daf.butler.FileDataset(new_dest_uri, key)
                     )
+                    
+                for i, ref in enumerate(datasetRefs_exposure):
+                    # dest_butler.registry.registerDatasetType(datasetRefs[0].datasetType)
+                    dest_butler.registry.registerDatasetType(ref.datasetType)
+                    dest_butler.registry.registerRun(ref.run)
 
                 # ingest to the destination butler
+                dest_butler.transfer_dimension_records_from(butler, datasetRefs_exposure)
                 dest_butler.ingest(*filedataset_list, transfer="direct")
             else:
                 dest_butler.transfer_from(
