@@ -30,24 +30,6 @@ def is_it_there(
     iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
     iterable_collections = utils.iteration.ensure_iterable(collections)
 
-    """
-    # this is all junk idk if we'll need it...
-    print('datasettype', datasettype)
-    resultString = ' '.join(datasettype)
-    print('resultString', resultString)
-    print('type', type(resultString))
-    print('unpacking datasettype', *datasettype,
-          'unpacking resultString', *resultString)
-    
-    STOP
-    print('datasettype before insert into subprocess', datasettype)
-    iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
-    print('iterable datasettype', iterable_datasettype)
-    print('star iterable', *iterable_datasettype)
-    unpack_list = [*iterable_datasettype]
-    print('unpacked list', unpack_list)
-    STOP
-    """
     # Run the package
     subprocess.call(
         [
@@ -60,17 +42,6 @@ def is_it_there(
             str(embargo_hours),
             "--datasettype",
             *iterable_datasettype,
-            # resultString,
-            # "raw", "calexp",
-            # subprocess doesn't want to accept it:
-            # move_embargo_args.py: error: argument --datasettype: expected at least one argument
-            # *iterable_datasettype,
-            # doesn't like the generator type:
-            # TypeError: expected str, bytes or os.PathLike object, not generator
-            # iterable_datasettype,
-            # this separates out into: ['r', 'a', 'w', ',', 'c', 'a', 'l', 'e', 'x', 'p']:
-            # *datasettype,
-            # "raw", "calexp", ## THIS WORKS
             "--collections",
             # "LATISS/raw/all",
             *iterable_collections,
@@ -87,13 +58,6 @@ def is_it_there(
     # first test stuff in the temp_to butler
     butler_to = Butler(temp_to)
     registry_to = butler_to.registry
-    # datasettype = ast.literal_eval(datasettype)
-    # datasettype = json.loads(datasettype)
-
-    # for dtype in datasettype:
-    #     print(dtype)
-    #     print(registry_to.queryDatasetTypes(dtype))
-
     for dtype in iterable_datasettype:
         if any(
             dim in ["exposure", "visit"]
@@ -214,16 +178,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
-            # datasettype=["raw","raw"],
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
+            datasettype=["raw", "raw"],
+            collections=["LATISS/raw/all", "LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
-            # desturiprefix="tests/data/",
         )
 
-
     # next test calexp are moved
-    
     def test_nothing_moves(self):
         """
         Nothing should move when the embargo hours falls right on
@@ -255,7 +215,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
         )
 
-'''
     def test_after_now_01(self):
         """
         Verify that exposures after now are not being moved
@@ -515,7 +474,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
             log=self.log,
         )
-'''
 
 
 if __name__ == "__main__":
