@@ -7,6 +7,7 @@ import logging
 
 # import ast
 import json
+
 # import prep_transfer
 import lsst
 import os
@@ -44,13 +45,6 @@ def parse_args():
         default=80.0,
         help="Embargo time period in hours. Input float",
     )
-    # parser.add_argument(
-    #     "--datasettype",
-    #     type=list,
-    #     required=False,
-    #     default="raw",
-    #     help="Dataset type. Input str",
-    # )
     parser.add_argument(
         "--datasettype",
         required=False,
@@ -203,23 +197,6 @@ if __name__ == "__main__":
                 assert (
                     dest_uri_prefix
                 ), f"dest_uri_prefix needs to be specified to transfer raw datatype"
-                # change the umask for the raw datatype before you do the transfer
-                #current_umask = os.umask(0)
-                #print('current umask', current_umask)
-                # os.umask(0o222)
-                # now prepare for ingest
-                '''
-                _ = prep_transfer.prep_for_ingest(
-                    dest_registry,
-                    dest_butler,
-                    registry,
-                    butler,
-                    datasetRefs_exposure,
-                    register_dataset_types=True,
-                    register_collection=True,
-                    transfer_dimensions=True,
-                )
-                '''
                 # define a new filedataset_list using URIs
                 dest_uri = lsst.resources.ResourcePath(dest_uri_prefix)
                 source_uri = butler.get_many_uris(datasetRefs_exposure)
@@ -236,14 +213,16 @@ if __name__ == "__main__":
                     filedataset_list.append(
                         lsst.daf.butler.FileDataset(new_dest_uri, key)
                     )
-                    
+
                 for i, ref in enumerate(datasetRefs_exposure):
                     # dest_butler.registry.registerDatasetType(datasetRefs[0].datasetType)
                     dest_butler.registry.registerDatasetType(ref.datasetType)
                     dest_butler.registry.registerRun(ref.run)
 
                 # ingest to the destination butler
-                dest_butler.transfer_dimension_records_from(butler, datasetRefs_exposure)
+                dest_butler.transfer_dimension_records_from(
+                    butler, datasetRefs_exposure
+                )
                 dest_butler.ingest(*filedataset_list, transfer="direct")
             else:
                 dest_butler.transfer_from(
