@@ -178,8 +178,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
-            datasettype=["raw", "raw"],
-            collections=["LATISS/raw/all", "LATISS/raw/all"],
+            # datasettype=["raw", "raw"],
+            # collections=["LATISS/raw/all", "LATISS/raw/all"],
+            datasettype=["raw"],
+            collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
 
@@ -213,6 +215,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
+            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_after_now_01(self):
@@ -245,6 +248,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
+            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_after_now_05(self):
@@ -313,6 +317,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
+            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_main_copy(self):
@@ -345,6 +350,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
+            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_main_move_midnight(self):
@@ -377,6 +383,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
+            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_main_copy_midnight(self):
@@ -409,6 +416,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
+            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_main_move_midnight_precision(self):
@@ -441,6 +449,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
+            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_main_copy_midnight_precision(self):
@@ -473,6 +482,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
+            desturiprefix=self.temp_dest_ingest,
         )
 
 
