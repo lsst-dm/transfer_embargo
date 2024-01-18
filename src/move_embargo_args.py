@@ -142,7 +142,7 @@ if __name__ == "__main__":
     for i, dtype in enumerate(datasetTypeList):
         if any(
             dim in ["exposure", "visit"]
-            for dim in [d.name for d in registry.queryDatasetTypes(dtype)[0].dimensions]
+            for dim in registry.queryDatasetTypes(dtype)[0].dimensions.names
         ):
             datalist_exposure.append(dtype)
             collections_exposure.append(collections[i])
@@ -214,10 +214,8 @@ if __name__ == "__main__":
                         lsst.daf.butler.FileDataset(new_dest_uri, key)
                     )
 
-                # register datasettype and collection run only once
-                dest_butler.registry.registerDatasetType(
-                    list(datasetRefs_exposure)[0].datasetType
-                )
+                # register datasettype and collection run only once 
+                dest_butler.registry.registerDatasetType(list(datasetRefs_exposure)[0].datasetType)
                 dest_butler.registry.registerRun(list(datasetRefs_exposure)[0].run)
 
                 # ingest to the destination butler
