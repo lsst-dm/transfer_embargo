@@ -31,7 +31,7 @@ def is_it_there(
     iterable_collections = utils.iteration.ensure_iterable(collections)
 
     # Run the package
-    subprocess.call(
+    subprocess.run(
         [
             "python",
             "../src/move_embargo_args.py",
@@ -53,7 +53,8 @@ def is_it_there(
             log,
             "--desturiprefix",
             desturiprefix,
-        ]
+        ],
+        check=True,
     )
     # first test stuff in the temp_to butler
     butler_to = Butler(temp_to)
