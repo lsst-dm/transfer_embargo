@@ -24,9 +24,16 @@ jobs:
     - name: Install dependencies
       run: |
        python -m ensurepip
-       python -m pip install lsst-daf-butler
+       curl -OL https://ls.st/lsstinstall
+       chmod u+x lsstinstall
+       ./lsstinstall -T v26_0_0
+       source loadLSST.sh
+       eups distrib install -t v26_0_0 lsst_distrib obs_lsst daf_butler
+       curl -sSL https://raw.githubusercontent.com/lsst/shebangtron/main/shebangtron | python
+       setup obs_lsst daf_butler
     - name: Run tests
       run: |
+       source loadLSST.sh
        cd ./tests
        python test_move_embargo_args.py
     # - name: docker build
