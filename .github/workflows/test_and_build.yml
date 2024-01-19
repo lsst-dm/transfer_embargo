@@ -28,8 +28,9 @@ jobs:
        chmod u+x lsstinstall
        ./lsstinstall -T v26_0_0
        source loadLSST.sh
-       eups distrib install -t v26_0_0 obs_lsst daf_butler
+       eups distrib install -t v26_0_0 obs_lsst
        curl -sSL https://raw.githubusercontent.com/lsst/shebangtron/main/shebangtron | python
+       setup obs_lsst
     #setup obs_lsst daf_butler
     - name: Run tests
       run: |
