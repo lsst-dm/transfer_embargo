@@ -26,9 +26,9 @@ jobs:
        python -m ensurepip
        curl -OL https://ls.st/lsstinstall
        chmod u+x lsstinstall
-       ./lsstinstall -T v26_0_0
+       ./lsstinstall -T w_2023_50
        source loadLSST.sh
-       eups distrib install -t v26_0_0 obs_lsst
+       eups distrib install -t w_2023_50 obs_lsst
        curl -sSL https://raw.githubusercontent.com/lsst/shebangtron/main/shebangtron | python
     - name: Run tests
       run: |
