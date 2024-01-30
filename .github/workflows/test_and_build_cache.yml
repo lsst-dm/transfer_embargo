@@ -1,0 +1,50 @@
+name: test
+
+on:
+  push:
+    branches:
+      - tickets/DM-41032
+    tags:
+      - v*
+  pull_request:
+
+env:
+  PROGRAM_NAME: transfer-embargo
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v3
+
+      - name: Setup python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ github.workspace }}/eups/
+          key: ${{ runner.os }}-eups-${{ hashFiles('**/*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-eups-
+
+      - name: Install dependencies
+        run: |
+          python -m ensurepip
+          curl -OL https://ls.st/lsstinstall
+          chmod u+x lsstinstall
+          ./lsstinstall -T w_2023_50
+          source loadLSST.sh
+          eups distrib install -t w_2023_50 obs_lsst
+          curl -sSL https://raw.githubusercontent.com/lsst/shebangtron/main/shebangtron | python
+
+      - name: Run tests
+        run: |
+          source loadLSST.sh
+          setup obs_lsst
+          cd ./tests
+          python test_move_embargo_args.py
