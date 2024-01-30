@@ -29,8 +29,8 @@ jobs:
           path: |
             ${{ github.workspace }}/eups/
           key: ${{ runner.os }}-eups-${{ hashFiles('**/*.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-eups-
+          restore-keys: |
+            ${{ runner.os }}-eups-
 
       - name: Install dependencies
         run: |
