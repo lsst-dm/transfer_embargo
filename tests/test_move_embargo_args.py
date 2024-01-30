@@ -4,8 +4,6 @@ import shutil
 import os
 import tempfile
 
-# import ast
-import json
 import lsst.utils as utils
 from typing import Union
 
@@ -63,7 +61,6 @@ def is_it_there(
         if any(
             dim in ["exposure", "visit"]
             for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
-            
         ):
             print(
                 "dtype with exposure or visit info: ",
@@ -104,7 +101,8 @@ def is_it_there(
                 {temp_from}, which is {ids_should_remain_after_move}"
         # otherwise, if copy
         else:
-            # everything in temp_from should be either in ids_remain or ids_moved
+            # everything in temp_from should be either
+            # in ids_remain or ids_moved
             assert sorted(ids_in_temp_from) == sorted(
                 ids_should_remain_after_move + ids_should_be_moved
             ), f"move is {move} and {ids_in_temp_from} should be in either \
@@ -184,6 +182,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
+
+
 '''
     # next test calexp are moved
     def test_nothing_moves(self):
