@@ -1,4 +1,4 @@
-name: test
+name: cache dependencies and test
 
 on:
   push:
