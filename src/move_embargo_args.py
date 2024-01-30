@@ -5,10 +5,6 @@ from lsst.daf.butler import Butler, Timespan
 from lsst.daf.butler.cli.cliLog import CliLog
 import logging
 
-# import ast
-import json
-
-# import prep_transfer
 import lsst
 import os
 
@@ -196,7 +192,7 @@ if __name__ == "__main__":
                 # first check that the destination uri is defined
                 assert (
                     dest_uri_prefix
-                ), f"dest_uri_prefix needs to be specified to transfer raw datatype"
+                ), f"dest_uri_prefix needs to be specified to transfer raw datatype, {dest_uri_prefix}"
                 # define a new filedataset_list using URIs
                 dest_uri = lsst.resources.ResourcePath(dest_uri_prefix)
                 source_uri = butler.get_many_uris(datasetRefs_exposure)
@@ -214,8 +210,10 @@ if __name__ == "__main__":
                         lsst.daf.butler.FileDataset(new_dest_uri, key)
                     )
 
-                # register datasettype and collection run only once 
-                dest_butler.registry.registerDatasetType(list(datasetRefs_exposure)[0].datasetType)
+                # register datasettype and collection run only once
+                dest_butler.registry.registerDatasetType(
+                    list(datasetRefs_exposure)[0].datasetType
+                )
                 dest_butler.registry.registerRun(list(datasetRefs_exposure)[0].run)
 
                 # ingest to the destination butler
@@ -246,7 +244,7 @@ if __name__ == "__main__":
         # ie deepcoadds need to be queried using an ingest
         # date keyword
         datasetRefs_no_exposure = registry.queryDatasets(
-            datasetType=datasetlist_no_exposure,
+            datasetType=datalist_no_exposure,
             collections=collections_no_exposure,
             where="ingest_date <= timespan_embargo_begin",
             bind={"timespan_embargo_begin": timespan_embargo.begin},
@@ -266,7 +264,7 @@ if __name__ == "__main__":
             ids_moved = [
                 dt.id
                 for dt in dest_registry.queryDatasets(
-                    datasetType=datasetlist_no_exposure, collections=collections_ingest
+                    datasetType=datalist_no_exposure, collections=collections_no_exposure
                 )
             ]
             logger.info("ingest ids moved: %s", ids_moved)
@@ -276,5 +274,5 @@ if __name__ == "__main__":
         # is there a way to do this at the same time?
         if datalist_exposure:
             butler.pruneDatasets(refs=datasetRefs_exposure, unstore=True, purge=True)
-        if datalist_ingest:
+        if datalist_no_exposure:
             butler.pruneDatasets(refs=datasetRefs_no_exposure, unstore=True, purge=True)
