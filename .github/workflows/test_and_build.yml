@@ -3,7 +3,7 @@ on:
   push:
     branches:
     # - main
-    # - tickets/DM-40972
+    - tickets/DM-41033
     tags:
     - v*
   pull_request:
@@ -23,12 +23,19 @@ jobs:
           python-version: "3.11"
     - name: Install dependencies
       run: |
-       python -m ensurepip
-       python -m pip install lsst-daf-butler
-    # - name: Run tests
-    #   run: |
-    #    cd ./tests
-    #    python test_move_embargo_args.py
+          curl -OL https://ls.st/lsstinstall
+          chmod u+x lsstinstall
+          ./lsstinstall -T w_2023_50
+          source loadLSST.sh
+          eups distrib install -t w_2023_50 obs_lsst
+          curl -sSL https://raw.githubusercontent.com/lsst/shebangtron/main/shebangtron | python
+
+    - name: Run tests
+      run: |
+          source loadLSST.sh
+          setup obs_lsst
+          cd ./tests
+          python test_move_embargo_args.py
     # - name: docker build
     #   run: |
     #     docker build . \
