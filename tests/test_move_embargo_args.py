@@ -4,8 +4,6 @@ import shutil
 import os
 import tempfile
 
-# import ast
-import json
 import lsst.utils as utils
 from typing import Union
 
@@ -30,24 +28,6 @@ def is_it_there(
     iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
     iterable_collections = utils.iteration.ensure_iterable(collections)
 
-    """
-    # this is all junk idk if we'll need it...
-    print('datasettype', datasettype)
-    resultString = ' '.join(datasettype)
-    print('resultString', resultString)
-    print('type', type(resultString))
-    print('unpacking datasettype', *datasettype,
-          'unpacking resultString', *resultString)
-    
-    STOP
-    print('datasettype before insert into subprocess', datasettype)
-    iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
-    print('iterable datasettype', iterable_datasettype)
-    print('star iterable', *iterable_datasettype)
-    unpack_list = [*iterable_datasettype]
-    print('unpacked list', unpack_list)
-    STOP
-    """
     # Run the package
     subprocess.run(
         [
@@ -60,17 +40,6 @@ def is_it_there(
             str(embargo_hours),
             "--datasettype",
             *iterable_datasettype,
-            # resultString,
-            # "raw", "calexp",
-            # subprocess doesn't want to accept it:
-            # move_embargo_args.py: error: argument --datasettype: expected at least one argument
-            # *iterable_datasettype,
-            # doesn't like the generator type:
-            # TypeError: expected str, bytes or os.PathLike object, not generator
-            # iterable_datasettype,
-            # this separates out into: ['r', 'a', 'w', ',', 'c', 'a', 'l', 'e', 'x', 'p']:
-            # *datasettype,
-            # "raw", "calexp", ## THIS WORKS
             "--collections",
             # "LATISS/raw/all",
             *iterable_collections,
@@ -85,57 +54,28 @@ def is_it_there(
         ],
         check=True,
     )
-    print('made it through subprocess')
     # first test stuff in the temp_to butler
     butler_to = Butler(temp_to)
     registry_to = butler_to.registry
-    print('butler', butler_to)
-    # datasettype = ast.literal_eval(datasettype)
-    # datasettype = json.loads(datasettype)
-
-    # for dtype in datasettype:
-    #     print(dtype)
-    #     print(registry_to.queryDatasetTypes(dtype))
-
-    '''
-    for i, dtype in enumerate(datasetTypeList):
-        if any(
-            dim in ["exposure", "visit"]
-            for dim in [d.name for d in registry.queryDatasetTypes(dtype)[0].dimensions]
-        ):
-            datalist_exposure.append(dtype)
-            collections_exposure.append(collections[i])
-        else:
-            # these should be the raw datasettype
-            datalist_no_exposure.append(dtype)
-            collections_no_exposure.append(collections[i])
-
-    '''
-    print('registry_to', registry_to)
-    print('iterable_datasettype', datasettype)
-
+    counter = 0
     for dtype in datasettype:
-        print('dtype', dtype) 
         if any(
             dim in ["exposure", "visit"]
-            for dim in [
-                d.name for d in registry_to.queryDatasetTypes(dtype)[0].dimensions
-            ]
+            for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
         ):
             print(
                 "dtype with exposure or visit info: ", dtype
             )
             ids_in_temp_to = [
-                dt.dataId.full["exposure"]
+                dt.dataId.mapping["exposure"]
                 for dt in registry_to.queryDatasets(datasetType=..., collections=...)
             ]
         else:
+            print("dtype with no exposure", dtype)
             datasetRefs = registry_to.queryDatasets(
                 datasetType=datasettype, collections=collections
             )
             ids_in_temp_to = [dt.id for dt in datasetRefs]
-
-        
 
         # verifying the contents of the temp_to butler
         # check that what we expect to move (ids_should_be_moved)
@@ -147,13 +87,23 @@ def is_it_there(
         # now check the temp_from butler and see what remains
         butler_from = Butler(temp_from)
         registry_from = butler_from.registry
-        ids_in_temp_from = [
-            dt.dataId.full["exposure"]
-            for dt in registry_from.queryDatasets(datasetType=..., collections=...)
-        ]
-        print('ids in temp to', ids_in_temp_to)
-        print('ids in temp from', ids_in_temp_from)
-
+        
+        if any(
+            dim in ["exposure", "visit"]
+            for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
+        ):
+            ids_in_temp_from = [
+                dt.dataId.mapping["exposure"]
+                for dt in registry_from.queryDatasets(datasetType=..., collections=...)
+            ]
+        else:
+            ids_in_temp_from = [
+                dt.id
+                for dt in registry_from.queryDatasets(
+                    datasetType=..., collections=...
+                )
+            ]
+            
         # verifying the contents of the from butler
         # if move is on, only the ids_remain should be in temp_from butler
         if move == "True":
@@ -165,15 +115,18 @@ def is_it_there(
                 {temp_from}, which is {ids_should_remain_after_move}"
         # otherwise, if copy
         else:
-            # everything in temp_from should be either in ids_remain or ids_moved
+            # everything in temp_from should be either
+            # in ids_remain or ids_moved
             assert sorted(ids_in_temp_from) == sorted(
                 ids_should_remain_after_move + ids_should_be_moved
             ), f"move is {move} and {ids_in_temp_from} should be in either \
                     {temp_from} or {temp_to} repo but it isn't"
+        counter += 1
+    assert counter != 0, f"Never went through the for loop shame on you, counter = {counter}"
 
-    print('made it to the end')
-
-
+class AtLeastOneAssertionFailed(Exception):
+    pass
+    
 class TestMoveEmbargoArgs(unittest.TestCase):
     def setUp(self):
         """
@@ -207,7 +160,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
-    def test_list_datatypes(self):
+    # test the other datatypes:
+    # first goodseeingdeepcoadd
+    def test_raw_datatypes(self):
         """
         Test that move_embargo_args runs for a list
         of input datatypes
@@ -239,13 +194,63 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
-            # datasettype=["raw","raw"],
+            # datasettype=["raw", "raw"],
+            # collections=["LATISS/raw/all", "LATISS/raw/all"],
             datasettype=["raw"],
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
-            # desturiprefix="tests/data/",
-        )   
-'''
+        )
+
+    # test the other datatypes:
+    # first goodseeingdeepcoadd
+    
+    def test_raw_datatypes_should_fail(self):
+        """
+        Test that move_embargo_args runs for a list
+        of input datatypes
+        """
+        move = "False"
+        # now_time_embargo = "now"
+        # embargo_hours =  80.0 # hours
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 0.1  # hours
+        # IDs that should be moved to temp_to:
+        # lol 2019111300059 should be in the ids_moved
+        # list but I'm removing it to make sure the assertions
+        # fail
+        ids_moved = [
+            2019111300061,
+            2020011700002,
+            2020011700003,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        
+        try:
+            is_it_there(
+                embargo_hours,
+                now_time_embargo,
+                ids_remain,
+                ids_moved,
+                self.temp_from_path,
+                self.temp_to_path,
+                move=move,
+                log=self.log,
+                datasettype=["raw"],
+                collections=["LATISS/raw/all"],
+                desturiprefix=self.temp_dest_ingest,
+            )
+        except AssertionError:
+            # At least one assertion failed, which is what we want
+            pass
+        else:
+            # All assertions passed, so we raise a custom exception
+            raise AtLeastOneAssertionFailed("All assertions within is_it_there passed and they should have failed")
+  
     def test_calexp_should_move(self):
         """
         Test that move_embargo_args runs for
@@ -283,7 +288,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         ) 
-
+'''
 # test the other datatypes:
     # first goodseeingdeepcoadd
 
