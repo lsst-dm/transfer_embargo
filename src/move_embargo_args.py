@@ -192,7 +192,7 @@ if __name__ == "__main__":
         ).expanded()
 
         if namespace.log == "True":
-            ids_to_move = [dt.dataId.full["exposure"] for dt in datasetRefs_exposure]
+            ids_to_move = [dt.dataId.mapping["exposure"] for dt in datasetRefs_exposure]
             logger.info("exposure ids to move: %s", ids_to_move)
 
         # raw dtype requires special handling for the transfer,
