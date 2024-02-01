@@ -57,19 +57,21 @@ def is_it_there(
     # first test stuff in the temp_to butler
     butler_to = Butler(temp_to)
     registry_to = butler_to.registry
-    for dtype in iterable_datasettype:
+    counter = 0
+    for dtype in datasettype:
         if any(
             dim in ["exposure", "visit"]
             for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
         ):
             print(
-                "dtype with exposure or visit info: ",
+                "dtype with exposure or visit info: ", dtype
             )
             ids_in_temp_to = [
-                dt.dataId.full["exposure"]
+                dt.dataId.mapping["exposure"]
                 for dt in registry_to.queryDatasets(datasetType=..., collections=...)
             ]
         else:
+            print("dtype with no exposure", dtype)
             datasetRefs = registry_to.queryDatasets(
                 datasetType=datasettype, collections=collections
             )
@@ -85,11 +87,23 @@ def is_it_there(
         # now check the temp_from butler and see what remains
         butler_from = Butler(temp_from)
         registry_from = butler_from.registry
-        ids_in_temp_from = [
-            dt.dataId.full["exposure"]
-            for dt in registry_from.queryDatasets(datasetType=..., collections=...)
-        ]
-
+        
+        if any(
+            dim in ["exposure", "visit"]
+            for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
+        ):
+            ids_in_temp_from = [
+                dt.dataId.mapping["exposure"]
+                for dt in registry_from.queryDatasets(datasetType=..., collections=...)
+            ]
+        else:
+            ids_in_temp_from = [
+                dt.id
+                for dt in registry_from.queryDatasets(
+                    datasetType=..., collections=...
+                )
+            ]
+            
         # verifying the contents of the from butler
         # if move is on, only the ids_remain should be in temp_from butler
         if move == "True":
@@ -107,8 +121,12 @@ def is_it_there(
                 ids_should_remain_after_move + ids_should_be_moved
             ), f"move is {move} and {ids_in_temp_from} should be in either \
                     {temp_from} or {temp_to} repo but it isn't"
+        counter += 1
+    assert counter != 0, f"Never went through the for loop shame on you, counter = {counter}"
 
-
+class AtLeastOneAssertionFailed(Exception):
+    pass
+    
 class TestMoveEmbargoArgs(unittest.TestCase):
     def setUp(self):
         """
@@ -144,7 +162,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     # test the other datatypes:
     # first goodseeingdeepcoadd
-    def test_list_datatypes(self):
+    def test_raw_datatypes(self):
         """
         Test that move_embargo_args runs for a list
         of input datatypes
@@ -182,6 +200,57 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
+
+    # test the other datatypes:
+    # first goodseeingdeepcoadd
+    
+    def test_raw_datatypes_should_fail(self):
+        """
+        Test that move_embargo_args runs for a list
+        of input datatypes
+        """
+        move = "False"
+        # now_time_embargo = "now"
+        # embargo_hours =  80.0 # hours
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 0.1  # hours
+        # IDs that should be moved to temp_to:
+        # lol 2019111300059 should be in the ids_moved
+        # list but I'm removing it to make sure the assertions
+        # fail
+        ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        
+        try:
+            is_it_there(
+                embargo_hours,
+                now_time_embargo,
+                ids_remain,
+                ids_moved,
+                self.temp_from_path,
+                self.temp_to_path,
+                move=move,
+                log=self.log,
+                datasettype=["raw"],
+                collections=["LATISS/raw/all"],
+                desturiprefix=self.temp_dest_ingest,
+            )
+        except AssertionError:
+            # At least one assertion failed, which is what we want
+            pass
+        else:
+            # All assertions passed, so we raise a custom exception
+            raise AtLeastOneAssertionFailed("All assertions within is_it_there passed and they should have failed")
 
 
 '''
