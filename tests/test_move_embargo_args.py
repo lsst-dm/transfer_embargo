@@ -219,7 +219,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         # list but I'm removing it to make sure the assertions
         # fail
         ids_moved = [
-            2019111300059,
             2019111300061,
             2020011700002,
             2020011700003,
