@@ -98,7 +98,7 @@ if __name__ == "__main__":
     dest_butler = Butler(namespace.torepo, writeable=True)
     dest_registry = dest_butler.registry
     datasetTypeList = namespace.datasettype
-    print('whats the datasettypelist in here', datasetTypeList)
+    print("whats the datasettypelist in here", datasetTypeList)
     collections = namespace.collections
     move = namespace.move
     dest_uri_prefix = namespace.desturiprefix
@@ -181,7 +181,6 @@ if __name__ == "__main__":
             where="exposure.id IN (exposure_ids)",
             bind={"exposure_ids": outside_embargo},
         ).expanded()
-        
 
         if namespace.log == "True":
             ids_to_move = [dt.dataId.mapping["exposure"] for dt in datasetRefs_exposure]
@@ -272,7 +271,8 @@ if __name__ == "__main__":
             ids_moved = [
                 dt.id
                 for dt in dest_registry.queryDatasets(
-                    datasetType=datalist_no_exposure, collections=collections_no_exposure
+                    datasetType=datalist_no_exposure,
+                    collections=collections_no_exposure,
                 )
             ]
             logger.info("ingest ids moved: %s", ids_moved)
