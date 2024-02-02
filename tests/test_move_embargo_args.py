@@ -27,7 +27,10 @@ def is_it_there(
     # make it iterable
     iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
     iterable_collections = utils.iteration.ensure_iterable(collections)
-
+    
+    print('datasettype', datasettype)
+    print('after ensure iterable', iterable_datasettype)
+    
     # Run the package
     subprocess.run(
         [
@@ -59,21 +62,24 @@ def is_it_there(
     registry_to = butler_to.registry
     counter = 0
     for dtype in datasettype:
-        if any(
-            dim in ["exposure", "visit"]
-            for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
-        ):
-            print("dtype with exposure or visit info: ", dtype)
-            ids_in_temp_to = [
-                dt.dataId.mapping["exposure"]
-                for dt in registry_to.queryDatasets(datasetType=..., collections=...)
-            ]
-        else:
-            print("dtype with no exposure", dtype)
-            datasetRefs = registry_to.queryDatasets(
-                datasetType=datasettype, collections=collections
-            )
-            ids_in_temp_to = [dt.id for dt in datasetRefs]
+        try:
+            if any(
+                dim in ["exposure", "visit"]
+                for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
+            ):
+                print("dtype with exposure or visit info: ", dtype)
+                ids_in_temp_to = [
+                    dt.dataId.mapping["exposure"]
+                    for dt in registry_to.queryDatasets(datasetType=..., collections=...)
+                ]
+            else:
+                print("dtype with no exposure", dtype)
+                datasetRefs = registry_to.queryDatasets(
+                    datasetType=datasettype, collections=collections
+                )
+                ids_in_temp_to = [dt.id for dt in datasetRefs]
+        except IndexError:
+            ids_in_temp_to = []
 
         # verifying the contents of the temp_to butler
         # check that what we expect to move (ids_should_be_moved)
@@ -86,19 +92,26 @@ def is_it_there(
         butler_from = Butler(temp_from)
         registry_from = butler_from.registry
 
-        if any(
+        # first check if anything is in the registry_to:
+        try:
+            if any(
             dim in ["exposure", "visit"]
-            for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
+            for dim in registry_from.queryDatasetTypes(dtype)[0].dimensions.names
         ):
-            ids_in_temp_from = [
-                dt.dataId.mapping["exposure"]
-                for dt in registry_from.queryDatasets(datasetType=..., collections=...)
-            ]
-        else:
-            ids_in_temp_from = [
-                dt.id
-                for dt in registry_from.queryDatasets(datasetType=..., collections=...)
-            ]
+                ids_in_temp_from = [
+                    dt.dataId.mapping["exposure"]
+                    for dt in registry_from.queryDatasets(datasetType=..., collections=...)
+                ]
+            else:
+                ids_in_temp_from = [
+                    dt.id
+                    for dt in registry_from.queryDatasets(datasetType=..., collections=...)
+                ]
+        except IndexError:
+            ids_in_temp_from = []
+            
+
+        
 
         # verifying the contents of the from butler
         # if move is on, only the ids_remain should be in temp_from butler
@@ -160,6 +173,40 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
+    def test_nothing_moves(self):
+        """
+        Nothing should move when the embargo hours falls right on
+        the oldest exposure
+        """
+        move = "False"
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 5596964.255774 / 3600.0
+        # IDs that should be moved to temp_to:
+        ids_moved = []
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+            log=self.log,
+            datasettype=["raw"],
+            collections=["LATISS/raw/all"],
+            desturiprefix=self.temp_dest_ingest,
+        )
+
     # test the other datatypes:
     # first goodseeingdeepcoadd
     def test_raw_datatypes(self):
@@ -200,6 +247,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
+        
 
     # test the other datatypes:
     # first goodseeingdeepcoadd
@@ -253,37 +301,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                 "All assertions within is_it_there passed and they should have failed"
             )
 
-    def test_nothing_moves(self):
-        """
-        Nothing should move when the embargo hours falls right on
-        the oldest exposure
-        """
-        move = "False"
-        now_time_embargo = "2020-01-17 16:55:11.322700"
-        embargo_hours = 5596964.255774 / 3600.0
-        # IDs that should be moved to temp_to:
-        ids_moved = []
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-            2020011700004,
-            2020011700005,
-            2020011700006,
-        ]
-        is_it_there(
-            embargo_hours,
-            now_time_embargo,
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            move=move,
-            log=self.log,
-            desturiprefix=self.temp_dest_ingest,
-        )
+    
+        
 
     def test_after_now_01(self):
         """
