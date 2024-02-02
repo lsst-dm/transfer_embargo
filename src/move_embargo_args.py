@@ -98,6 +98,7 @@ if __name__ == "__main__":
     dest_butler = Butler(namespace.torepo, writeable=True)
     dest_registry = dest_butler.registry
     datasetTypeList = namespace.datasettype
+    print('whats the datasettypelist in here', datasetTypeList)
     collections = namespace.collections
     move = namespace.move
     dest_uri_prefix = namespace.desturiprefix
@@ -180,6 +181,7 @@ if __name__ == "__main__":
             where="exposure.id IN (exposure_ids)",
             bind={"exposure_ids": outside_embargo},
         ).expanded()
+        
 
         if namespace.log == "True":
             ids_to_move = [dt.dataId.mapping["exposure"] for dt in datasetRefs_exposure]
@@ -211,16 +213,22 @@ if __name__ == "__main__":
                     )
 
                 # register datasettype and collection run only once
-                dest_butler.registry.registerDatasetType(
-                    list(datasetRefs_exposure)[0].datasetType
-                )
-                dest_butler.registry.registerRun(list(datasetRefs_exposure)[0].run)
+                try:
+                    dest_butler.registry.registerDatasetType(
+                        list(datasetRefs_exposure)[0].datasetType
+                    )
+                    dest_butler.registry.registerRun(list(datasetRefs_exposure)[0].run)
 
-                # ingest to the destination butler
-                dest_butler.transfer_dimension_records_from(
-                    butler, datasetRefs_exposure
-                )
-                dest_butler.ingest(*filedataset_list, transfer="direct")
+                    # ingest to the destination butler
+                    dest_butler.transfer_dimension_records_from(
+                        butler, datasetRefs_exposure
+                    )
+                    dest_butler.ingest(*filedataset_list, transfer="direct")
+                except IndexError:
+                    # this will be thrown if nothing is being moved
+                    if namespace.log == "True":
+                        logger.info("nothing in datasetRefs_exposure")
+
             else:
                 dest_butler.transfer_from(
                     butler,
