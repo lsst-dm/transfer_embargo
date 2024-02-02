@@ -63,9 +63,7 @@ def is_it_there(
             dim in ["exposure", "visit"]
             for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
         ):
-            print(
-                "dtype with exposure or visit info: ", dtype
-            )
+            print("dtype with exposure or visit info: ", dtype)
             ids_in_temp_to = [
                 dt.dataId.mapping["exposure"]
                 for dt in registry_to.queryDatasets(datasetType=..., collections=...)
@@ -87,7 +85,7 @@ def is_it_there(
         # now check the temp_from butler and see what remains
         butler_from = Butler(temp_from)
         registry_from = butler_from.registry
-        
+
         if any(
             dim in ["exposure", "visit"]
             for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
@@ -99,11 +97,9 @@ def is_it_there(
         else:
             ids_in_temp_from = [
                 dt.id
-                for dt in registry_from.queryDatasets(
-                    datasetType=..., collections=...
-                )
+                for dt in registry_from.queryDatasets(datasetType=..., collections=...)
             ]
-            
+
         # verifying the contents of the from butler
         # if move is on, only the ids_remain should be in temp_from butler
         if move == "True":
@@ -122,11 +118,15 @@ def is_it_there(
             ), f"move is {move} and {ids_in_temp_from} should be in either \
                     {temp_from} or {temp_to} repo but it isn't"
         counter += 1
-    assert counter != 0, f"Never went through the for loop shame on you, counter = {counter}"
+    assert (
+        counter != 0
+    ), f"Never went through the for loop shame on you, counter = {counter}"
 
-class AtLeastOneAssertionFailed(Exception):
+
+class AtLeastOneAssertionFailedError(Exception):
     pass
-    
+
+
 class TestMoveEmbargoArgs(unittest.TestCase):
     def setUp(self):
         """
@@ -203,7 +203,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     # test the other datatypes:
     # first goodseeingdeepcoadd
-    
+
     def test_raw_datatypes_should_fail(self):
         """
         Test that move_embargo_args runs for a list
@@ -229,7 +229,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700005,
             2020011700006,
         ]
-        
+
         try:
             is_it_there(
                 embargo_hours,
@@ -249,11 +249,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             pass
         else:
             # All assertions passed, so we raise a custom exception
-            raise AtLeastOneAssertionFailed("All assertions within is_it_there passed and they should have failed")
+            raise AtLeastOneAssertionFailedError(
+                "All assertions within is_it_there passed and they should have failed"
+            )
 
-
-'''
-    # next test calexp are moved
     def test_nothing_moves(self):
         """
         Nothing should move when the embargo hours falls right on
@@ -553,6 +552,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-'''
+
 if __name__ == "__main__":
     unittest.main()
