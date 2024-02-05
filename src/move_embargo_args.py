@@ -148,7 +148,7 @@ if __name__ == "__main__":
     for i, dtype in enumerate(datasetTypeList):
         if any(
             dim in ["exposure", "visit"]
-            for dim in [d.name for d in registry.queryDatasetTypes(dtype)[0].dimensions]
+            for dim in [d.name for d in registry.queryDatasetTypes(dtype)[0].dimensions.names]
         ):
             datalist_exposure.append(dtype)
             collections_exposure.append(collections[i])
@@ -203,17 +203,6 @@ if __name__ == "__main__":
                 assert (
                     dest_uri_prefix
                 ), f"dest_uri_prefix needs to be specified to transfer raw datatype"
-                # now prepare for ingest
-                # _ = prep_transfer.prep_for_ingest(
-                #     dest_registry,
-                #     dest_butler,
-                #     registry,
-                #     butler,
-                #     datasetRefs_exposure,
-                #     register_dataset_types=True,
-                #     register_collection=True,
-                #     transfer_dimensions=True,
-                # )
                 # define a new filedataset_list using URIs
                 dest_uri = lsst.resources.ResourcePath(dest_uri_prefix)
                 source_uri = butler.get_many_uris(datasetRefs_exposure)
@@ -231,15 +220,19 @@ if __name__ == "__main__":
                         lsst.daf.butler.FileDataset(new_dest_uri, key)
                     )
                 
-                # register datatype and collection. This has to be done only once so change the following accordingly
-                for i, ref in enumerate(datasetRefs_exposure):
-                    # dest_butler.registry.registerDatasetType(datasetRefs[0].datasetType)
-                    dest_butler.registry.registerDatasetType(ref.datasetType)
-                    dest_butler.registry.registerRun(ref.run)
-
-                dest_butler.transfer_dimension_records_from(butler, datasetRefs_exposure)
-                # ingest to the destination butler
-                dest_butler.ingest(*filedataset_list, transfer="direct")
+                # register datatype and collection run only once
+                try:
+                    for i, ref in enumerate(datasetRefs_exposure):
+                        # dest_butler.registry.registerDatasetType(datasetRefs[0].datasetType)
+                        dest_butler.registry.registerDatasetType(ref.datasetType)
+                        dest_butler.registry.registerRun(ref.run)
+    
+                    dest_butler.transfer_dimension_records_from(butler, datasetRefs_exposure)
+                    # ingest to the destination butler
+                    dest_butler.ingest(*filedataset_list, transfer="direct")
+                except IndexError:
+                    if namespace.log == "True":
+                        logger.info("nothing in datasetRefs_exposure")
             else:
                 dest_butler.transfer_from(
                     butler,
