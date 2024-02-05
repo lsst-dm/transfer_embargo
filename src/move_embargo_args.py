@@ -148,7 +148,7 @@ if __name__ == "__main__":
     for i, dtype in enumerate(datasetTypeList):
         if any(
             dim in ["exposure", "visit"]
-            for dim in [d.name for d in registry.queryDatasetTypes(dtype)[0].dimensions.names]
+            for dim in registry.queryDatasetTypes(dtype)[0].dimensions.names
         ):
             datalist_exposure.append(dtype)
             collections_exposure.append(collections[i])
@@ -244,7 +244,7 @@ if __name__ == "__main__":
                 )
         if namespace.log == "True":
             ids_moved = [
-                dt.dataId.full["exposure"]
+                dt.dataId.mapping["exposure"]
                 for dt in dest_registry.queryDatasets(
                     datasetType=datalist_exposure, collections=collections_exposure
                 )
