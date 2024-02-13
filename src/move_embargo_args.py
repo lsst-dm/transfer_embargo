@@ -170,6 +170,10 @@ if __name__ == "__main__":
 
     if datalist_exposure:  # if there is anything in the list
         # first, run all of the exposure types through
+        if namespace.log == "True":
+            logger.info("datalist_exposure exists")
+            logger.info("collections: %s", collections_exposure)
+        
         outside_embargo = [
             dt.id
             for dt in registry.queryDimensionRecords(
@@ -182,6 +186,9 @@ if __name__ == "__main__":
                 bind={"timespan_embargo": timespan_embargo},
             )
         ]
+        if namespace.log == "True":
+            logger.info("outside embargo: %s", outside_embargo)
+        
         # Query the DataIds after embargo period
         datasetRefs_exposure = registry.queryDatasets(
             datalist_exposure,
