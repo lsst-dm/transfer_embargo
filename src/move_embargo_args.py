@@ -186,8 +186,34 @@ if __name__ == "__main__":
                 bind={"timespan_embargo": timespan_embargo},
             )
         ]
+        '''
+        outside_embargo_calexp = [
+            dt.id
+            for dt in registry.queryDimensionRecords(
+                "visit",
+                dataId=dataId,
+                datasets=datalist_exposure,
+                collections=collections_exposure,
+                where="NOT exposure.timespan OVERLAPS\
+                                                        timespan_embargo",
+                bind={"timespan_embargo": timespan_embargo},
+            )
+        ]
+        '''
         if namespace.log == "True":
+            for dt in registry.queryDimensionRecords(
+                "visit",
+                dataId=dataId,
+                datasets=datalist_exposure,
+                collections=collections_exposure,
+                where="NOT exposure.timespan OVERLAPS\
+                                                        timespan_embargo",
+                bind={"timespan_embargo": timespan_embargo},
+            ):
+                logger.info("dt: %s", dt)
             logger.info("outside embargo: %s", outside_embargo)
+            
+            #logger.info("outside embargo: %s", outside_embargo_calexp)
         
         # Query the DataIds after embargo period
         datasetRefs_exposure = registry.queryDatasets(

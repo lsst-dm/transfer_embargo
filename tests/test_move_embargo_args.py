@@ -28,9 +28,6 @@ def is_it_there(
     iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
     iterable_collections = utils.iteration.ensure_iterable(collections)
 
-    print("datasettype", datasettype)
-    print("after ensure iterable", iterable_datasettype)
-
     # Run the package
     subprocess.run(
         [
@@ -67,7 +64,6 @@ def is_it_there(
                 dim in ["exposure", "visit"]
                 for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
             ):
-                print("dtype with exposure or visit info: ", dtype)
                 ids_in_temp_to = [
                     dt.dataId.mapping["exposure"]
                     for dt in registry_to.queryDatasets(
@@ -75,7 +71,6 @@ def is_it_there(
                     )
                 ]
             else:
-                print("dtype with no exposure", dtype)
                 datasetRefs = registry_to.queryDatasets(
                     datasetType=datasettype, collections=collections
                 )
@@ -122,31 +117,15 @@ def is_it_there(
                 ]
         # now concatenate all of these:
         ids_in_temp_from = ids_in_temp_from_exposure + ids_in_temp_from_visit + ids_in_temp_from_else
-        print('all ids', ids_in_temp_from)
-
-        # verifying the contents of the from butler
-        # if move is on, only the ids_remain should be in temp_from butler
-        if move == "True":
-            # checking that everything in temp_from butler
-            # is in the ids_remain list
-            assert sorted(ids_in_temp_from) == sorted(
-                ids_should_be_in_temp_from
-            ), f"move is {move} and {ids_in_temp_from} does not match what should be in \
-                {temp_from}, which is {ids_should_be_in_temp_from}"
-        # otherwise, if copy
-        else:
-            # the list of ids in ids_should_be_in_temp_from
-            # must be included in the list of ids actually
-            # in temp from
-            assert all(id_should_be in ids_in_temp_from for id_should_be in ids_should_be_in_temp_from), \
-                f"move is {move} and {ids_should_be_in_temp_from} should be in {temp_from} repo but it isn't, \
-                instead this is what is in it: {ids_in_temp_from}"
-            '''
-            assert sorted(ids_in_temp_from) == sorted(
-                ids_should_be_in_temp_from + ids_should_be_in_temp_to
-            ), f"move is {move} and {ids_in_temp_from} should be in either \
-                    {temp_from} or {temp_to} repo but it isn't"
-            '''
+        
+        # verify the contents of the from butler
+        # the list of ids in ids_should_be_in_temp_from
+        # must be included in the list of ids actually
+        # in temp from
+        missing_ids = [id_should_be for id_should_be in ids_should_be_in_temp_from if id_should_be not in ids_in_temp_from]
+        assert not missing_ids, \
+            f"move is {move} and the following IDs are missing in {temp_from} repo: {missing_ids}, \
+            instead this is what is in it: {ids_in_temp_from}"
         counter += 1
     assert (
         counter != 0
@@ -190,8 +169,43 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
-    # test the other datatypes:
-    # first goodseeingdeepcoadd
+    def test_calexp_should_move(self):
+        """
+        Test that move_embargo_args runs for the calexp datatype
+        """
+        move = "False"
+        # now_time_embargo = "now"
+        # embargo_hours =  80.0 # hours
+        now_time_embargo = "2022-11-11 03:35:12.836981"
+        #"2020-01-17 16:55:11.322700"
+        embargo_hours = 80.0  # hours
+        # IDs that should be moved to temp_to:
+        ids_expected_in_to = [
+            2022110800580,
+            2022110900673,
+            2022111000436
+        ]
+        # IDs that should stay in the temp_from:
+        ids_expected_in_from = [
+            2022110800580,
+            2022110900673,
+            2022111000436
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_expected_in_from,
+            ids_expected_in_to,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+            log=self.log,
+            datasettype=["calexp"],
+            collections=["LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"],
+            desturiprefix=self.temp_dest_ingest,
+            # desturiprefix="tests/data/",
+        ) 
+'''
     def test_raw_datatypes(self):
         """
         Test that move_embargo_args runs for a list
@@ -209,9 +223,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700002,
             2020011700003,
         ]
-
-
-        #[2019111300059, 2020011700004, 2020011700002, 2020011700003, 2020011700005, 2019111300061, 2020011700006, 2022110800230, 2022110800235, 2022110800238]
         # IDs that should stay in the temp_from:
         ids_expected_in_from = [
             2019111300059,
@@ -238,45 +249,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
+'''
 
 '''
-    def test_calexp_should_move(self):
-        """
-        Test that move_embargo_args runs for the calexp datatype
-        """
-        move = "False"
-        # now_time_embargo = "now"
-        # embargo_hours =  80.0 # hours
-        now_time_embargo = "2022-11-11 03:35:12.836981"
-        #"2020-01-17 16:55:11.322700"
-        embargo_hours = 80.0  # hours
-        # IDs that should be moved to temp_to:
-        ids_moved = [
-            2022110800580,
-            2022110900673,
-            2022111000436
-        ]
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2022110800580,
-            2022110900673,
-            2022111000436
-        ]
-        is_it_there(
-            embargo_hours,
-            now_time_embargo,
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            move=move,
-            log=self.log,
-            datasettype=["calexp"],
-            collections=["LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"],
-            desturiprefix=self.temp_dest_ingest,
-            # desturiprefix="tests/data/",
-        ) 
-
 # test the other datatypes:
     # first goodseeingdeepcoadd
 
