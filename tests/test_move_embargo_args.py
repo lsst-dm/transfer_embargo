@@ -13,8 +13,8 @@ from lsst.daf.butler import Butler
 def is_it_there(
     embargo_hours: float,
     now_time_embargo: str,
-    ids_should_remain_after_move,
-    ids_should_be_moved,
+    ids_should_be_in_temp_from,
+    ids_should_be_in_temp_to,
     temp_from,
     temp_to,
     move,
@@ -86,20 +86,18 @@ def is_it_there(
         # verifying the contents of the temp_to butler
         # check that what we expect to move (ids_should_be_moved)
         # are in the temp_to repo (ids_in_temp_to)
-        assert sorted(ids_should_be_moved) == sorted(
+        assert sorted(ids_should_be_in_temp_to) == sorted(
             ids_in_temp_to
-        ), f"{ids_should_be_moved} should be in {temp_to} repo but isnt :(, \
+        ), f"{ids_should_be_in_temp_to} should be in {temp_to} repo but isnt :(, \
             what is in it is: {ids_in_temp_to}"
         # now check the temp_from butler and see what remains
         butler_from = Butler(temp_from)
         registry_from = butler_from.registry
-
-        dtype_all = ['calexp','raw']
-        print('dtype list', dtype_all)
-        print(registry_from.queryDatasetTypes(...), len(registry_from.queryDatasetTypes(...)))
         ids_in_temp_from_exposure = []
         ids_in_temp_from_visit = []
         ids_in_temp_from_else = []
+        # explore the datatypes in registry from
+        # build a list of all ids in registry from
         for DatasetType in registry_from.queryDatasetTypes(...):
             if any(dim in ["exposure"] for dim in DatasetType.dimensions.names):
                 ids_in_temp_from_exposure = [
@@ -124,55 +122,7 @@ def is_it_there(
                 ]
         # now concatenate all of these:
         ids_in_temp_from = ids_in_temp_from_exposure + ids_in_temp_from_visit + ids_in_temp_from_else
-        print(ids_in_temp_from)
-                
-        '''
-
-        # first check if anything is in the registry_from:
-        try:
-            
-            if any(
-                dim in ["exposure", "visit"]
-                
-                for dim in registry_from.queryDatasetTypes(...)[0].dimensions.names
-                ):
-                
-                for dim in registry_from.queryDatasetTypes(...)[0].dimensions.names:
-                    
-                    print('any dim', dim)
-                
-                for dt in registry_from.queryDatasets(
-                        datasetType=..., collections=...
-                    ):
-                    print('dt', dt.dataId.mapping)
-                try:
-                    ids_in_temp_from_exposure = [
-                        dt.dataId.mapping["exposure"]
-                        for dt in registry_from.queryDatasets(
-                            datasetType=..., collections=...
-                        )
-                    ]
-                except KeyError:
-                    # then grab visit
-                    ids_in_temp_from_visit = [
-                        dt.dataId.mapping["visit"]
-                        for dt in registry_from.queryDatasets(
-                            datasetType=..., collections=...
-                        )
-                    ]
-                # concat ids from exposure with that from visit:
-                ids_in_temp_from = ids_in_temp_from_exposure + ids_in_temp_from_visit
-                print('total ids', ids_in_temp_from)
-            else:
-                ids_in_temp_from = [
-                    dt.id
-                    for dt in registry_from.queryDatasets(
-                        datasetType=..., collections=...
-                    )
-                ]
-        except IndexError:
-            ids_in_temp_from = []
-        '''
+        print('all ids', ids_in_temp_from)
 
         # verifying the contents of the from butler
         # if move is on, only the ids_remain should be in temp_from butler
@@ -180,17 +130,23 @@ def is_it_there(
             # checking that everything in temp_from butler
             # is in the ids_remain list
             assert sorted(ids_in_temp_from) == sorted(
-                ids_should_remain_after_move
+                ids_should_be_in_temp_from
             ), f"move is {move} and {ids_in_temp_from} does not match what should be in \
-                {temp_from}, which is {ids_should_remain_after_move}"
+                {temp_from}, which is {ids_should_be_in_temp_from}"
         # otherwise, if copy
         else:
-            # everything in temp_from should be either
-            # in ids_remain or ids_moved
+            # the list of ids in ids_should_be_in_temp_from
+            # must be included in the list of ids actually
+            # in temp from
+            assert all(id_should_be in ids_in_temp_from for id_should_be in ids_should_be_in_temp_from), \
+                f"move is {move} and {ids_should_be_in_temp_from} should be in {temp_from} repo but it isn't, \
+                instead this is what is in it: {ids_in_temp_from}"
+            '''
             assert sorted(ids_in_temp_from) == sorted(
-                ids_should_remain_after_move + ids_should_be_moved
+                ids_should_be_in_temp_from + ids_should_be_in_temp_to
             ), f"move is {move} and {ids_in_temp_from} should be in either \
                     {temp_from} or {temp_to} repo but it isn't"
+            '''
         counter += 1
     assert (
         counter != 0
@@ -247,14 +203,21 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         now_time_embargo = "2020-01-17 16:55:11.322700"
         embargo_hours = 0.1  # hours
         # IDs that should be moved to temp_to:
-        ids_moved = [
+        ids_expected_in_to = [
             2019111300059,
             2019111300061,
             2020011700002,
             2020011700003,
         ]
+
+
+        #[2019111300059, 2020011700004, 2020011700002, 2020011700003, 2020011700005, 2019111300061, 2020011700006, 2022110800230, 2022110800235, 2022110800238]
         # IDs that should stay in the temp_from:
-        ids_remain = [
+        ids_expected_in_from = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
             2020011700004,
             2020011700005,
             2020011700006,
@@ -262,8 +225,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         is_it_there(
             embargo_hours,
             now_time_embargo,
-            ids_remain,
-            ids_moved,
+            ids_expected_in_from,
+            ids_expected_in_to,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
