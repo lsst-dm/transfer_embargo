@@ -94,18 +94,75 @@ def is_it_there(
         butler_from = Butler(temp_from)
         registry_from = butler_from.registry
 
-        # first check if anything is in the registry_to:
-        try:
-            if any(
-                dim in ["exposure", "visit"]
-                for dim in registry_from.queryDatasetTypes(dtype)[0].dimensions
-            ):
-                ids_in_temp_from = [
-                    dt.dataId.mapping["exposure"]
+        dtype_all = ['calexp','raw']
+        print('dtype list', dtype_all)
+        print(registry_from.queryDatasetTypes(...), len(registry_from.queryDatasetTypes(...)))
+        ids_in_temp_from_exposure = []
+        ids_in_temp_from_visit = []
+        ids_in_temp_from_else = []
+        for DatasetType in registry_from.queryDatasetTypes(...):
+            if any(dim in ["exposure"] for dim in DatasetType.dimensions.names):
+                ids_in_temp_from_exposure = [
+                        dt.dataId.mapping["exposure"]
+                        for dt in registry_from.queryDatasets(
+                            datasetType=DatasetType.name, collections=...
+                        )
+                    ]
+            elif any(dim in ["visit"] for dim in DatasetType.dimensions.names):
+                ids_in_temp_from_visit = [
+                        dt.dataId.mapping["visit"]
+                        for dt in registry_from.queryDatasets(
+                            datasetType=DatasetType.name, collections=...
+                        )
+                    ]
+            else:
+                ids_in_temp_from_else = [
+                    dt.id
                     for dt in registry_from.queryDatasets(
-                        datasetType=..., collections=...
+                        datasetType=DatasetType.name, collections=...
                     )
                 ]
+        # now concatenate all of these:
+        ids_in_temp_from = ids_in_temp_from_exposure + ids_in_temp_from_visit + ids_in_temp_from_else
+        print(ids_in_temp_from)
+                
+        '''
+
+        # first check if anything is in the registry_from:
+        try:
+            
+            if any(
+                dim in ["exposure", "visit"]
+                
+                for dim in registry_from.queryDatasetTypes(...)[0].dimensions.names
+                ):
+                
+                for dim in registry_from.queryDatasetTypes(...)[0].dimensions.names:
+                    
+                    print('any dim', dim)
+                
+                for dt in registry_from.queryDatasets(
+                        datasetType=..., collections=...
+                    ):
+                    print('dt', dt.dataId.mapping)
+                try:
+                    ids_in_temp_from_exposure = [
+                        dt.dataId.mapping["exposure"]
+                        for dt in registry_from.queryDatasets(
+                            datasetType=..., collections=...
+                        )
+                    ]
+                except KeyError:
+                    # then grab visit
+                    ids_in_temp_from_visit = [
+                        dt.dataId.mapping["visit"]
+                        for dt in registry_from.queryDatasets(
+                            datasetType=..., collections=...
+                        )
+                    ]
+                # concat ids from exposure with that from visit:
+                ids_in_temp_from = ids_in_temp_from_exposure + ids_in_temp_from_visit
+                print('total ids', ids_in_temp_from)
             else:
                 ids_in_temp_from = [
                     dt.id
@@ -115,6 +172,7 @@ def is_it_there(
                 ]
         except IndexError:
             ids_in_temp_from = []
+        '''
 
         # verifying the contents of the from butler
         # if move is on, only the ids_remain should be in temp_from butler
@@ -176,10 +234,52 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
+    # test the other datatypes:
+    # first goodseeingdeepcoadd
+    def test_raw_datatypes(self):
+        """
+        Test that move_embargo_args runs for a list
+        of input datatypes
+        """
+        move = "False"
+        # now_time_embargo = "now"
+        # embargo_hours =  80.0 # hours
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 0.1  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+            log=self.log,
+            # datasettype=["raw", "raw"],
+            # collections=["LATISS/raw/all", "LATISS/raw/all"],
+            datasettype=["raw"],
+            collections=["LATISS/raw/all"],
+            desturiprefix=self.temp_dest_ingest,
+        )
+
+
+'''
     def test_calexp_should_move(self):
         """
-        Test that move_embargo_args runs for
-        the calexp datatype
+        Test that move_embargo_args runs for the calexp datatype
         """
         move = "False"
         # now_time_embargo = "now"
@@ -250,7 +350,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         )
-'''
+
     def test_after_now_01(self):
         """
         Verify that exposures after now are not being moved
@@ -320,46 +420,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-    # test the other datatypes:
-    # first goodseeingdeepcoadd
-    def test_raw_datatypes(self):
-        """
-        Test that move_embargo_args runs for a list
-        of input datatypes
-        """
-        move = "False"
-        # now_time_embargo = "now"
-        # embargo_hours =  80.0 # hours
-        now_time_embargo = "2020-01-17 16:55:11.322700"
-        embargo_hours = 0.1  # hours
-        # IDs that should be moved to temp_to:
-        ids_moved = [
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-        ]
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2020011700004,
-            2020011700005,
-            2020011700006,
-        ]
-        is_it_there(
-            embargo_hours,
-            now_time_embargo,
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            move=move,
-            log=self.log,
-            # datasettype=["raw", "raw"],
-            # collections=["LATISS/raw/all", "LATISS/raw/all"],
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
-            desturiprefix=self.temp_dest_ingest,
-        )
 
     # test the other datatypes:
     # first goodseeingdeepcoadd
