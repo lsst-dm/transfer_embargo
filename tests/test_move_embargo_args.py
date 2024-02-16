@@ -61,7 +61,17 @@ def is_it_there(
     for dtype in datasettype:
         try:
             if any(
-                dim in ["exposure", "visit"]
+                dim in ["visit"]
+                for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
+            ):
+                ids_in_temp_to = [
+                    dt.dataId.mapping["visit"]
+                    for dt in registry_to.queryDatasets(
+                        datasetType=..., collections=...
+                    )
+                ]
+            elif any(
+                dim in ["exposure"]
                 for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
             ):
                 ids_in_temp_to = [
@@ -176,7 +186,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         move = "False"
         # now_time_embargo = "now"
         # embargo_hours =  80.0 # hours
-        now_time_embargo = "2022-11-11 03:35:12.836981"
+        now_time_embargo = "2022-11-13 03:35:12.836981"
+        #'2022-11-09 01:03:22.888003'
         #"2020-01-17 16:55:11.322700"
         embargo_hours = 80.0  # hours
         # IDs that should be moved to temp_to:
