@@ -1,13 +1,8 @@
 import argparse
-
 import astropy.time
 from lsst.daf.butler import Butler, Timespan
 from lsst.daf.butler.cli.cliLog import CliLog
 import logging
-
-# import ast
-import json
-# import prep_transfer
 import lsst
 import os
 
@@ -143,7 +138,7 @@ if __name__ == "__main__":
     datalist_exposure = []
     datalist_visit = []
     datalist_no_exposure = []
-    
+
     collections_exposure = []
     collections_visit = []
     collections_no_exposure = []
@@ -183,7 +178,7 @@ if __name__ == "__main__":
         if namespace.log == "True":
             logger.info("datalist_exposure exists")
             logger.info("collections: %s", collections_exposure)
-        
+
         outside_embargo = [
             dt.id
             for dt in registry.queryDimensionRecords(
@@ -196,7 +191,7 @@ if __name__ == "__main__":
                 bind={"timespan_embargo": timespan_embargo},
             )
         ]
-        '''
+        """
         # still an issue if a calexp has two visits, one is embargoed ie
         # using visit takes care of this
         # if both exposure and visit, use visit
@@ -214,13 +209,12 @@ if __name__ == "__main__":
                 bind={"timespan_embargo": timespan_embargo},
             )
         ]
-        '''
+        """
         if namespace.log == "True":
-            
             logger.info("outside embargo: %s", outside_embargo)
-            
-            #logger.info("outside embargo: %s", outside_embargo_calexp)
-        
+
+            # logger.info("outside embargo: %s", outside_embargo_calexp)
+
         # Query the DataIds after embargo period
         datasetRefs_exposure = registry.queryDatasets(
             datalist_exposure,
@@ -241,7 +235,7 @@ if __name__ == "__main__":
                 # first check that the destination uri is defined
                 assert (
                     dest_uri_prefix
-                ), f"dest_uri_prefix needs to be specified to transfer raw datatype"
+                ), f"dest_uri_prefix ({dest_uri_prefix}) needs to be specified to transfer raw datatype"
                 # define a new filedataset_list using URIs
                 dest_uri = lsst.resources.ResourcePath(dest_uri_prefix)
                 source_uri = butler.get_many_uris(datasetRefs_exposure)
@@ -258,15 +252,17 @@ if __name__ == "__main__":
                     filedataset_list.append(
                         lsst.daf.butler.FileDataset(new_dest_uri, key)
                     )
-                
+
                 # register datatype and collection run only once
                 try:
                     for i, ref in enumerate(datasetRefs_exposure):
                         # dest_butler.registry.registerDatasetType(datasetRefs[0].datasetType)
                         dest_butler.registry.registerDatasetType(ref.datasetType)
                         dest_butler.registry.registerRun(ref.run)
-    
-                    dest_butler.transfer_dimension_records_from(butler, datasetRefs_exposure)
+
+                    dest_butler.transfer_dimension_records_from(
+                        butler, datasetRefs_exposure
+                    )
                     # ingest to the destination butler
                     dest_butler.ingest(*filedataset_list, transfer="direct")
                 except IndexError:
@@ -294,7 +290,7 @@ if __name__ == "__main__":
         if namespace.log == "True":
             logger.info("datalist_visit exists")
             logger.info("collections: %s", collections_visit)
-        
+
         outside_embargo = [
             dt.id
             for dt in registry.queryDimensionRecords(
@@ -307,10 +303,10 @@ if __name__ == "__main__":
                 bind={"timespan_embargo": timespan_embargo},
             )
         ]
-        
+
         if namespace.log == "True":
             logger.info("visit outside embargo: %s", outside_embargo)
-            
+
         # Query the DataIds after embargo period
         datasetRefs_visit = registry.queryDatasets(
             datalist_visit,
@@ -328,31 +324,29 @@ if __name__ == "__main__":
         # so separate by dtype:
         for dtype in datalist_visit:
             dest_butler.transfer_from(
-                    butler,
-                    source_refs=datasetRefs_visit,
-                    transfer="copy",
-                    skip_missing=True,
-                    register_dataset_types=True,
-                    transfer_dimensions=True,
-                )
+                butler,
+                source_refs=datasetRefs_visit,
+                transfer="copy",
+                skip_missing=True,
+                register_dataset_types=True,
+                transfer_dimensions=True,
+            )
         if namespace.log == "True":
-            '''
+            """
             ids_moved = [
                 dt.dataId.mapping["visit"]
                 for dt in dest_registry.queryDatasets(
                     datasetType=datalist_visit, collections=collections_visit
                 )
             ]
-            '''
+            """
             ids_moved = [
                 dt.dataId.mapping["visit"]
-                for dt in dest_registry.queryDatasets(
-                    datasetType=..., collections=...
-                )
+                for dt in dest_registry.queryDatasets(datasetType=..., collections=...)
             ]
             logger.info("datalist_visit: %s", datalist_visit)
             logger.info("collections_visit: %s", collections_visit)
-            
+
             logger.info("visit ids moved: %s", ids_moved)
     if datalist_no_exposure:
         # this is for datatypes that don't have an exposure
@@ -360,7 +354,7 @@ if __name__ == "__main__":
         # ie deepcoadds need to be queried using an ingest
         # date keyword
         datasetRefs_no_exposure = registry.queryDatasets(
-            datasetType=datasetlist_no_exposure,
+            datasetType=datalist_no_exposure,
             collections=collections_no_exposure,
             where="ingest_date <= timespan_embargo_begin",
             bind={"timespan_embargo_begin": timespan_embargo.begin},
@@ -380,7 +374,7 @@ if __name__ == "__main__":
             ids_moved = [
                 dt.id
                 for dt in dest_registry.queryDatasets(
-                    datasetType=datasetlist_no_exposure, collections=collections_ingest
+                    datasetType=datalist_no_exposure, collections=collections_no_exposure
                 )
             ]
             logger.info("ingest ids moved: %s", ids_moved)
@@ -390,5 +384,7 @@ if __name__ == "__main__":
         # is there a way to do this at the same time?
         if datalist_exposure:
             butler.pruneDatasets(refs=datasetRefs_exposure, unstore=True, purge=True)
-        if datalist_ingest:
+        if datalist_visit:
+            butler.pruneDatasets(refs=datasetRefs_visit, unstore=True, purge=True)
+        if datalist_no_exposure:
             butler.pruneDatasets(refs=datasetRefs_no_exposure, unstore=True, purge=True)
