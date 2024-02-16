@@ -109,18 +109,18 @@ def is_it_there(
         for DatasetType in registry_from.queryDatasetTypes(...):
             if any(dim in ["exposure"] for dim in DatasetType.dimensions.names):
                 ids_in_temp_from_exposure = [
-                        dt.dataId.mapping["exposure"]
-                        for dt in registry_from.queryDatasets(
-                            datasetType=DatasetType.name, collections=...
-                        )
-                    ]
+                    dt.dataId.mapping["exposure"]
+                    for dt in registry_from.queryDatasets(
+                        datasetType=DatasetType.name, collections=...
+                    )
+                ]
             elif any(dim in ["visit"] for dim in DatasetType.dimensions.names):
                 ids_in_temp_from_visit = [
-                        dt.dataId.mapping["visit"]
-                        for dt in registry_from.queryDatasets(
-                            datasetType=DatasetType.name, collections=...
-                        )
-                    ]
+                    dt.dataId.mapping["visit"]
+                    for dt in registry_from.queryDatasets(
+                        datasetType=DatasetType.name, collections=...
+                    )
+                ]
             else:
                 ids_in_temp_from_else = [
                     dt.id
@@ -129,15 +129,22 @@ def is_it_there(
                     )
                 ]
         # now concatenate all of these:
-        ids_in_temp_from = ids_in_temp_from_exposure + ids_in_temp_from_visit + ids_in_temp_from_else
-        
+        ids_in_temp_from = (
+            ids_in_temp_from_exposure + ids_in_temp_from_visit + ids_in_temp_from_else
+        )
+
         # verify the contents of the from butler
         # the list of ids in ids_should_be_in_temp_from
         # must be included in the list of ids actually
         # in temp from
-        missing_ids = [id_should_be for id_should_be in ids_should_be_in_temp_from if id_should_be not in ids_in_temp_from]
-        assert not missing_ids, \
-            f"move is {move} and the following IDs are missing in {temp_from} repo: {missing_ids}, \
+        missing_ids = [
+            id_should_be
+            for id_should_be in ids_should_be_in_temp_from
+            if id_should_be not in ids_in_temp_from
+        ]
+        assert (
+            not missing_ids
+        ), f"move is {move} and the following IDs are missing in {temp_from} repo: {missing_ids}, \
             instead this is what is in it: {ids_in_temp_from}"
         counter += 1
     assert (
@@ -191,15 +198,11 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         # now_time_embargo = "now"
         # embargo_hours =  80.0 # hours
         now_time_embargo = "2022-11-11 03:35:12.836981"
-        #"2020-01-17 16:55:11.322700"
+        # "2020-01-17 16:55:11.322700"
         embargo_hours = 80.0  # hours
         ids_expected_in_to = []
         # IDs that should stay in the temp_from:
-        ids_expected_in_from = [
-            2022110800235,
-            2022110800230,
-            2022110800238
-        ]
+        ids_expected_in_from = [2022110800235, 2022110800230, 2022110800238]
         is_it_there(
             embargo_hours,
             now_time_embargo,
@@ -210,10 +213,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
             log=self.log,
             datasettype=["calexp"],
-            collections=["LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"],
+            collections=[
+                "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
+            ],
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
-        ) 
+        )
 
     def test_calexp_should_move(self):
         """
@@ -223,21 +228,13 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         # now_time_embargo = "now"
         # embargo_hours =  80.0 # hours
         now_time_embargo = "2022-11-13 03:35:12.836981"
-        #'2022-11-09 01:03:22.888003'
-        #"2020-01-17 16:55:11.322700"
+        # '2022-11-09 01:03:22.888003'
+        # "2020-01-17 16:55:11.322700"
         embargo_hours = 80.0  # hours
         # IDs that should be moved to temp_to:
-        ids_expected_in_to = [
-            2022110800235,
-            2022110800230,
-            2022110800238
-        ]
+        ids_expected_in_to = [2022110800235, 2022110800230, 2022110800238]
         # IDs that should stay in the temp_from:
-        ids_expected_in_from = [
-            2022110800235,
-            2022110800230,
-            2022110800238
-        ]
+        ids_expected_in_from = [2022110800235, 2022110800230, 2022110800238]
         is_it_there(
             embargo_hours,
             now_time_embargo,
@@ -248,10 +245,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             move=move,
             log=self.log,
             datasettype=["calexp"],
-            collections=["LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"],
+            collections=[
+                "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
+            ],
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
-        ) 
+        )
 
     def test_raw_datatypes(self):
         """
@@ -295,7 +294,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
-
 
     def test_after_now_01(self):
         """
@@ -365,7 +363,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
-
 
     # test the other datatypes:
     # first goodseeingdeepcoadd
@@ -666,7 +663,5 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         )
 
 
-
-
 if __name__ == "__main__":
-    unittest.main()  
+    unittest.main()
