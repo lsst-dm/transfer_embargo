@@ -294,13 +294,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         )
 
 
-
-'''
-# test the other datatypes:
-    # first goodseeingdeepcoadd
-
-    
-
     def test_after_now_01(self):
         """
         Verify that exposures after now are not being moved
@@ -310,14 +303,14 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         now_time_embargo = "2020-01-17 16:55:11.322700"
         embargo_hours = 0.1  # hours
         # IDs that should be moved to temp_to:
-        ids_moved = [
+        ids_expected_in_to = [
             2019111300059,
             2019111300061,
             2020011700002,
             2020011700003,
         ]
         # IDs that should stay in the temp_from:
-        ids_remain = [
+        ids_expected_in_from = [
             2020011700004,
             2020011700005,
             2020011700006,
@@ -325,8 +318,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         is_it_there(
             embargo_hours,
             now_time_embargo,
-            ids_remain,
-            ids_moved,
+            ids_expected_in_from,
+            ids_expected_in_to,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -345,9 +338,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         now_time_embargo = "2020-01-17 16:55:11.322700"
         embargo_hours = 5596964.255774 / 3600.0
         # IDs that should be moved to temp_to:
-        ids_moved = []
+        ids_expected_in_to = []
         # IDs that should stay in the temp_from:
-        ids_remain = [
+        ids_expected_in_from = [
             2019111300059,
             2019111300061,
             2020011700002,
@@ -359,8 +352,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         is_it_there(
             embargo_hours,
             now_time_embargo,
-            ids_remain,
-            ids_moved,
+            ids_expected_in_from,
+            ids_expected_in_to,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -388,13 +381,13 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         # lol 2019111300059 should be in the ids_moved
         # list but I'm removing it to make sure the assertions
         # fail
-        ids_moved = [
+        ids_expected_in_to = [
             2019111300061,
             2020011700002,
             2020011700003,
         ]
         # IDs that should stay in the temp_from:
-        ids_remain = [
+        ids_expected_in_from = [
             2020011700004,
             2020011700005,
             2020011700006,
@@ -404,8 +397,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             is_it_there(
                 embargo_hours,
                 now_time_embargo,
-                ids_remain,
-                ids_moved,
+                ids_expected_in_from,
+                ids_expected_in_to,
                 self.temp_from_path,
                 self.temp_to_path,
                 move=move,
@@ -433,12 +426,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         now_time_embargo = "2020-01-17 16:55:11.322700"
         embargo_hours = 0.5  # hours
         # IDs that should be moved to temp_to:
-        ids_moved = [
+        ids_expected_in_to = [
             2019111300059,
             2019111300061,
         ]
         # IDs that should stay in the temp_from:
-        ids_remain = [
+        ids_expected_in_from = [
             2020011700002,
             2020011700003,
             2020011700004,
@@ -448,8 +441,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         is_it_there(
             embargo_hours,
             now_time_embargo,
-            ids_remain,
-            ids_moved,
+            ids_expected_in_from,
+            ids_expected_in_to,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -468,7 +461,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         now_time_embargo = "2020-03-01 23:59:59.999999"
         embargo_hours = 3827088.677299 / 3600  # hours
         # IDs that should be moved to temp_to:
-        ids_moved = [
+        ids_expected_in_to = [
             2019111300059,
             2019111300061,
             2020011700002,
@@ -476,15 +469,15 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700004,
         ]
         # IDs that should stay in the temp_from:
-        ids_remain = [
+        ids_expected_in_from = [
             2020011700005,
             2020011700006,
         ]
         is_it_there(
             embargo_hours,
             now_time_embargo,
-            ids_remain,
-            ids_moved,
+            ids_expected_in_from,
+            ids_expected_in_to,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -503,7 +496,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         now_time_embargo = "2020-03-01 23:59:59.999999"
         embargo_hours = 3827088.677299 / 3600  # hours
         # IDs that should be moved to temp_to:
-        ids_moved = [
+        ids_expected_in_to = [
             2019111300059,
             2019111300061,
             2020011700002,
@@ -511,15 +504,15 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700004,
         ]
         # IDs that should stay in the temp_from:
-        ids_remain = [
+        ids_expected_in_from = [
             2020011700005,
             2020011700006,
         ]
         is_it_there(
             embargo_hours,
             now_time_embargo,
-            ids_remain,
-            ids_moved,
+            ids_expected_in_from,
+            ids_expected_in_to,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -538,7 +531,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         now_time_embargo = "2020-03-02 00:00:00.000000"
         embargo_hours = 3827088.6773 / 3600  # hours
         # IDs that should be moved to temp_to:
-        ids_moved = [
+        ids_expected_in_to = [
             2019111300059,
             2019111300061,
             2020011700002,
@@ -546,15 +539,15 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700004,
         ]
         # IDs that should stay in the temp_from:
-        ids_remain = [
+        ids_expected_in_from = [
             2020011700005,
             2020011700006,
         ]
         is_it_there(
             embargo_hours,
             now_time_embargo,
-            ids_remain,
-            ids_moved,
+            ids_expected_in_from,
+            ids_expected_in_to,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -573,7 +566,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         now_time_embargo = "2020-03-02 00:00:00.000000"
         embargo_hours = 3827088.6773 / 3600  # hours
         # IDs that should be moved to temp_to:
-        ids_moved = [
+        ids_expected_in_to = [
             2019111300059,
             2019111300061,
             2020011700002,
@@ -581,15 +574,15 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2020011700004,
         ]
         # IDs that should stay in the temp_from:
-        ids_remain = [
+        ids_expected_in_from = [
             2020011700005,
             2020011700006,
         ]
         is_it_there(
             embargo_hours,
             now_time_embargo,
-            ids_remain,
-            ids_moved,
+            ids_expected_in_from,
+            ids_expected_in_to,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -608,14 +601,14 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         now_time_embargo = "2020-03-02 00:00:00.000000"
         embargo_hours = 3827088.677301 / 3600  # hours
         # IDs that should be moved to temp_to:
-        ids_moved = [
+        ids_expected_in_to = [
             2019111300059,
             2019111300061,
             2020011700002,
             2020011700003,
         ]
         # IDs that should stay in the temp_from:
-        ids_remain = [
+        ids_expected_in_from = [
             2020011700004,
             2020011700005,
             2020011700006,
@@ -623,8 +616,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         is_it_there(
             embargo_hours,
             now_time_embargo,
-            ids_remain,
-            ids_moved,
+            ids_expected_in_from,
+            ids_expected_in_to,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -643,14 +636,14 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         now_time_embargo = "2020-03-02 00:00:00.000000"
         embargo_hours = 3827088.677301 / 3600  # hours
         # IDs that should be moved to temp_to:
-        ids_moved = [
+        ids_expected_in_to = [
             2019111300059,
             2019111300061,
             2020011700002,
             2020011700003,
         ]
         # IDs that should stay in the temp_from:
-        ids_remain = [
+        ids_expected_in_from = [
             2020011700004,
             2020011700005,
             2020011700006,
@@ -658,8 +651,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         is_it_there(
             embargo_hours,
             now_time_embargo,
-            ids_remain,
-            ids_moved,
+            ids_expected_in_from,
+            ids_expected_in_to,
             self.temp_from_path,
             self.temp_to_path,
             move=move,
@@ -670,7 +663,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         )
 
 
-'''
+
 
 if __name__ == "__main__":
     unittest.main()  
