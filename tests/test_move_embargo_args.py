@@ -179,28 +179,23 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
-    def test_calexp_should_move(self):
+    def test_calexp_should_not_move(self):
         """
-        Test that move_embargo_args runs for the calexp datatype
+        Test that move_embargo_args does not move
+        the calexp data that is too close to embargo
         """
         move = "False"
         # now_time_embargo = "now"
         # embargo_hours =  80.0 # hours
-        now_time_embargo = "2022-11-13 03:35:12.836981"
-        #'2022-11-09 01:03:22.888003'
+        now_time_embargo = "2022-11-11 03:35:12.836981"
         #"2020-01-17 16:55:11.322700"
         embargo_hours = 80.0  # hours
-        # IDs that should be moved to temp_to:
-        ids_expected_in_to = [
-            2022110800580,
-            2022110900673,
-            2022111000436
-        ]
+        ids_expected_in_to = []
         # IDs that should stay in the temp_from:
         ids_expected_in_from = [
-            2022110800580,
-            2022110900673,
-            2022111000436
+            2022110800235,
+            2022110800230,
+            2022110800238
         ]
         is_it_there(
             embargo_hours,
@@ -216,7 +211,45 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         ) 
-'''
+
+    def test_calexp_should_move(self):
+        """
+        Test that move_embargo_args runs for the calexp datatype
+        """
+        move = "False"
+        # now_time_embargo = "now"
+        # embargo_hours =  80.0 # hours
+        now_time_embargo = "2022-11-13 03:35:12.836981"
+        #'2022-11-09 01:03:22.888003'
+        #"2020-01-17 16:55:11.322700"
+        embargo_hours = 80.0  # hours
+        # IDs that should be moved to temp_to:
+        ids_expected_in_to = [
+            2022110800235,
+            2022110800230,
+            2022110800238
+        ]
+        # IDs that should stay in the temp_from:
+        ids_expected_in_from = [
+            2022110800235,
+            2022110800230,
+            2022110800238
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_expected_in_from,
+            ids_expected_in_to,
+            self.temp_from_path,
+            self.temp_to_path,
+            move=move,
+            log=self.log,
+            datasettype=["calexp"],
+            collections=["LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"],
+            desturiprefix=self.temp_dest_ingest,
+            # desturiprefix="tests/data/",
+        ) 
+
     def test_raw_datatypes(self):
         """
         Test that move_embargo_args runs for a list
@@ -260,45 +293,13 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-'''
+
 
 '''
 # test the other datatypes:
     # first goodseeingdeepcoadd
 
-    def test_calexp_should_not_move(self):
-        """
-        Test that move_embargo_args does not move
-        the calexp data that is too close to embargo
-        """
-        move = "False"
-        # now_time_embargo = "now"
-        # embargo_hours =  80.0 # hours
-        now_time_embargo = "2022-11-11 03:35:12.836981"
-        #"2020-01-17 16:55:11.322700"
-        embargo_hours = 80.0  # hours
-        # IDs that should be moved to temp_to:
-        ids_moved = []
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2022110800580,
-            2022110900673,
-            2022111000436
-        ]
-        is_it_there(
-            embargo_hours,
-            now_time_embargo,
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            move=move,
-            log=self.log,
-            datasettype=["calexp"],
-            collections=["LATISS/raw/all"],
-            desturiprefix=self.temp_dest_ingest,
-            # desturiprefix="tests/data/",
-        )
+    
 
     def test_after_now_01(self):
         """
