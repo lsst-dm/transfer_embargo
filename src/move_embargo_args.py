@@ -141,13 +141,22 @@ if __name__ == "__main__":
     # Else: don't move
     # Save data Ids of these observations into a list
     datalist_exposure = []
-    collections_exposure = []
+    datalist_visit = []
     datalist_no_exposure = []
+    
+    collections_exposure = []
+    collections_visit = []
     collections_no_exposure = []
 
     for i, dtype in enumerate(datasetTypeList):
         if any(
-            dim in ["exposure", "visit"]
+            dim in ["visit"]
+            for dim in registry.queryDatasetTypes(dtype)[0].dimensions.names
+        ):
+            datalist_visit.append(dtype)
+            collections_visit.append(collections[i])
+        elif any(
+            dim in ["exposure"]
             for dim in registry.queryDatasetTypes(dtype)[0].dimensions.names
         ):
             datalist_exposure.append(dtype)
@@ -160,6 +169,7 @@ if __name__ == "__main__":
     # sort out which dtype goes into which list
     if namespace.log == "True":
         logger.info("datalist_exposure to move: %s", datalist_exposure)
+        logger.info("datalist_visit to move: %s", datalist_visit)
         logger.info("datalist_no_exposure to move: %s", datalist_no_exposure)
 
     # because some dtypes don't have an exposure dimension
@@ -187,6 +197,11 @@ if __name__ == "__main__":
             )
         ]
         '''
+        # still an issue if a calexp has two visits, one is embargoed ie
+        # using visit takes care of this
+        # if both exposure and visit, use visit
+        # calexp defined by visit
+        # raw defined by exposure
         outside_embargo_calexp = [
             dt.id
             for dt in registry.queryDimensionRecords(
@@ -194,23 +209,14 @@ if __name__ == "__main__":
                 dataId=dataId,
                 datasets=datalist_exposure,
                 collections=collections_exposure,
-                where="NOT exposure.timespan OVERLAPS\
+                where="NOT visit.timespan OVERLAPS\
                                                         timespan_embargo",
                 bind={"timespan_embargo": timespan_embargo},
             )
         ]
         '''
         if namespace.log == "True":
-            for dt in registry.queryDimensionRecords(
-                "visit",
-                dataId=dataId,
-                datasets=datalist_exposure,
-                collections=collections_exposure,
-                where="NOT exposure.timespan OVERLAPS\
-                                                        timespan_embargo",
-                bind={"timespan_embargo": timespan_embargo},
-            ):
-                logger.info("dt: %s", dt)
+            
             logger.info("outside embargo: %s", outside_embargo)
             
             #logger.info("outside embargo: %s", outside_embargo_calexp)
@@ -283,6 +289,71 @@ if __name__ == "__main__":
                 )
             ]
             logger.info("exposure ids moved: %s", ids_moved)
+    if datalist_visit:  # if there is anything in the list
+        # first, run all of the exposure types through
+        if namespace.log == "True":
+            logger.info("datalist_visit exists")
+            logger.info("collections: %s", collections_visit)
+        
+        outside_embargo = [
+            dt.id
+            for dt in registry.queryDimensionRecords(
+                "visit",
+                dataId=dataId,
+                datasets=datalist_visit,
+                collections=collections_visit,
+                where="NOT visit.timespan OVERLAPS\
+                                                        timespan_embargo",
+                bind={"timespan_embargo": timespan_embargo},
+            )
+        ]
+        
+        if namespace.log == "True":
+            logger.info("visit outside embargo: %s", outside_embargo)
+            
+        # Query the DataIds after embargo period
+        datasetRefs_visit = registry.queryDatasets(
+            datalist_visit,
+            dataId=dataId,
+            collections=collections_visit,
+            where="visit.id IN (visit_ids)",
+            bind={"visit_ids": outside_embargo},
+        ).expanded()
+
+        if namespace.log == "True":
+            ids_to_move = [dt.dataId.mapping["visit"] for dt in datasetRefs_visit]
+            logger.info("visit ids to move: %s", ids_to_move)
+
+        # raw dtype requires special handling for the transfer,
+        # so separate by dtype:
+        for dtype in datalist_visit:
+            dest_butler.transfer_from(
+                    butler,
+                    source_refs=datasetRefs_visit,
+                    transfer="copy",
+                    skip_missing=True,
+                    register_dataset_types=True,
+                    transfer_dimensions=True,
+                )
+        if namespace.log == "True":
+            '''
+            ids_moved = [
+                dt.dataId.mapping["visit"]
+                for dt in dest_registry.queryDatasets(
+                    datasetType=datalist_visit, collections=collections_visit
+                )
+            ]
+            '''
+            ids_moved = [
+                dt.dataId.mapping["visit"]
+                for dt in dest_registry.queryDatasets(
+                    datasetType=..., collections=...
+                )
+            ]
+            logger.info("datalist_visit: %s", datalist_visit)
+            logger.info("collections_visit: %s", collections_visit)
+            
+            logger.info("visit ids moved: %s", ids_moved)
     if datalist_no_exposure:
         # this is for datatypes that don't have an exposure
         # or visit dimension
