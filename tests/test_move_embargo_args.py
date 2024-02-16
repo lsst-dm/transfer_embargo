@@ -91,6 +91,9 @@ def is_it_there(
         # verifying the contents of the temp_to butler
         # check that what we expect to move (ids_should_be_moved)
         # are in the temp_to repo (ids_in_temp_to)
+        # this exactly equals statement guarantees
+        # there are no extra things in temp_to beyond
+        # what we're expecting
         assert sorted(ids_should_be_in_temp_to) == sorted(
             ids_in_temp_to
         ), f"{ids_should_be_in_temp_to} should be in {temp_to} repo but isnt :(, \
