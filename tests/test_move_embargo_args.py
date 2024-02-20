@@ -38,8 +38,8 @@ def is_it_there(
             "LATISS",
             "--embargohours",
             str(embargo_hours),
-            "--datasettype",
-            *iterable_datasettype,
+            #"--datasettype",
+            #*iterable_datasettype,
             "--collections",
             # "LATISS/raw/all",
             *iterable_collections,
@@ -212,7 +212,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             move=move,
             log=self.log,
-            datasettype=["calexp"],
+            #datasettype=["calexp"],
             collections=[
                 "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
             ],
