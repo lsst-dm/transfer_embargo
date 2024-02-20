@@ -6,6 +6,22 @@ import logging
 import lsst
 import os
 
+# transfer.py
+from kubernetes import client, config
+import yaml
+
+def read_datatypes_from_configmap():
+    # Load Kubernetes configuration
+    config.load_kube_config()
+
+    # Read ConfigMap data
+    v1 = client.CoreV1Api()
+    configmap = v1.read_namespaced_config_map(name="datatype-config",
+                                              namespace="devel-transfer-embargo")
+    datatypes_yaml = configmap.data.get("datatypes", "")
+    datatypes = yaml.safe_load(datatypes_yaml)
+    return datatypes
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -39,13 +55,14 @@ def parse_args():
         default=80.0,
         help="Embargo time period in hours. Input float",
     )
-    # parser.add_argument(
-    #     "--datasettype",
-    #     type=list,
-    #     required=False,
-    #     default="raw",
-    #     help="Dataset type. Input str",
-    # )
+    parser.add_argument(
+        "--configmapnamespace",
+        type=str,
+        required=False,
+        default="devel-transfer-embargo",
+        help="Namespace of the datasettype ConfigMap. Default = 'devel-transfer-embargo'",
+    )
+    '''
     parser.add_argument(
         "--datasettype",
         required=False,
@@ -53,6 +70,7 @@ def parse_args():
         # default=[]
         help="Dataset type. Input list or str",
     )
+    '''
     parser.add_argument(
         "--collections",
         # type=str,
@@ -98,11 +116,21 @@ if __name__ == "__main__":
     # Define embargo and destination butler
     # If move is true, then you'll need write
     # permissions from the fromrepo (embargo)
+    if namespace.log == "True":
+        CliLog.initLog(longlog=True)
+        logger = logging.getLogger("lsst.transfer.embargo")
+        logger.info("from path: %s", namespace.fromrepo)
+        logger.info("to path: %s", namespace.torepo)
     butler = Butler(namespace.fromrepo, writeable=namespace.move)
     registry = butler.registry
     dest_butler = Butler(namespace.torepo, writeable=True)
     dest_registry = dest_butler.registry
-    datasetTypeList = namespace.datasettype
+    # Read datatypes from ConfigMap using the default or provided namespace
+    datasetTypeList = read_datatypes_from_configmap(namespace.configmapnamespace)
+    if namespace.log == "True":
+        logger.info("namespace.configmapnamespace: %s", namespace.configmapnamespace)
+        logger.info("datasettypelist: %s", datasetTypeList)
+    #datasetTypeList = namespace.datasettype
     collections = namespace.collections
     move = namespace.move
     dest_uri_prefix = namespace.desturiprefix
@@ -117,11 +145,7 @@ if __name__ == "__main__":
     else:
         now = astropy.time.Time.now().tai
 
-    if namespace.log == "True":
-        CliLog.initLog(longlog=True)
-        logger = logging.getLogger("lsst.transfer.embargo")
-        logger.info("from path: %s", namespace.fromrepo)
-        logger.info("to path: %s", namespace.torepo)
+    
     # the timespan object defines a "forbidden" region of time
     # starting at the nowtime minus the embargo period
     # and terminating in anything in the future

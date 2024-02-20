@@ -4,6 +4,6 @@ kind: ConfigMap
 metadata:
   name: datatype-config
 data:
-  datatypes.yaml: |
+  datatypes: |
     - raw
     - calexp
