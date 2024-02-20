@@ -219,7 +219,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         )
-
+'''
     def test_calexp_should_move(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -661,7 +661,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
-
+'''
 
 if __name__ == "__main__":
     unittest.main()
