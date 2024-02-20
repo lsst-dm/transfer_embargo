@@ -87,6 +87,12 @@ spec:
                   mountPath: /sdf/group/rubin
                 - name: sdf-data-rubin
                   mountPath: /sdf/data/rubin
+                # datasettype list configuration
+                - name: config
+                  subPath: config
+                  # this is an "unused directory where I would like
+                  # the configmap to appear"
+                  mountPath: /etc/config/datasettype_list_config.yaml
           volumes:
             - name: sdf-group-rubin
               persistentVolumeClaim:
