@@ -1,0 +1,9 @@
+# datasettype_list_config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: datatype-config
+data:
+  datatypes.yaml: |
+    - raw
+    - calexp
