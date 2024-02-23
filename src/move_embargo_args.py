@@ -10,14 +10,14 @@ import os
 from kubernetes import client, config
 import yaml
 
-def read_datatypes_from_configmap():
+def read_datatypes_from_configmap(namespace="devel-transfer-embargo"):
     # Load Kubernetes configuration
     config.load_kube_config()
 
     # Read ConfigMap data
     v1 = client.CoreV1Api()
     configmap = v1.read_namespaced_config_map(name="datatype-config",
-                                              namespace="devel-transfer-embargo")
+                                              namespace=namespace)
     datatypes_yaml = configmap.data.get("datatypes", "")
     datatypes = yaml.safe_load(datatypes_yaml)
     return datatypes
