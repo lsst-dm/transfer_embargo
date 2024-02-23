@@ -21,9 +21,6 @@ jobs:
       uses: actions/setup-python@v4
       with:
           python-version: "3.11"
-    - name: Additional installs
-      run: |
-          pip install google-auth google-auth-oauthlib google-auth-httplib2 kubernetes
     - name: Install dependencies
       run: |
           curl -OL https://ls.st/lsstinstall
@@ -32,6 +29,9 @@ jobs:
           source loadLSST.sh
           eups distrib install -t w_2023_50 obs_lsst
           curl -sSL https://raw.githubusercontent.com/lsst/shebangtron/main/shebangtron | python
+    - name: Additional installs
+      run: |
+          pip install google-auth google-auth-oauthlib google-auth-httplib2 kubernetes
     - name: Run tests
       run: |
           source loadLSST.sh
