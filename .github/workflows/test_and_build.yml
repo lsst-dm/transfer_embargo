@@ -23,7 +23,7 @@ jobs:
           python-version: "3.11"
     - name: Additional installs
       run: |
-          pip install kubernetes
+          pip install google-auth google-auth-oauthlib google-auth-httplib2 kubernetes
     - name: Install dependencies
       run: |
           curl -OL https://ls.st/lsstinstall
