@@ -1,4 +1,0 @@
-lsst-daf-butler-26.2024.200
-psycopg2
-botocore
-boto3
