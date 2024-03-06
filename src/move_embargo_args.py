@@ -1,10 +1,12 @@
 import argparse
-import logging
 
 import astropy.time
-from lsst.resources import ResourcePath
-from lsst.daf.butler import Butler, Timespan, FileDataset
+from lsst.daf.butler import Butler, Timespan
 from lsst.daf.butler.cli.cliLog import CliLog
+import logging
+
+import lsst
+import os
 
 
 def parse_args():
@@ -43,10 +45,12 @@ def parse_args():
         "--datasettype",
         required=False,
         nargs="+",
+        # default=[]
         help="Dataset type. Input list or str",
     )
     parser.add_argument(
         "--collections",
+        # type=str,
         nargs="+",
         required=False,
         default="LATISS/raw/all",
@@ -62,16 +66,17 @@ def parse_args():
     )
     parser.add_argument(
         "--move",
+        type=str,
         required=False,
-        action="store_true",
-        help="Copies if False, deletes original if it exists True",
+        default="False",
+        help="Copies if False, deletes original if True",
     )
     parser.add_argument(
         "--log",
         type=str,
         required=False,
-        default="INFO",
-        help="Default is INFO level, other options are DEBUG or WARNING",
+        default="False",
+        help="No logging if False, longlog if True",
     )
     parser.add_argument(
         "--desturiprefix",
@@ -93,20 +98,8 @@ if __name__ == "__main__":
     dest_butler = Butler(namespace.torepo, writeable=True)
     dest_registry = dest_butler.registry
     datasetTypeList = namespace.datasettype
-
-    # Initialize the logger and set the level
-    CliLog.initLog(longlog=True)
-    CliLog.setLogLevels(logLevels=[(None, namespace.log)])
-    # CliLogNew.initLog(log=namespace.log)
-    logger = logging.getLogger("lsst.transfer.embargo")
-    logger.info("log level %s", namespace.log)
-    logger.info("whats the datasettypelist in here: %s", datasetTypeList)
+    print("whats the datasettypelist in here", datasetTypeList)
     collections = namespace.collections
-    if namespace.move:
-        raise ValueError(
-            "namespace.move is True. Program terminating because this is too dangerous."
-        )
-
     move = namespace.move
     dest_uri_prefix = namespace.desturiprefix
     # Dataset to move
@@ -119,8 +112,12 @@ if __name__ == "__main__":
         now = astropy.time.Time(namespace.nowtime, scale="tai", format="iso")
     else:
         now = astropy.time.Time.now().tai
-    logger.info("from path: %s", namespace.fromrepo)
-    logger.info("to path: %s", namespace.torepo)
+
+    if namespace.log == "True":
+        CliLog.initLog(longlog=True)
+        logger = logging.getLogger("lsst.transfer.embargo")
+        logger.info("from path: %s", namespace.fromrepo)
+        logger.info("to path: %s", namespace.torepo)
     # the timespan object defines a "forbidden" region of time
     # starting at the nowtime minus the embargo period
     # and terminating in anything in the future
@@ -138,6 +135,7 @@ if __name__ == "__main__":
     collections_exposure = []
     datalist_no_exposure = []
     collections_no_exposure = []
+
     for i, dtype in enumerate(datasetTypeList):
         if any(
             dim in ["exposure", "visit"]
@@ -148,9 +146,11 @@ if __name__ == "__main__":
         else:
             datalist_no_exposure.append(dtype)
             collections_no_exposure.append(collections[i])
+
     # sort out which dtype goes into which list
-    logger.info("datalist_exposure to move: %s", datalist_exposure)
-    logger.info("datalist_no_exposure to move: %s", datalist_no_exposure)
+    if namespace.log == "True":
+        logger.info("datalist_exposure to move: %s", datalist_exposure)
+        logger.info("datalist_no_exposure to move: %s", datalist_no_exposure)
 
     # because some dtypes don't have an exposure dimension
     # we will need a different option to move those
@@ -181,8 +181,9 @@ if __name__ == "__main__":
             bind={"exposure_ids": outside_embargo},
         ).expanded()
 
-        ids_to_move = [dt.dataId.mapping["exposure"] for dt in datasetRefs_exposure]
-        logger.info("exposure ids to move: %s", ids_to_move)
+        if namespace.log == "True":
+            ids_to_move = [dt.dataId.mapping["exposure"] for dt in datasetRefs_exposure]
+            logger.info("exposure ids to move: %s", ids_to_move)
 
         # raw dtype requires special handling for the transfer,
         # so separate by dtype:
@@ -193,21 +194,21 @@ if __name__ == "__main__":
                     dest_uri_prefix
                 ), f"dest_uri_prefix needs to be specified to transfer raw datatype, {dest_uri_prefix}"
                 # define a new filedataset_list using URIs
-                dest_uri = ResourcePath(dest_uri_prefix)
+                dest_uri = lsst.resources.ResourcePath(dest_uri_prefix)
                 source_uri = butler.get_many_uris(datasetRefs_exposure)
                 filedataset_list = []
                 for key, value in source_uri.items():
                     source_path_uri = value[0]
                     source_path = source_path_uri.relative_to(value[0].root_uri())
                     new_dest_uri = dest_uri.join(source_path)
-                    if new_dest_uri.exists():
-                        logger.info("new_dest_uri already exists")
+                    if os.path.exists(source_path):
+                        if namespace.log == "True":
+                            logger.info("source path uri already exists")
                     else:
                         new_dest_uri.transfer_from(source_path_uri, transfer="copy")
-                        logger.info(
-                            "new_dest_uri does not exist, creating new dest URI"
-                        )
-                    filedataset_list.append(FileDataset(new_dest_uri, key))
+                    filedataset_list.append(
+                        lsst.daf.butler.FileDataset(new_dest_uri, key)
+                    )
 
                 # register datasettype and collection run only once
                 try:
@@ -223,7 +224,8 @@ if __name__ == "__main__":
                     dest_butler.ingest(*filedataset_list, transfer="direct")
                 except IndexError:
                     # this will be thrown if nothing is being moved
-                    logger.info("nothing in datasetRefs_exposure")
+                    if namespace.log == "True":
+                        logger.info("nothing in datasetRefs_exposure")
 
             else:
                 dest_butler.transfer_from(
@@ -234,13 +236,14 @@ if __name__ == "__main__":
                     register_dataset_types=True,
                     transfer_dimensions=True,
                 )
-        ids_moved = [
-            dt.dataId.mapping["exposure"]
-            for dt in dest_registry.queryDatasets(
-                datasetType=datalist_exposure, collections=collections_exposure
-            )
-        ]
-        logger.info("exposure ids moved: %s", ids_moved)
+        if namespace.log == "True":
+            ids_moved = [
+                dt.dataId.mapping["exposure"]
+                for dt in dest_registry.queryDatasets(
+                    datasetType=datalist_exposure, collections=collections_exposure
+                )
+            ]
+            logger.info("exposure ids moved: %s", ids_moved)
     if datalist_no_exposure:
         # this is for datatypes that don't have an exposure
         # or visit dimension
@@ -252,8 +255,9 @@ if __name__ == "__main__":
             where="ingest_date <= timespan_embargo_begin",
             bind={"timespan_embargo_begin": timespan_embargo.begin},
         )
-        ids_to_move = [dt.id for dt in datasetRefs_no_exposure]
-        logger.info("ingest ids to move: %s", ids_to_move)
+        if namespace.log == "True":
+            ids_to_move = [dt.id for dt in datasetRefs_no_exposure]
+            logger.info("ingest ids to move: %s", ids_to_move)
         dest_butler.transfer_from(
             butler,
             source_refs=datasetRefs_no_exposure,
@@ -262,19 +266,20 @@ if __name__ == "__main__":
             register_dataset_types=True,
             transfer_dimensions=True,
         )
-        ids_moved = [
-            dt.id
-            for dt in dest_registry.queryDatasets(
-                datasetType=datalist_no_exposure,
-                collections=collections_no_exposure,
-            )
-        ]
-        logger.info("ingest ids moved: %s", ids_moved)
+        if namespace.log == "True":
+            ids_moved = [
+                dt.id
+                for dt in dest_registry.queryDatasets(
+                    datasetType=datalist_no_exposure,
+                    collections=collections_no_exposure,
+                )
+            ]
+            logger.info("ingest ids moved: %s", ids_moved)
 
     if move == "True":
-        # concatenate both dataset types
-        combined_datalist = datalist_exposure + datalist_no_exposure
-        # prune the combined list only if it is defined
-        if combined_datalist:
-            combined_dataset_refs = datasetRefs_exposure + datasetRefs_no_exposure
-            butler.pruneDatasets(refs=combined_dataset_refs, unstore=True, purge=True)
+        # prune both datasettypes
+        # is there a way to do this at the same time?
+        if datalist_exposure:
+            butler.pruneDatasets(refs=datasetRefs_exposure, unstore=True, purge=True)
+        if datalist_no_exposure:
+            butler.pruneDatasets(refs=datasetRefs_no_exposure, unstore=True, purge=True)
