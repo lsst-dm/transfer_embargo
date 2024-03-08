@@ -132,25 +132,36 @@ if __name__ == "__main__":
     # Else: don't move
     # Save data Ids of these observations into a list
     datalist_exposure = []
-    collections_exposure = []
+    datalist_visit = []
     datalist_no_exposure = []
+
+    collections_exposure = []
+    collections_visit = []
     collections_no_exposure = []
 
     for i, dtype in enumerate(datasetTypeList):
         if any(
-            dim in ["exposure", "visit"]
+            dim in ["visit"]
+            for dim in registry.queryDatasetTypes(dtype)[0].dimensions.names
+        ):
+            datalist_visit.append(dtype)
+            collections_visit.append(collections[i])
+        elif any(
+            dim in ["exposure"]
             for dim in registry.queryDatasetTypes(dtype)[0].dimensions.names
         ):
             datalist_exposure.append(dtype)
             collections_exposure.append(collections[i])
         else:
+            # these should be the raw datasettype
             datalist_no_exposure.append(dtype)
             collections_no_exposure.append(collections[i])
 
     # sort out which dtype goes into which list
-    if namespace.log == "True":
-        logger.info("datalist_exposure to move: %s", datalist_exposure)
-        logger.info("datalist_no_exposure to move: %s", datalist_no_exposure)
+    logger.info("datalist_exposure to move: %s", datalist_exposure)
+    logger.info("datalist_visit to move: %s", datalist_visit)
+    logger.info("datalist_no_exposure to move: %s", datalist_no_exposure)
+
 
     # because some dtypes don't have an exposure dimension
     # we will need a different option to move those
@@ -181,9 +192,8 @@ if __name__ == "__main__":
             bind={"exposure_ids": outside_embargo},
         ).expanded()
 
-        if namespace.log == "True":
-            ids_to_move = [dt.dataId.mapping["exposure"] for dt in datasetRefs_exposure]
-            logger.info("exposure ids to move: %s", ids_to_move)
+        ids_to_move = [dt.dataId.mapping["exposure"] for dt in datasetRefs_exposure]
+        logger.info("exposure ids to move: %s", ids_to_move)
 
         # raw dtype requires special handling for the transfer,
         # so separate by dtype:
@@ -201,11 +211,11 @@ if __name__ == "__main__":
                     source_path_uri = value[0]
                     source_path = source_path_uri.relative_to(value[0].root_uri())
                     new_dest_uri = dest_uri.join(source_path)
-                    if os.path.exists(source_path):
-                        if namespace.log == "True":
-                            logger.info("source path uri already exists")
+                    if new_dest_uri.exists():
+                        logger.info("new_dest_uri already exists")
                     else:
                         new_dest_uri.transfer_from(source_path_uri, transfer="copy")
+                        logger.info("new_dest_uri does not exist, creating new dest URI")
                     filedataset_list.append(
                         lsst.daf.butler.FileDataset(new_dest_uri, key)
                     )
