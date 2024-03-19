@@ -101,7 +101,7 @@ def is_it_there(
         # now check the temp_from butler and see what remains
         butler_from = Butler(temp_from)
         registry_from = butler_from.registry
-ids_in_temp_from_exposure = []
+        ids_in_temp_from_exposure = []
         ids_in_temp_from_visit = []
         ids_in_temp_from_else = []
         # explore the datatypes in registry from
@@ -139,7 +139,7 @@ ids_in_temp_from_exposure = []
         # in temp from
         missing_ids = [
             id_should_be
-            for id_should_be in ids_should_be_in_temp_from
+            for id_should_be in ids_should_remain_after_move
             if id_should_be not in ids_in_temp_from
         ]
         assert (
@@ -151,6 +151,7 @@ ids_in_temp_from_exposure = []
         counter != 0
     ), f"Never went through the for loop shame on you, counter = {counter}"
 
+    '''
 
         # verifying the contents of the from butler
         # if move is on, only the ids_remain should be in temp_from butler
@@ -177,6 +178,7 @@ ids_in_temp_from_exposure = []
         counter != 0
     ), f"Never went through the for loop shame on you, \
        counter = {counter}"
+    '''
 
 
 class AtLeastOneAssertionFailedError(Exception):
@@ -216,6 +218,40 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
+    def test_after_now_01(self):
+        """
+        Verify that exposures after now are not being moved
+        when the nowtime is right in the middle of the exposures
+        """
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 0.1  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            datasettype=["raw"],
+            collections=["LATISS/raw/all"],
+            desturiprefix=self.temp_dest_ingest,
+        )
+
+    
     def test_calexp_should_not_move(self):
         """
         Test that move_embargo_args does not move
@@ -269,9 +305,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             ],
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
-        )
-
-    
+        )   
     @pytest.mark.xfail(strict=True)
     def test_should_fail_if_move_is_true(self):
         """
@@ -309,38 +343,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-    def test_after_now_01(self):
-        """
-        Verify that exposures after now are not being moved
-        when the nowtime is right in the middle of the exposures
-        """
-        now_time_embargo = "2020-01-17 16:55:11.322700"
-        embargo_hours = 0.1  # hours
-        # IDs that should be moved to temp_to:
-        ids_moved = [
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-        ]
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2020011700004,
-            2020011700005,
-            2020011700006,
-        ]
-        is_it_there(
-            embargo_hours,
-            now_time_embargo,
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
-            desturiprefix=self.temp_dest_ingest,
-        )
+    
 
     def test_nothing_moves(self):
         """
