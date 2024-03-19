@@ -158,9 +158,10 @@ if __name__ == "__main__":
             collections_no_exposure.append(collections[i])
 
     # sort out which dtype goes into which list
-    logger.info("datalist_exposure to move: %s", datalist_exposure)
-    logger.info("datalist_visit to move: %s", datalist_visit)
-    logger.info("datalist_no_exposure to move: %s", datalist_no_exposure)
+    if namespace.log == "True":
+        logger.info("datalist_exposure to move: %s", datalist_exposure)
+        logger.info("datalist_visit to move: %s", datalist_visit)
+        logger.info("datalist_no_exposure to move: %s", datalist_no_exposure)
 
 
     # because some dtypes don't have an exposure dimension
@@ -193,7 +194,8 @@ if __name__ == "__main__":
         ).expanded()
 
         ids_to_move = [dt.dataId.mapping["exposure"] for dt in datasetRefs_exposure]
-        logger.info("exposure ids to move: %s", ids_to_move)
+        if namespace.log == "True":
+            logger.info("exposure ids to move: %s", ids_to_move)
 
         # raw dtype requires special handling for the transfer,
         # so separate by dtype:
@@ -215,7 +217,8 @@ if __name__ == "__main__":
                         logger.info("new_dest_uri already exists")
                     else:
                         new_dest_uri.transfer_from(source_path_uri, transfer="copy")
-                        logger.info("new_dest_uri does not exist, creating new dest URI")
+                        if namespace.log == "True":
+                            logger.info("new_dest_uri does not exist, creating new dest URI")
                     filedataset_list.append(
                         lsst.daf.butler.FileDataset(new_dest_uri, key)
                     )
