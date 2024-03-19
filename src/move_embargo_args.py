@@ -195,6 +195,7 @@ if __name__ == "__main__":
 
         ids_to_move = [dt.dataId.mapping["exposure"] for dt in datasetRefs_exposure]
         if namespace.log == "True":
+            ids_to_move = [dt.dataId.mapping["exposure"] for dt in datasetRefs_exposure]
             logger.info("exposure ids to move: %s", ids_to_move)
 
         # raw dtype requires special handling for the transfer,
@@ -257,6 +258,70 @@ if __name__ == "__main__":
                 )
             ]
             logger.info("exposure ids moved: %s", ids_moved)
+    if datalist_visit:  # if there is anything in the list
+        # first, run all of the exposure types through
+        if namespace.log == "True":
+            logger.info("datalist_visit exists")
+            logger.info("collections: %s", collections_visit)
+
+        outside_embargo = [
+            dt.id
+            for dt in registry.queryDimensionRecords(
+                "visit",
+                dataId=dataId,
+                datasets=datalist_visit,
+                collections=collections_visit,
+                where="NOT visit.timespan OVERLAPS\
+                                                        timespan_embargo",
+                bind={"timespan_embargo": timespan_embargo},
+            )
+        ]
+
+        if namespace.log == "True":
+            logger.info("visit outside embargo: %s", outside_embargo)
+
+        # Query the DataIds after embargo period
+        datasetRefs_visit = registry.queryDatasets(
+            datalist_visit,
+            dataId=dataId,
+            collections=collections_visit,
+            where="visit.id IN (visit_ids)",
+            bind={"visit_ids": outside_embargo},
+        ).expanded()
+
+        if namespace.log == "True":
+            ids_to_move = [dt.dataId.mapping["visit"] for dt in datasetRefs_visit]
+            logger.info("visit ids to move: %s", ids_to_move)
+
+        # raw dtype requires special handling for the transfer,
+        # so separate by dtype:
+        for dtype in datalist_visit:
+            dest_butler.transfer_from(
+                butler,
+                source_refs=datasetRefs_visit,
+                transfer="copy",
+                skip_missing=True,
+                register_dataset_types=True,
+                transfer_dimensions=True,
+            )
+        if namespace.log == "True":
+            """
+            ids_moved = [
+                dt.dataId.mapping["visit"]
+                for dt in dest_registry.queryDatasets(
+                    datasetType=datalist_visit, collections=collections_visit
+                )
+            ]
+            """
+            ids_moved = [
+                dt.dataId.mapping["visit"]
+                for dt in dest_registry.queryDatasets(datasetType=..., collections=...)
+            ]
+            logger.info("datalist_visit: %s", datalist_visit)
+            logger.info("collections_visit: %s", collections_visit)
+
+            logger.info("visit ids moved: %s", ids_moved)
+
     if datalist_no_exposure:
         # this is for datatypes that don't have an exposure
         # or visit dimension
@@ -294,5 +359,7 @@ if __name__ == "__main__":
         # is there a way to do this at the same time?
         if datalist_exposure:
             butler.pruneDatasets(refs=datasetRefs_exposure, unstore=True, purge=True)
+        if datalist_visit:
+            butler.pruneDatasets(refs=datasetRefs_visit, unstore=True, purge=True)
         if datalist_no_exposure:
             butler.pruneDatasets(refs=datasetRefs_no_exposure, unstore=True, purge=True)

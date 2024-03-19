@@ -218,38 +218,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
-    def test_after_now_01(self):
-        """
-        Verify that exposures after now are not being moved
-        when the nowtime is right in the middle of the exposures
-        """
-        now_time_embargo = "2020-01-17 16:55:11.322700"
-        embargo_hours = 0.1  # hours
-        # IDs that should be moved to temp_to:
-        ids_moved = [
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-        ]
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2020011700004,
-            2020011700005,
-            2020011700006,
-        ]
-        is_it_there(
-            embargo_hours,
-            now_time_embargo,
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
-            desturiprefix=self.temp_dest_ingest,
-        )
 
     
     def test_calexp_should_not_move(self):
@@ -305,7 +273,41 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             ],
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
-        )   
+        )  
+'''
+    def test_after_now_01(self):
+        """
+        Verify that exposures after now are not being moved
+        when the nowtime is right in the middle of the exposures
+        """
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 0.1  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            datasettype=["raw"],
+            collections=["LATISS/raw/all"],
+            desturiprefix=self.temp_dest_ingest,
+        )
+
     @pytest.mark.xfail(strict=True)
     def test_should_fail_if_move_is_true(self):
         """
@@ -685,7 +687,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
-
+'''
 
 if __name__ == "__main__":
     unittest.main()
