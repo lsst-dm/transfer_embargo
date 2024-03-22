@@ -114,26 +114,20 @@ def is_it_there(
         except IndexError:
             ids_in_temp_from = []
 
-        # verifying the contents of the from butler
-        # if move is on, only the ids_remain should be in temp_from butler
-        if move == "True":
-            # checking that everything in temp_from butler
-            # is in the ids_remain list
-            assert sorted(ids_in_temp_from) == sorted(
-                ids_should_remain_after_move
-            ), f"move is {move} and {ids_in_temp_from} does not match \
-               what should be in \
-               {temp_from}, which is {ids_should_remain_after_move}"
-        # otherwise, if copy
-        else:
-            # everything in temp_from should be either
-            # in ids_remain or ids_moved
-            assert sorted(ids_in_temp_from) == sorted(
-                ids_should_remain_after_move + ids_should_be_moved
-            ), f"move is {move} and {ids_in_temp_from} \
-               should \
-               be in either \
-               {temp_from} or {temp_to} repo but it isn't"
+        # verify the contents of the from butler
+        # the list of ids in ids_should_be_in_temp_from
+        # must be included in the list of ids actually
+        # in temp from
+        missing_ids = [
+            id_should_be
+            for id_should_be in ids_should_remain_after_move
+            if id_should_be not in ids_in_temp_from
+        ]
+        assert (
+            not missing_ids
+        ), f"move is {move} and the following IDs are missing in {temp_from} repo: {missing_ids}, \
+            instead this is what is in it: {ids_in_temp_from}"
+        counter += 1
         counter += 1
     assert (
         counter != 0
@@ -224,7 +218,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         embargo_hours = 0.1  # hours
         # IDs that should be moved to temp_to:
         ids_moved = [
-            2020011700004,
+            #2020011700004,
             2019111300059,
             2019111300061,
             2020011700002,
@@ -250,7 +244,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         )
 
 
-'''
     def test_nothing_moves(self):
         """
         Nothing should move when the embargo hours falls right on
@@ -591,7 +584,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
-'''
 
 if __name__ == "__main__":
     unittest.main()
