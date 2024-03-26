@@ -135,23 +135,34 @@ if __name__ == "__main__":
     # Else: don't move
     # Save data Ids of these observations into a list
     datalist_exposure = []
-    collections_exposure = []
+    datalist_visit = []
     datalist_no_exposure = []
+
+    collections_exposure = []
+    collections_visit = []
     collections_no_exposure = []
+
     for i, dtype in enumerate(datasetTypeList):
         if any(
-            dim in ["exposure", "visit"]
+            dim in ["visit"]
+            for dim in registry.queryDatasetTypes(dtype)[0].dimensions.names
+        ):
+            datalist_visit.append(dtype)
+            collections_visit.append(collections[i])
+        elif any(
+            dim in ["exposure"]
             for dim in registry.queryDatasetTypes(dtype)[0].dimensions.names
         ):
             datalist_exposure.append(dtype)
             collections_exposure.append(collections[i])
         else:
+            # these should be the raw datasettype
             datalist_no_exposure.append(dtype)
             collections_no_exposure.append(collections[i])
     # sort out which dtype goes into which list
     logger.info("datalist_exposure to move: %s", datalist_exposure)
+    logger.info("datalist_visit to move: %s", datalist_visit)
     logger.info("datalist_no_exposure to move: %s", datalist_no_exposure)
-
     # because some dtypes don't have an exposure dimension
     # we will need a different option to move those
     # ie deepcoadds
@@ -241,6 +252,58 @@ if __name__ == "__main__":
             )
         ]
         logger.info("exposure ids moved: %s", ids_moved)
+    if datalist_visit:  # if there is anything in the list
+        # first, run all of the exposure types through
+        logger.info("datalist_visit exists")
+        logger.info("collections: %s", collections_visit)
+
+        outside_embargo = [
+            dt.id
+            for dt in registry.queryDimensionRecords(
+                "visit",
+                dataId=dataId,
+                datasets=datalist_visit,
+                collections=collections_visit,
+                where="NOT visit.timespan OVERLAPS\
+                                                        timespan_embargo",
+                bind={"timespan_embargo": timespan_embargo},
+            )
+        ]
+
+        logger.info("visit outside embargo: %s", outside_embargo)
+
+        # Query the DataIds after embargo period
+        datasetRefs_visit = registry.queryDatasets(
+            datalist_visit,
+            dataId=dataId,
+            collections=collections_visit,
+            where="visit.id IN (visit_ids)",
+            bind={"visit_ids": outside_embargo},
+        ).expanded()
+
+        ids_to_move = [dt.dataId.mapping["visit"] for dt in datasetRefs_visit]
+        logger.info("visit ids to move: %s", ids_to_move)
+
+        # raw dtype requires special handling for the transfer,
+        # so separate by dtype:
+        for dtype in datalist_visit:
+            dest_butler.transfer_from(
+                butler,
+                source_refs=datasetRefs_visit,
+                transfer="copy",
+                skip_missing=True,
+                register_dataset_types=True,
+                transfer_dimensions=True,
+            )
+        ids_moved = [
+                dt.dataId.mapping["visit"]
+                for dt in dest_registry.queryDatasets(datasetType=..., collections=...)
+            ]
+        logger.info("datalist_visit: %s", datalist_visit)
+        logger.info("collections_visit: %s", collections_visit)
+        logger.info("visit ids moved: %s", ids_moved)
+
+    
     if datalist_no_exposure:
         # this is for datatypes that don't have an exposure
         # or visit dimension
@@ -273,8 +336,8 @@ if __name__ == "__main__":
 
     if move == "True":
         # concatenate both dataset types
-        combined_datalist = datalist_exposure + datalist_no_exposure
+        combined_datalist = datalist_exposure + datalist_visit + datalist_no_exposure
         # prune the combined list only if it is defined
         if combined_datalist:
-            combined_dataset_refs = datasetRefs_exposure + datasetRefs_no_exposure
+            combined_dataset_refs = datasetRefs_exposure + datasetRefs_visit + datasetRefs_no_exposure
             butler.pruneDatasets(refs=combined_dataset_refs, unstore=True, purge=True)
