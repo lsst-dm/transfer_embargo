@@ -63,7 +63,17 @@ def is_it_there(
     for dtype in datasettype:
         try:
             if any(
-                dim in ["exposure", "visit"]
+                dim in ["visit"]
+                for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
+            ):
+                ids_in_temp_to = [
+                    dt.dataId.mapping["visit"]
+                    for dt in registry_to.queryDatasets(
+                        datasetType=..., collections=...
+                    )
+                ]
+            elif any(
+                dim in ["exposure"]
                 for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
             ):
                 ids_in_temp_to = [
@@ -91,28 +101,37 @@ def is_it_there(
         # now check the temp_from butler and see what remains
         butler_from = Butler(temp_from)
         registry_from = butler_from.registry
-
-        # first check if anything is in the registry_to:
-        try:
-            if any(
-                dim in ["exposure", "visit"]
-                for dim in registry_from.queryDatasetTypes(dtype)[0].dimensions.names
-            ):
-                ids_in_temp_from = [
+        ids_in_temp_from_exposure = []
+        ids_in_temp_from_visit = []
+        ids_in_temp_from_else = []
+        # explore the datatypes in registry from
+        # build a list of all ids in registry from
+        for DatasetType in registry_from.queryDatasetTypes(...):
+            if any(dim in ["exposure"] for dim in DatasetType.dimensions.names):
+                ids_in_temp_from_exposure = [
                     dt.dataId.mapping["exposure"]
                     for dt in registry_from.queryDatasets(
-                        datasetType=..., collections=...
+                        datasetType=DatasetType.name, collections=...
+                    )
+                ]
+            elif any(dim in ["visit"] for dim in DatasetType.dimensions.names):
+                ids_in_temp_from_visit = [
+                    dt.dataId.mapping["visit"]
+                    for dt in registry_from.queryDatasets(
+                        datasetType=DatasetType.name, collections=...
                     )
                 ]
             else:
-                ids_in_temp_from = [
+                ids_in_temp_from_else = [
                     dt.id
                     for dt in registry_from.queryDatasets(
-                        datasetType=..., collections=...
+                        datasetType=DatasetType.name, collections=...
                     )
                 ]
-        except IndexError:
-            ids_in_temp_from = []
+        # now concatenate all of these:
+        ids_in_temp_from = (
+            ids_in_temp_from_exposure + ids_in_temp_from_visit + ids_in_temp_from_else
+        )
 
         # verify the contents of the from butler
         # the list of ids in ids_should_be_in_temp_from
@@ -127,7 +146,6 @@ def is_it_there(
             not missing_ids
         ), f"move is {move} and the following IDs are missing in {temp_from} repo: {missing_ids}, \
             instead this is what is in it: {ids_in_temp_from}"
-        counter += 1
         counter += 1
     assert (
         counter != 0
@@ -172,6 +190,61 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
+    def test_calexp_should_not_move(self):
+        """
+        Test that move_embargo_args does not move
+        the calexp data that is too close to embargo
+        """
+        now_time_embargo = "2022-11-11 03:35:12.836981"
+        # "2020-01-17 16:55:11.322700"
+        embargo_hours = 80.0  # hours
+        ids_moved = []
+        # IDs that should stay in the temp_from:
+        ids_remain = [2022110800235, 2022110800230, 2022110800238]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            #datasettype=["calexp"],
+            collections=[
+                "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
+            ],
+            desturiprefix=self.temp_dest_ingest,
+            # desturiprefix="tests/data/",
+        )
+
+    def test_calexp_should_move(self):
+        """
+        Test that move_embargo_args runs for the calexp datatype
+        """
+        now_time_embargo = "2022-11-13 03:35:12.836981"
+        # '2022-11-09 01:03:22.888003'
+        # "2020-01-17 16:55:11.322700"
+        embargo_hours = 80.0  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [2022110800235, 2022110800230, 2022110800238]
+        # IDs that should stay in the temp_from:
+        ids_remain = [2022110800235, 2022110800230, 2022110800238]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            datasettype=["calexp"],
+            collections=[
+                "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
+            ],
+            desturiprefix=self.temp_dest_ingest,
+            # desturiprefix="tests/data/",
+        )  
+    
     @pytest.mark.xfail(strict=True)
     def test_should_fail_if_move_is_true(self):
         """
