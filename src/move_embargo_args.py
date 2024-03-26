@@ -263,7 +263,7 @@ if __name__ == "__main__":
                 "visit",
                 dataId=dataId,
                 datasets=datalist_visit,
-                collections=collections_visit,
+                collections=...,# collections_visit,
                 where="NOT visit.timespan OVERLAPS\
                                                         timespan_embargo",
                 bind={"timespan_embargo": timespan_embargo},
@@ -276,7 +276,7 @@ if __name__ == "__main__":
         datasetRefs_visit = registry.queryDatasets(
             datalist_visit,
             dataId=dataId,
-            collections=collections_visit,
+            collections=...,# collections_visit,
             where="visit.id IN (visit_ids)",
             bind={"visit_ids": outside_embargo},
         ).expanded()
