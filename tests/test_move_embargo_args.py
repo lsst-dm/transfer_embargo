@@ -3,6 +3,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import yaml
 
 import lsst.utils as utils
 import pytest
@@ -21,11 +22,10 @@ def is_it_there(
     datasettype: list | str = "raw",
     collections: list | str = "LATISS/raw/all",
     desturiprefix: str = "tests/data/",
+    use_dataquery_config=None,
+    dataquery_config_file_path: str = "./",
+    dataquery_config_file_name: str = "config.yaml",
 ):
-    # need to check if datasettype is a single str,
-    # make it iterable
-    iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
-    iterable_collections = utils.iteration.ensure_iterable(collections)
     # Run the package
     print("this is the move arg", str(move) if move is not None else "")
     subprocess_args = [
@@ -36,22 +36,40 @@ def is_it_there(
         "LATISS",
         "--embargohours",
         str(embargo_hours),
-        "--datasettype",
-        *iterable_datasettype,
-        "--collections",
-        *iterable_collections,
         "--nowtime",
         now_time_embargo,
         "--log",
         log,
         "--desturiprefix",
-        desturiprefix,
+        desturiprefix,        
     ]
+    if use_dataquery_config:
+        # define the config path
+        config_file = dataquery_config_file_path + dataquery_config_file_name
+        # Read config file
+        with open(config_file, 'r') as f:
+            config = yaml.safe_load(f)
+        # Extract datasettype and collections from config
+        datasettype = config['datasettype']
+        collections = config['collections']
+    else:   
+        # need to check if datasettype is a single str,
+        # make it iterable
+        iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
+        iterable_collections = utils.iteration.ensure_iterable(collections)
+        subprocess_args.extend(["--datasettype", *iterable_datasettype,
+                                "--collections", *iterable_collections])
+    
 
     # add --move argument only if move is not None
     if move is not None:
-        subprocess_args.extend(["--move", str(move)])
+        subprocess_args.extend(["--move"])#, str(move)])
     assert move is None, f"move is {move}"
+    if use_dataquery_config is not None:
+        subprocess_args.extend(["--use_dataquery_config",
+                                "--dataquery_config_file_path", str(dataquery_config_file_path),
+                                "--dataquery_config_file_name", str(dataquery_config_file_name)])#, str(move)])
+        
 
     # now run the subprocess
     subprocess.run(subprocess_args, check=True)
@@ -190,6 +208,34 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
+    def test_calexp_should_move_yaml(self):
+        """
+        Test that move_embargo_args runs for the calexp datatype
+        read from the config.yaml file
+        """
+        now_time_embargo = "2022-11-13 03:35:12.836981"
+        # '2022-11-09 01:03:22.888003'
+        # "2020-01-17 16:55:11.322700"
+        embargo_hours = 80.0  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [2022110800235, 2022110800230, 2022110800238]
+        # IDs that should stay in the temp_from:
+        ids_remain = [2022110800235, 2022110800230, 2022110800238]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            desturiprefix=self.temp_dest_ingest,
+            #namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
+            use_dataquery_config=True,
+            dataquery_config_file_path="./",
+            dataquery_config_file_name="config.yaml",
+        )
+    
     def test_calexp_should_not_move(self):
         """
         Test that move_embargo_args does not move
@@ -243,8 +289,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             ],
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
-        )  
-    
+        ) 
+
     @pytest.mark.xfail(strict=True)
     def test_should_fail_if_move_is_true(self):
         """
