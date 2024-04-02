@@ -1,5 +1,6 @@
 import argparse
 import logging
+import yaml
 
 import astropy.time
 from lsst.resources import ResourcePath
@@ -38,6 +39,31 @@ def parse_args():
         required=False,
         default=80.0,
         help="Embargo time period in hours. Input float",
+    )
+    parser.add_argument(
+        "--use_dataquery_config",
+        required=False,
+        action="store_true",
+        help="Ignores config.yaml and uses datasettype and collections lists if False. \
+              If this keyword is used (if True), reads from the config file.\
+              The path and name of the config file are given below",
+    )
+    parser.add_argument(
+        "--dataquery_config_file_name",
+        type=str,
+        required=False,
+        default="config.yaml",
+        help="Config file that contains lists of datasettype and collections",
+    )
+    parser.add_argument(
+        "--dataquery_config_file_path",
+        required=False,
+        type=str,
+        default="/etc/",
+        help="Name and path of the config file.\
+              Used to input datasettype, collections list pairs.\
+              If datasettype and collections args are also provided,\
+              these are the default.",
     )
     parser.add_argument(
         "--datasettype",
@@ -92,7 +118,6 @@ if __name__ == "__main__":
     registry = butler.registry
     dest_butler = Butler(namespace.torepo, writeable=True)
     dest_registry = dest_butler.registry
-    datasetTypeList = namespace.datasettype
 
     # Initialize the logger and set the level
     CliLog.initLog(longlog=True)
@@ -100,12 +125,37 @@ if __name__ == "__main__":
     # CliLogNew.initLog(log=namespace.log)
     logger = logging.getLogger("lsst.transfer.embargo")
     logger.info("log level %s", namespace.log)
-    logger.info("whats the datasettypelist in here: %s", datasetTypeList)
-    collections = namespace.collections
     if namespace.move:
         raise ValueError(
             "namespace.move is True. Program terminating because this is too dangerous."
         )
+    
+    # determine if we will use the config file or the 
+    # provided datasettypelist and collections args
+    if namespace.use_dataquery_config:
+        logger.info("using the config file, use_dataquery_config is %s", namespace.use_dataquery_config)
+        # define the config path
+        config_file = namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
+        logger.info("config_file name/path is %s", config_file)
+        # Read config file
+        with open(config_file, 'r') as f:
+            config = yaml.safe_load(f)
+        print('config', config)
+        logger.info("config %s", config)
+        # Extract datasettype and collections from config
+        datasetTypeList = config['datasettype']
+        collections = config['collections']
+        #datasettype = config.get('datasettype', datasettype)
+        #collections = config.get('collections', collections)
+    else:
+        datasetTypeList = namespace.datasettype
+        collections = namespace.collections
+
+    logger.info("whats the datasettypelist in here: %s", datasetTypeList)
+    
+    
+    
+    
 
     move = namespace.move
     dest_uri_prefix = namespace.desturiprefix
