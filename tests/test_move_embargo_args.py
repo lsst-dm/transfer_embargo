@@ -237,10 +237,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
             #namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
             use_dataquery_config=True,
-            dataquery_config_file_path="./",
+            dataquery_config_file_path="./yamls/",
             dataquery_config_file_name="config_calexp.yaml",
         )
-'''    
+  
     def test_calexp_should_not_move(self):
         """
         Test that move_embargo_args does not move
@@ -707,7 +707,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
-'''
+
 
 if __name__ == "__main__":
     unittest.main()
