@@ -41,40 +41,50 @@ def is_it_there(
         "--log",
         log,
         "--desturiprefix",
-        desturiprefix,        
+        desturiprefix,
     ]
     if use_dataquery_config:
         # define the config path
         config_file = dataquery_config_file_path + dataquery_config_file_name
         # Read config file
-        with open(config_file, 'r') as f:
+        with open(config_file, "r") as f:
             config = yaml.safe_load(f)
         # Extract datasettype and collections from config
-        print('config in its entirety', config)
+        print("config in its entirety", config)
         datasettype = []
         collections = []
-        for query in config['dataqueries']:
-            datasettype.append(query['datasettype'])
-            collections.append(query['collections'])
+        for query in config["dataqueries"]:
+            datasettype.append(query["datasettype"])
+            collections.append(query["collections"])
             print(f"Dataset Type: {datasettype}, Collections: {collections}")
-    else:   
+    else:
         # need to check if datasettype is a single str,
         # make it iterable
         iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
         iterable_collections = utils.iteration.ensure_iterable(collections)
-        subprocess_args.extend(["--datasettype", *iterable_datasettype,
-                                "--collections", *iterable_collections])
-    
+        subprocess_args.extend(
+            [
+                "--datasettype",
+                *iterable_datasettype,
+                "--collections",
+                *iterable_collections,
+            ]
+        )
 
     # add --move argument only if move is not None
     if move is not None:
-        subprocess_args.extend(["--move"])#, str(move)])
+        subprocess_args.extend(["--move"])  # , str(move)])
     assert move is None, f"move is {move}"
     if use_dataquery_config is not None:
-        subprocess_args.extend(["--use_dataquery_config",
-                                "--dataquery_config_file_path", str(dataquery_config_file_path),
-                                "--dataquery_config_file_name", str(dataquery_config_file_name)])#, str(move)])
-        
+        subprocess_args.extend(
+            [
+                "--use_dataquery_config",
+                "--dataquery_config_file_path",
+                str(dataquery_config_file_path),
+                "--dataquery_config_file_name",
+                str(dataquery_config_file_name),
+            ]
+        )  # , str(move)])
 
     # now run the subprocess
     subprocess.run(subprocess_args, check=True)
@@ -213,6 +223,41 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
+    def test_raw_should_move_yaml(self):
+        """
+        Verify that exposures after now are not being moved
+        when the nowtime is right in the middle of the exposures
+        """
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = 0.1  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            # 2020011700004,
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            embargo_hours,
+            now_time_embargo,
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            desturiprefix=self.temp_dest_ingest,
+            use_dataquery_config=True,
+            dataquery_config_file_path="./yamls/",
+            dataquery_config_file_name="config_raw.yaml",
+        )
+
     def test_calexp_should_move_yaml(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -235,12 +280,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             log=self.log,
             desturiprefix=self.temp_dest_ingest,
-            #namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
+            # namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
             use_dataquery_config=True,
             dataquery_config_file_path="./yamls/",
             dataquery_config_file_name="config_calexp.yaml",
         )
-  
+
     def test_calexp_should_not_move(self):
         """
         Test that move_embargo_args does not move
@@ -260,7 +305,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_from_path,
             self.temp_to_path,
             log=self.log,
-            #datasettype=["calexp"],
+            # datasettype=["calexp"],
             collections=[
                 "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
             ],
@@ -294,7 +339,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             ],
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
-        ) 
+        )
 
     @pytest.mark.xfail(strict=True)
     def test_should_fail_if_move_is_true(self):
