@@ -1,0 +1,6 @@
+# config.yaml
+dataqueries:
+  - datasettype: "calexp"
+    collections: "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
+  - datasettype: "raw"
+    collections: "LATISS/raw/all"
