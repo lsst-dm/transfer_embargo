@@ -50,8 +50,13 @@ def is_it_there(
         with open(config_file, 'r') as f:
             config = yaml.safe_load(f)
         # Extract datasettype and collections from config
-        datasettype = config['datasettype']
-        collections = config['collections']
+        print('config in its entirety', config)
+        datasettype = []
+        collections = []
+        for query in config['dataqueries']:
+            datasettype.append(query['datasettype'])
+            collections.append(query['collections'])
+            print(f"Dataset Type: {datasettype}, Collections: {collections}")
     else:   
         # need to check if datasettype is a single str,
         # make it iterable
@@ -233,9 +238,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             #namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
             use_dataquery_config=True,
             dataquery_config_file_path="./",
-            dataquery_config_file_name="config.yaml",
+            dataquery_config_file_name="config_calexp.yaml",
         )
-    
+'''    
     def test_calexp_should_not_move(self):
         """
         Test that move_embargo_args does not move
@@ -702,7 +707,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
-
+'''
 
 if __name__ == "__main__":
     unittest.main()

@@ -143,10 +143,11 @@ if __name__ == "__main__":
         print('config', config)
         logger.info("config %s", config)
         # Extract datasettype and collections from config
-        datasetTypeList = config['datasettype']
-        collections = config['collections']
-        #datasettype = config.get('datasettype', datasettype)
-        #collections = config.get('collections', collections)
+        datasetTypeList = []
+        collections = []
+        for query in config['dataqueries']:
+            datasetTypeList.append(query['datasettype'])
+            collections.append(query['collections'])
     else:
         datasetTypeList = namespace.datasettype
         collections = namespace.collections
