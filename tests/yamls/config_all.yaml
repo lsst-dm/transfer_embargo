@@ -2,9 +2,7 @@
 dataqueries:
   - datasettype: "calexp"
     collections: "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
-    now_time_embargo: "2022-11-13 03:35:12.836981"
     embargo_hours: 80.0  # hours
   - datasettype: "raw"
     collections: "LATISS/raw/all"
-    now_time_embargo: "2020-01-17 16:55:11.322700"
     embargo_hours: 0.1  # hours
