@@ -34,6 +34,14 @@ def parse_args():
         help="Instrument. Input str",
     )
     parser.add_argument(
+        "--pastembargohours",
+        type=str,
+        required=False,
+        help="Time to search past the embargo time period in hours. \
+              Input float or list. This is helpful for not transferring everything \
+              during the initial testing of the deployment.",
+    )
+    parser.add_argument(
         "--embargohours",
         nargs="+",
         #type=float,
@@ -147,14 +155,16 @@ if __name__ == "__main__":
         # Extract datasettype and collections from config
         datasetTypeList = []
         collections = []
+        embargohrs_list = []
+        #dataqueries = []
         for query in config['dataqueries']:
+            #dataqueries.append(DataQuery(query))
             datasetTypeList.append(query['datasettype'])
             collections.append(query['collections'])
-
-        # check if nowtime and embargohrs are provided in the config file
-        #for query in config['dataqueries']:
-        #    if query['embargohrs']:
-                
+            if 'embargohrs' in query:
+                # The 'embargohrs' key exists in the dictionary 'query'
+                embargohrs_list.append(query['embargohrs'])
+                # Proceed with whatever you need to do with the 'embargohrs' value 
     else:
         datasetTypeList = namespace.datasettype
         collections = namespace.collections
@@ -167,11 +177,11 @@ if __name__ == "__main__":
     dataId = {"instrument": namespace.instrument}
     # Define embargo period and nowtime
     logger.info("embargo  hrs: %s", namespace.embargohours)
+    logger.info("past embargo hrs: %s", namespace.pastembargohours)
     logger.info("nowtime: %s", namespace.nowtime)
 
     # option for embargohours and nowtime to be individual items
     if not isinstance(namespace.embargohours, list) and not isinstance(namespace.nowtime, list):
-        embargo_hours = namespace.embargohours
         embargo_period = astropy.time.TimeDelta(
             namespace.embargohours * 3600.0, format="sec"
         )
@@ -186,7 +196,19 @@ if __name__ == "__main__":
         # for moving any exposure that overlaps with it
         # documentation here:
         # https://community.lsst.org/t/constructing-a-where-for-query-dimension-records/6478
-        timespan_embargo = Timespan(now - embargo_period, None)
+        if namespace.pastembargohours:
+            logger.info("using past embargohours")
+            # if this argument is specified, we're placing a limit on the
+            # amount of data before that to be transferred
+            past_embargo_period = astropy.time.TimeDelta(
+                float(namespace.pastembargohours * 3600.0), format="sec"
+            )
+            timespan_embargo = Timespan(now - embargo_period, now - embargo_period - past_embargo_period)
+            assert (now - embargo_period) > (now - embargo_period - past_embargo_period), \
+                "end of embargo happens before start of embargo, this is grabbing not yet released data"
+        else:
+            logger.info("not using past embargohours")
+            timespan_embargo = Timespan(now - embargo_period, None)
         logger.info("timespan: %s", timespan_embargo)
     elif isinstance(namespace.embargohours, list) and isinstance(namespace.nowtime, list):
         embargo_hours = [float(hours) for hours in namespace.embargohours]
@@ -209,8 +231,24 @@ if __name__ == "__main__":
             logger.info("i: %s", i)
             logger.info("now list entry: %s", now_list[i])
             logger.info("embargo_periods entry: %s", embargo_periods[i])
-            timespans_embargo.append(Timespan(now_list[i] - embargo_periods[i], None))
+            if namespace.pastembargohours:
+                logger.info("using past embargohours")
+                # if this argument is specified, we're placing a limit on the
+                # amount of data before that to be transferred
+                past_embargo_periods = [astropy.time.TimeDelta(float(namespace.pastembargohours) * 3600.0, format="sec") for hours in embargo_hours]
+                logger.info("beginning of span", now_list[i] - embargo_periods[i])
+                logger.info("end of span", now_list[i] - embargo_periods[i])
+                start_of_embargo = now_list[i] - embargo_periods[i]
+                end_of_embargo = now_list[i] - embargo_periods[i] - past_embargo_periods[i]
+                timespans_embargo.append(Timespan(start_of_embargo,
+                                                  end_of_embargo))
+                assert start_of_embargo > end_of_embargo, "end of embargo happens before \
+                    start of embargo, this is grabbing not yet released data"
+            else:
+                logger.info("not using past embargohours")
+                timespans_embargo.append(Timespan(now_list[i] - embargo_periods[i], None))
         logger.info("list of timespans: %s", timespans_embargo)
+        
     else:
         # this means that one is a list but one is not
         # and that is a problem because we're not prepared for this
@@ -232,9 +270,14 @@ if __name__ == "__main__":
         datalist_exposure = []
         collections_exposure = []
         
+        dataquery_exposure = []
+        
         datalist_visit = []
         collections_visit = []
-        
+
+        # configs have no dims
+        # also data by tract, patch, not connected to original images
+        # ie coadds
         datalist_no_exposure = []
         collections_no_exposure = []
         
