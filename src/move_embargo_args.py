@@ -536,8 +536,7 @@ if __name__ == "__main__":
         logger.info("visit timespan_embargo: %s", timespan_embargo_visit)
         logger.info("visit timespan_embargo[0]: %s", timespan_embargo_visit[0])
         logger.info("visit outside embargo: %s", outside_embargo)
-        STOP
-
+        
         # Query the DataIds after embargo period
         datasetRefs_visit = registry.queryDatasets(
             datalist_visit,
