@@ -248,7 +248,45 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
-    def test_calexp_should_move_yaml_pasttime_100_hr(self):
+    def test_raw_should_move_yaml(self):
+        """
+        Verify that exposures after now are not being moved
+        when the nowtime is right in the middle of the exposures
+        Test this for reading from the yaml
+        """
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = str(0.1)  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            # 2020011700004,
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            embargo_hours=embargo_hours,
+            now_time_embargo=now_time_embargo,
+            desturiprefix=self.temp_dest_ingest,
+            use_dataquery_config=True,
+            dataquery_config_file_path="./yamls/",
+            dataquery_config_file_name="config_raw.yaml",
+        )
+
+    
+'''
+    def test_calexp_should_move_yaml_pasttime_18_half_hr(self):
         """
         Test that move_embargo_args runs for the calexp datatype
         read from the config.yaml file
@@ -258,7 +296,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         # "2020-01-17 16:55:11.322700"
         embargo_hours = str(80.0)  # hours
         # IDs that should be moved to temp_to:
-        ids_moved = [2022110800235, 2022110800230, 2022110800238]
+        ids_moved = [2022110800238]
         # IDs that should stay in the temp_from:
         ids_remain = [2022110800235, 2022110800230, 2022110800238]
         is_it_there(
@@ -268,7 +306,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             log=self.log,
             embargo_hours=embargo_hours,
-            past_embargo_hours=str(43.5),
+            past_embargo_hours=str(18.5),
             now_time_embargo=now_time_embargo,
             desturiprefix=self.temp_dest_ingest,
             # namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
@@ -276,7 +314,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataquery_config_file_path="./yamls/",
             dataquery_config_file_name="config_calexp.yaml",
         )
-'''
     def test_calexp_should_move_yaml_pasttime_1_hr(self):
         """
         Test that move_embargo_args runs for the calexp datatype

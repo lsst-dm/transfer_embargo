@@ -181,12 +181,13 @@ if __name__ == "__main__":
     logger.info("nowtime: %s", namespace.nowtime)
 
     # option for embargohours and nowtime to be individual items
-    if not isinstance(namespace.embargohours, list) and not isinstance(namespace.nowtime, list):
+    #if not isinstance(namespace.embargohours, list) and not isinstance(namespace.nowtime, list):
+    if len(namespace.embargohours) == 1 and len(namespace.nowtime) == 1:
         embargo_period = astropy.time.TimeDelta(
-            namespace.embargohours * 3600.0, format="sec"
+            float(namespace.embargohours[0]) * 3600.0, format="sec"
         )
         if namespace.nowtime != "now":
-            now = astropy.time.Time(namespace.nowtime, scale="tai", format="iso")
+            now = astropy.time.Time(namespace.nowtime[0], scale="tai", format="iso")
         else:
             now = astropy.time.Time.now().tai
         # the timespan object defines a "forbidden" region of time
@@ -196,21 +197,28 @@ if __name__ == "__main__":
         # for moving any exposure that overlaps with it
         # documentation here:
         # https://community.lsst.org/t/constructing-a-where-for-query-dimension-records/6478
+
+        # both for the case of pastembargohours being defined
+        # and for when its not defined you'll need the timespan that is
+        # embargoed (no transfer allowed here)
+        # the format of this is (start of embargo, infinitely far into the future)
+        logger.info("now: %s", now)
+        logger.info("embargo_period: %s", embargo_period)
+        timespan_embargo = Timespan(now - embargo_period, None)
+        logger.info("timespan: %s", timespan_embargo)
         if namespace.pastembargohours:
             logger.info("using past embargohours")
             # if this argument is specified, we're placing a limit on the
             # amount of data before that to be transferred
             past_embargo_period = astropy.time.TimeDelta(
-                float(namespace.pastembargohours * 3600.0), format="sec"
+                float(namespace.pastembargohours[0]) * 3600.0, format="sec"
             )
-            timespan_embargo = Timespan(now - embargo_period, now - embargo_period - past_embargo_period)
+            timespan_pastembargo = Timespan(now - embargo_period - past_embargo_period, now - embargo_period)
+            #timespan_pastembargo = Timespan(now - embargo_period, now - embargo_period - past_embargo_period)
             #assert (now - embargo_period) > (now - embargo_period - past_embargo_period), \
             #    "end of embargo happens before start of embargo, this is grabbing not yet released data"
-        else:
-            logger.info("not using past embargohours")
-            timespan_embargo = Timespan(now - embargo_period, None)
-        logger.info("timespan: %s", timespan_embargo)
-    elif isinstance(namespace.embargohours, list) and isinstance(namespace.nowtime, list):
+    #elif isinstance(namespace.embargohours, list) and isinstance(namespace.nowtime, list):
+    elif len(namespace.embargohours) > 1 and len(namespace.nowtime) > 1:
         embargo_hours = [float(hours) for hours in namespace.embargohours]
         # Calculate embargo_period for each embargo hour
         embargo_periods = [astropy.time.TimeDelta(hours * 3600.0, format="sec") for hours in embargo_hours]
@@ -222,6 +230,7 @@ if __name__ == "__main__":
             else:
                 now_list.append(astropy.time.Time.now().tai)
         timespans_embargo = []
+        timespans_pastembargo = []
         # this is assuming both nows and embargo periods are specified, lists
         # are the same length, required to specify both
         logger.info("now list: %s", now_list)
@@ -231,6 +240,7 @@ if __name__ == "__main__":
             logger.info("i: %s", i)
             logger.info("now list entry: %s", now_list[i])
             logger.info("embargo_periods entry: %s", embargo_periods[i])
+            timespans_embargo.append(Timespan(now_list[i] - embargo_periods[i], None))
             if namespace.pastembargohours:
                 logger.info("using past embargohours")
                 # if this argument is specified, we're placing a limit on the
@@ -238,15 +248,12 @@ if __name__ == "__main__":
                 past_embargo_periods = [astropy.time.TimeDelta(float(namespace.pastembargohours) * 3600.0, format="sec") for hours in embargo_hours]
                 start_of_embargo = now_list[i] - embargo_periods[i]
                 end_of_embargo = now_list[i] - embargo_periods[i] - past_embargo_periods[i]
-                logger.info("beginning of span", start_of_embargo)
-                logger.info("end of span", end_of_embargo)
-                timespans_embargo.append(Timespan(end_of_embargo,
+                logger.info("beginning of span %s:", start_of_embargo)
+                logger.info("end of span %s:", end_of_embargo)
+                timespans_pastembargo.append(Timespan(end_of_embargo,
                                                   start_of_embargo))
                 #assert start_of_embargo > end_of_embargo, "end of embargo happens before \
                 #    start of embargo, this is grabbing not yet released data"
-            else:
-                logger.info("not using past embargohours")
-                timespans_embargo.append(Timespan(now_list[i] - embargo_periods[i], None))
         logger.info("list of timespans: %s", timespans_embargo)
         
     else:
@@ -261,7 +268,8 @@ if __name__ == "__main__":
     logger.info("from path: %s", namespace.fromrepo)
     logger.info("to path: %s", namespace.torepo)
 
-    if not isinstance(namespace.embargohours, list) and not isinstance(namespace.nowtime, list):
+    #if not isinstance(namespace.embargohours, list) and not isinstance(namespace.nowtime, list):
+    if len(namespace.embargohours) == 1 and len(namespace.nowtime) == 1:
         # The Dimensions query
         # If (now - embargo period, now) does not overlap
         # with observation time interval: move
@@ -298,7 +306,7 @@ if __name__ == "__main__":
                 # these should be the raw datasettype
                 datalist_no_exposure.append(dtype)
                 collections_no_exposure.append(collections[i])
-    elif isinstance(namespace.embargohours, list) and isinstance(namespace.nowtime, list):
+    elif len(namespace.embargohours) > 1 and len(namespace.nowtime) > 1:
         datalist_exposure = []
         collections_exposure = []
         timespan_embargo_exposure = []
@@ -343,7 +351,7 @@ if __name__ == "__main__":
 
     if datalist_exposure:  # if there is anything in the list
         # first, run all of the exposure types through
-        if not isinstance(namespace.embargohours, list) and not isinstance(namespace.nowtime, list):
+        if len(namespace.embargohours) == 1 and len(namespace.nowtime) == 1:
             if namespace.pastembargohours:
                 outside_embargo = [
                     dt.id
@@ -358,6 +366,7 @@ if __name__ == "__main__":
                     )
                 ]
             else:
+                # where and bind can be separate variables, defined in the if
                 outside_embargo = [
                     dt.id
                     for dt in registry.queryDimensionRecords(
@@ -370,7 +379,8 @@ if __name__ == "__main__":
                         bind={"timespan_embargo": timespan_embargo},
                     )
                 ]
-        elif isinstance(namespace.embargohours, list) and isinstance(namespace.nowtime, list):
+                
+        elif len(namespace.embargohours) > 1 and len(namespace.nowtime) > 1:
             logger.info("timespan_embargo_exposure: %s", timespan_embargo_exposure)
             if namespace.pastembargohours:
                 outside_embargo = [
@@ -479,64 +489,59 @@ if __name__ == "__main__":
         # first, run all of the exposure types through
         logger.info("datalist_visit exists")
         logger.info("collections: %s", collections_visit)
-        if not isinstance(namespace.embargohours, list) and not isinstance(namespace.nowtime, list):
+        if len(namespace.embargohours) == 1 and len(namespace.nowtime) == 1:
             if namespace.pastembargohours:
-                outside_embargo = [
-                    dt.id
-                    for dt in registry.queryDimensionRecords(
-                        "visit",
-                        dataId=dataId,
-                        datasets=datalist_visit,
-                        collections=...,# collections_visit,
-                        where="visit.timespan OVERLAPS\
-                                                                timespan_embargo",
-                        bind={"timespan_embargo": timespan_embargo},
-                    )
-                ]
+                where_statement = "NOT visit.timespan OVERLAPS timespan_embargo \
+                               AND visit.timespan OVERLAPS timespan_pastembargo"
+                bind_statement = {"timespan_embargo": timespan_embargo,
+                              "timespan_pastembargo": timespan_pastembargo}
             else:
-                outside_embargo = [
-                    dt.id
-                    for dt in registry.queryDimensionRecords(
-                        "visit",
-                        dataId=dataId,
-                        datasets=datalist_visit,
-                        collections=...,# collections_visit,
-                        where="NOT visit.timespan OVERLAPS\
-                                                                timespan_embargo",
-                        bind={"timespan_embargo": timespan_embargo},
-                    )
-                ]
-        elif isinstance(namespace.embargohours, list) and isinstance(namespace.nowtime, list):
-            if namespace.pastembargohours:
-                outside_embargo = [
-                    dt.id
-                    for dt in registry.queryDimensionRecords(
-                        "visit",
-                        dataId=dataId,
-                        datasets=datalist_visit,
-                        collections=...,# collections_visit,
-                        where="visit.timespan OVERLAPS\
-                                                                timespan_embargo",#
-                        bind={"timespan_embargo": timespan_embargo_visit[0]},
-                    )
-                ]
-            else:
-                outside_embargo = [
-                    dt.id
-                    for dt in registry.queryDimensionRecords(
-                        "visit",
-                        dataId=dataId,
-                        datasets=datalist_visit,
-                        collections=...,# collections_visit,
-                        where="NOT visit.timespan OVERLAPS\
-                                                                timespan_embargo",#
-                        bind={"timespan_embargo": timespan_embargo_visit[0]},
-                    )
-                ]
-        logger.info("visit timespan_embargo: %s", timespan_embargo_visit)
-        logger.info("visit timespan_embargo[0]: %s", timespan_embargo_visit[0])
-        logger.info("visit outside embargo: %s", outside_embargo)
+                where_statement = "NOT visit.timespan OVERLAPS\
+                                                                timespan_embargo"
+                bind_statement = {"timespan_embargo": timespan_embargo}
+            logger.info("where statement: %s", where_statement)
+            logger.info("bind statement: %s", bind_statement)
         
+            outside_embargo = [
+                    dt.id
+                    for dt in registry.queryDimensionRecords(
+                        "visit",
+                        dataId=dataId,
+                        datasets=datalist_visit,
+                        collections=...,# collections_visit,
+                        where=where_statement,
+                        bind=bind_statement,
+                    )
+                ]
+        elif len(namespace.embargohours) > 1 and len(namespace.nowtime) > 1:
+            logger.info("these are lists apparently", namespace.embargohours, namespace.nowtime, len(namespace.embargohours))
+            if namespace.pastembargohours:
+                outside_embargo = [
+                    dt.id
+                    for dt in registry.queryDimensionRecords(
+                        "visit",
+                        dataId=dataId,
+                        datasets=datalist_visit,
+                        collections=...,# collections_visit,
+                        where="visit.timespan OVERLAPS\
+                                                                timespan_embargo",#
+                        bind={"timespan_embargo": timespan_embargo_visit[0]},
+                    )
+                ]
+            else:
+                outside_embargo = [
+                    dt.id
+                    for dt in registry.queryDimensionRecords(
+                        "visit",
+                        dataId=dataId,
+                        datasets=datalist_visit,
+                        collections=...,# collections_visit,
+                        where="NOT visit.timespan OVERLAPS\
+                                                                timespan_embargo",#
+                        bind={"timespan_embargo": timespan_embargo_visit[0]},
+                    )
+                ]
+        logger.info("visit outside embargo: %s", outside_embargo)
         # Query the DataIds after embargo period
         datasetRefs_visit = registry.queryDatasets(
             datalist_visit,
