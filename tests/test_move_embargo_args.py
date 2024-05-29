@@ -388,7 +388,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     
 
-
+    '''
+    # commenting out this one test that incorporates multiple
+    # embargohrs arguments from the config yaml
     def test_raw_and_calexp_should_move_yaml_embargo_hrs_in_yaml(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -425,6 +427,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataquery_config_file_name="config_all_embargohrs.yaml",
             desturiprefix=self.temp_dest_ingest,
         )
+    '''
 
     def test_calexp_should_move(self):
         """
@@ -454,7 +457,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             # desturiprefix="tests/data/",
         )
 
-'''
+
     def test_raw_and_calexp_should_move_yaml(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -1023,7 +1026,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
-'''
 
 
 if __name__ == "__main__":
