@@ -207,11 +207,11 @@ if __name__ == "__main__":
         timespan_embargo = Timespan(now - embargo_period, None)
         logger.info("timespan: %s", timespan_embargo)
         if namespace.pastembargohours:
-            logger.info("using past embargohours")
+            logger.info("using past embargohours", namespace.pastembargohours)
             # if this argument is specified, we're placing a limit on the
             # amount of data before that to be transferred
             past_embargo_period = astropy.time.TimeDelta(
-                float(namespace.pastembargohours[0]) * 3600.0, format="sec"
+                float(namespace.pastembargohours) * 3600.0, format="sec"
             )
             timespan_pastembargo = Timespan(now - embargo_period - past_embargo_period, now - embargo_period)
             #timespan_pastembargo = Timespan(now - embargo_period, now - embargo_period - past_embargo_period)

@@ -117,10 +117,19 @@ def is_it_there(
     counter = 0
     ids_in_temp_to = []
     for dtype in datasettype:
+        # if there is nothing in registry_to, should enter the following
+        # if not statement
+        # this is necessary in order to not trigger an indexerror
+        # when trying to do registry_to.queryDatasetTypes(dtype)[0]
+        if not registry_to.queryDatasetTypes(dtype):
+            # then the list is empty
+            print('empty temp to')
+            counter += 1
+            continue
         if any(
-            dim in ["visit"]
-            for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
-        ):
+                dim in ["visit"]
+                for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
+            ):
             ids_visit = [dt.dataId.mapping["visit"]
                 for dt in registry_to.queryDatasets(
                     datasetType=dtype, collections=...
@@ -128,7 +137,7 @@ def is_it_there(
                         ]
             for id in ids_visit:
                 ids_in_temp_to.append(id)
-            
+         
         elif any(
             dim in ["exposure"]
             for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
@@ -155,11 +164,21 @@ def is_it_there(
     # verifying the contents of the temp_to butler
     # check that what we expect to move (ids_should_be_moved)
     # are in the temp_to repo (ids_in_temp_to)
+    print('stuff that should move', ids_should_be_moved)
     sorted_moved = sorted(ids_should_be_moved)
     sorted_temp_to = sorted(ids_in_temp_to)
+    '''
     assert (
         sorted_moved == sorted_temp_to
-    ), f"{sorted_moved} should be in {temp_to} repo but is not, instead what is there: {sorted_temp_to}"
+    ), f"""{sorted_moved} should be in {temp_to} repo but is not, instead what is there: {sorted_temp_to}"""
+    '''
+    message = f"{sorted_moved} should be in {temp_to} repo but is not, instead what is there:{sorted_temp_to}"
+    print(message[:1000])  # print the first part
+    print(message[1000:])  # print the second part
+    
+    assert sorted_moved == sorted_temp_to, message
+    
+    
     # now check the temp_from butler and see what remains
     butler_from = Butler(temp_from)
     registry_from = butler_from.registry
@@ -248,44 +267,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
-    def test_raw_should_move_yaml(self):
-        """
-        Verify that exposures after now are not being moved
-        when the nowtime is right in the middle of the exposures
-        Test this for reading from the yaml
-        """
-        now_time_embargo = "2020-01-17 16:55:11.322700"
-        embargo_hours = str(0.1)  # hours
-        # IDs that should be moved to temp_to:
-        ids_moved = [
-            # 2020011700004,
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-        ]
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2020011700004,
-            2020011700005,
-            2020011700006,
-        ]
-        is_it_there(
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            embargo_hours=embargo_hours,
-            now_time_embargo=now_time_embargo,
-            desturiprefix=self.temp_dest_ingest,
-            use_dataquery_config=True,
-            dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_raw.yaml",
-        )
-
-    
-'''
+    # first a a big group of calexp tests
     def test_calexp_should_move_yaml_pasttime_18_half_hr(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -314,71 +296,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataquery_config_file_path="./yamls/",
             dataquery_config_file_name="config_calexp.yaml",
         )
-    def test_calexp_should_move_yaml_pasttime_1_hr(self):
-        """
-        Test that move_embargo_args runs for the calexp datatype
-        read from the config.yaml file
-        """
-        now_time_embargo = "2022-11-13 03:35:12.836981"
-        # '2022-11-09 01:03:22.888003'
-        # "2020-01-17 16:55:11.322700"
-        embargo_hours = str(80.0)  # hours
-        # IDs that should be moved to temp_to:
-        ids_moved = []
-        # IDs that should stay in the temp_from:
-        ids_remain = [2022110800235, 2022110800230, 2022110800238]
-        is_it_there(
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            embargo_hours=embargo_hours,
-            past_embargo_hours=str(1.0),
-            now_time_embargo=now_time_embargo,
-            desturiprefix=self.temp_dest_ingest,
-            # namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
-            use_dataquery_config=True,
-            dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_calexp.yaml",
-        )
-  
-    def test_raw_should_move_yaml(self):
-        """
-        Verify that exposures after now are not being moved
-        when the nowtime is right in the middle of the exposures
-        Test this for reading from the yaml
-        """
-        now_time_embargo = "2020-01-17 16:55:11.322700"
-        embargo_hours = str(0.1)  # hours
-        # IDs that should be moved to temp_to:
-        ids_moved = [
-            # 2020011700004,
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-        ]
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2020011700004,
-            2020011700005,
-            2020011700006,
-        ]
-        is_it_there(
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            embargo_hours=embargo_hours,
-            now_time_embargo=now_time_embargo,
-            desturiprefix=self.temp_dest_ingest,
-            use_dataquery_config=True,
-            dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_raw.yaml",
-        )
-
 
     def test_calexp_should_move_yaml(self):
         """
@@ -407,7 +324,137 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataquery_config_file_path="./yamls/",
             dataquery_config_file_name="config_calexp.yaml",
         )
+
+
+    def test_calexp_should_move_yaml_pasttime_1_hr(self):
+        """
+        Test that move_embargo_args runs for the calexp datatype
+        read from the config.yaml file
+        """
+        now_time_embargo = "2022-11-13 03:35:12.836981"
+        # '2022-11-09 01:03:22.888003'
+        # "2020-01-17 16:55:11.322700"
+        embargo_hours = str(80.0)  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = []
+        # IDs that should stay in the temp_from:
+        ids_remain = [2022110800235, 2022110800230, 2022110800238]
+        is_it_there(
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            embargo_hours=embargo_hours,
+            past_embargo_hours=str(1.0),
+            now_time_embargo=now_time_embargo,
+            desturiprefix=self.temp_dest_ingest,
+            # namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
+            use_dataquery_config=True,
+            dataquery_config_file_path="./yamls/",
+            dataquery_config_file_name="config_calexp.yaml",
+        )
+
+
+    def test_calexp_should_not_move(self):
+        """
+        Test that move_embargo_args does not move
+        the calexp data that is too close to embargo
+        """
+        now_time_embargo = "2022-11-11 03:35:12.836981"
+        # "2020-01-17 16:55:11.322700"
+        embargo_hours = str(80.0)  # hours
+        ids_moved = []
+        # IDs that should stay in the temp_from:
+        ids_remain = [2022110800235, 2022110800230, 2022110800238]
+        is_it_there(
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            embargo_hours=embargo_hours,
+            now_time_embargo=now_time_embargo,
+            datasettype=["calexp"],
+            collections=[
+                "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
+            ],
+            desturiprefix=self.temp_dest_ingest,
+            # desturiprefix="tests/data/",
+        )
+
+
+
+
     
+
+
+    def test_raw_and_calexp_should_move_yaml_embargo_hrs_in_yaml(self):
+        """
+        Test that move_embargo_args runs for the calexp datatype
+        and for the raw datatype at the same time
+        """
+        # first raw, then calexp
+        now_time_embargo = ["2020-01-17 16:55:11.322700",
+                            "2022-11-13 03:35:12.836981"]
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            # 2020011700004,
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+            2022110800235, 2022110800230, 2022110800238
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+            2022110800235, 2022110800230, 2022110800238
+        ]
+        is_it_there(
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            now_time_embargo=now_time_embargo,
+            use_dataquery_config=True,
+            dataquery_config_file_path="./yamls/",
+            dataquery_config_file_name="config_all_embargohrs.yaml",
+            desturiprefix=self.temp_dest_ingest,
+        )
+
+    def test_calexp_should_move(self):
+        """
+        Test that move_embargo_args runs for the calexp datatype
+        """
+        now_time_embargo = "2022-11-13 03:35:12.836981"
+        # '2022-11-09 01:03:22.888003'
+        # "2020-01-17 16:55:11.322700"
+        embargo_hours = str(80.0)  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [2022110800235, 2022110800230, 2022110800238]
+        # IDs that should stay in the temp_from:
+        ids_remain = [2022110800235, 2022110800230, 2022110800238]
+        is_it_there(
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            embargo_hours=embargo_hours,
+            now_time_embargo=now_time_embargo,
+            datasettype=["calexp"],
+            collections=[
+                "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
+            ],
+            desturiprefix=self.temp_dest_ingest,
+            # desturiprefix="tests/data/",
+        )
+
+'''
     def test_raw_and_calexp_should_move_yaml(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -447,16 +494,16 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataquery_config_file_name="config_all.yaml",
             desturiprefix=self.temp_dest_ingest,
         )
-'''
-'''
-    def test_raw_and_calexp_should_move_yaml_embargo_hrs_in_yaml(self):
+
+    
+    def test_raw_should_move_yaml(self):
         """
-        Test that move_embargo_args runs for the calexp datatype
-        and for the raw datatype at the same time
+        Verify that exposures after now are not being moved
+        when the nowtime is right in the middle of the exposures
+        Test this for reading from the yaml
         """
-        # first raw, then calexp
-        now_time_embargo = ["2020-01-17 16:55:11.322700",
-                            "2022-11-13 03:35:12.836981"]
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = str(0.1)  # hours
         # IDs that should be moved to temp_to:
         ids_moved = [
             # 2020011700004,
@@ -464,14 +511,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2019111300061,
             2020011700002,
             2020011700003,
-            2022110800235, 2022110800230, 2022110800238
         ]
         # IDs that should stay in the temp_from:
         ids_remain = [
             2020011700004,
             2020011700005,
             2020011700006,
-            2022110800235, 2022110800230, 2022110800238
         ]
         is_it_there(
             ids_remain,
@@ -479,14 +524,54 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_from_path,
             self.temp_to_path,
             log=self.log,
+            embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
+            desturiprefix=self.temp_dest_ingest,
             use_dataquery_config=True,
             dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_all_embargohrs.yaml",
-            desturiprefix=self.temp_dest_ingest,
+            dataquery_config_file_name="config_raw.yaml",
         )
-'''
-'''
+
+    
+
+  
+    def test_raw_should_move_yaml(self):
+        """
+        Verify that exposures after now are not being moved
+        when the nowtime is right in the middle of the exposures
+        Test this for reading from the yaml
+        """
+        now_time_embargo = "2020-01-17 16:55:11.322700"
+        embargo_hours = str(0.1)  # hours
+        # IDs that should be moved to temp_to:
+        ids_moved = [
+            # 2020011700004,
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            ids_remain,
+            ids_moved,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            embargo_hours=embargo_hours,
+            now_time_embargo=now_time_embargo,
+            desturiprefix=self.temp_dest_ingest,
+            use_dataquery_config=True,
+            dataquery_config_file_path="./yamls/",
+            dataquery_config_file_name="config_raw.yaml",
+        )
+
+
     def test_raw_and_calexp_should_move(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -525,65 +610,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all",
                          "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"],
             desturiprefix=self.temp_dest_ingest,
-        )
-
-
-
-    def test_calexp_should_not_move(self):
-        """
-        Test that move_embargo_args does not move
-        the calexp data that is too close to embargo
-        """
-        now_time_embargo = "2022-11-11 03:35:12.836981"
-        # "2020-01-17 16:55:11.322700"
-        embargo_hours = str(80.0)  # hours
-        ids_moved = []
-        # IDs that should stay in the temp_from:
-        ids_remain = [2022110800235, 2022110800230, 2022110800238]
-        is_it_there(
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            embargo_hours=embargo_hours,
-            now_time_embargo=now_time_embargo,
-            datasettype=["calexp"],
-            collections=[
-                "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
-            ],
-            desturiprefix=self.temp_dest_ingest,
-            # desturiprefix="tests/data/",
-        )
-
- 
-
-    def test_calexp_should_move(self):
-        """
-        Test that move_embargo_args runs for the calexp datatype
-        """
-        now_time_embargo = "2022-11-13 03:35:12.836981"
-        # '2022-11-09 01:03:22.888003'
-        # "2020-01-17 16:55:11.322700"
-        embargo_hours = str(80.0)  # hours
-        # IDs that should be moved to temp_to:
-        ids_moved = [2022110800235, 2022110800230, 2022110800238]
-        # IDs that should stay in the temp_from:
-        ids_remain = [2022110800235, 2022110800230, 2022110800238]
-        is_it_there(
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            embargo_hours=embargo_hours,
-            now_time_embargo=now_time_embargo,
-            datasettype=["calexp"],
-            collections=[
-                "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
-            ],
-            desturiprefix=self.temp_dest_ingest,
-            # desturiprefix="tests/data/",
         )
 
     @pytest.mark.xfail(strict=True)
@@ -998,67 +1024,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 '''
-'''
 
-    def test_raw_and_calexp_should_move_yaml(self):
-        """
-        Read from yaml: both raw and calexp
-        with different now times and embargo hours
-        """
-        now_time_embargo = "2020-01-17 16:55:11.322700"
-        embargo_hours = 0.1  # hours
-        # IDs that should be moved to temp_to:
-        ids_moved = [
-            # 2020011700004,
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-        ]
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2020011700004,
-            2020011700005,
-            2020011700006,
-        ]
-        is_it_there(
-            embargo_hours,
-            now_time_embargo,
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            desturiprefix=self.temp_dest_ingest,
-            use_dataquery_config=True,
-            dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_raw.yaml",
-        )
-        now_time_embargo = "2022-11-13 03:35:12.836981"
-        # '2022-11-09 01:03:22.888003'
-        # "2020-01-17 16:55:11.322700"
-        embargo_hours = 80.0  # hours
-        # IDs that should be moved to temp_to:
-        ids_moved = [2022110800235, 2022110800230, 2022110800238]
-        # IDs that should stay in the temp_from:
-        ids_remain = [2022110800235, 2022110800230, 2022110800238]
-        is_it_there(
-            embargo_hours,
-            now_time_embargo,
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            desturiprefix=self.temp_dest_ingest,
-            # namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
-            use_dataquery_config=True,
-            dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_calexp.yaml",
-        )
-
-
-'''
 
 if __name__ == "__main__":
     unittest.main()
