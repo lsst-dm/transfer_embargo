@@ -27,13 +27,13 @@ def is_it_there(
     dataquery_config_file_path: str = "./",
     dataquery_config_file_name: str = "config.yaml",
 ):
-    '''
+    """
     # Convert single values to lists if needed
     if not isinstance(embargo_hours, list):
         embargo_hours = [embargo_hours]
     if not isinstance(now_time_embargo, list):
         now_time_embargo = [now_time_embargo]
-    '''
+    """
     # Run the package
     print("this is the move arg", str(move) if move is not None else "")
     subprocess_args = [
@@ -42,10 +42,10 @@ def is_it_there(
         temp_from,
         temp_to,
         "LATISS",
-        #"--embargohours",
-        #str(embargo_hours),
-        #"--nowtime",
-        #now_time_embargo,
+        # "--embargohours",
+        # str(embargo_hours),
+        # "--nowtime",
+        # now_time_embargo,
         "--log",
         log,
         "--desturiprefix",
@@ -73,14 +73,15 @@ def is_it_there(
         iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
         iterable_collections = utils.iteration.ensure_iterable(collections)
         subprocess_args.extend(
-            ["--embargohours",
-             *iterable_embargo_hours,
-             "--nowtime",
-             *iterable_nowtime,
-             "--datasettype",
-             *iterable_datasettype,
-             "--collections",
-             *iterable_collections,
+            [
+                "--embargohours",
+                *iterable_embargo_hours,
+                "--nowtime",
+                *iterable_nowtime,
+                "--datasettype",
+                *iterable_datasettype,
+                "--collections",
+                *iterable_collections,
             ]
         )
     # add --move argument only if move is not None
@@ -89,16 +90,19 @@ def is_it_there(
     assert move is None, f"move is {move}"
     # do the same with the past embargo hours arg
     if past_embargo_hours is not None:
-        subprocess_args.extend(["--pastembargohours", past_embargo_hours])  # , str(move)])
-    
+        subprocess_args.extend(
+            ["--pastembargohours", past_embargo_hours]
+        )  # , str(move)])
+
     if use_dataquery_config is not None:
         iterable_embargo_hours = utils.iteration.ensure_iterable(embargo_hours)
         iterable_nowtime = utils.iteration.ensure_iterable(now_time_embargo)
         subprocess_args.extend(
-            ["--embargohours",
-             *iterable_embargo_hours,
-             "--nowtime",
-             *iterable_nowtime,
+            [
+                "--embargohours",
+                *iterable_embargo_hours,
+                "--nowtime",
+                *iterable_nowtime,
                 "--use_dataquery_config",
                 "--dataquery_config_file_path",
                 str(dataquery_config_file_path),
@@ -106,10 +110,10 @@ def is_it_there(
                 str(dataquery_config_file_name),
             ]
         )  # , str(move)])
-    print('loaded the config')
+    print("loaded the config")
     # now run the subprocess
     subprocess.run(subprocess_args, check=True)
-    print('made it through the program')
+    print("made it through the program")
 
     # first test stuff in the temp_to butler
     butler_to = Butler(temp_to)
@@ -123,29 +127,28 @@ def is_it_there(
         # when trying to do registry_to.queryDatasetTypes(dtype)[0]
         if not registry_to.queryDatasetTypes(dtype):
             # then the list is empty
-            print('empty temp to')
+            print("empty temp to")
             counter += 1
             continue
         if any(
-                dim in ["visit"]
-                for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
-            ):
-            ids_visit = [dt.dataId.mapping["visit"]
-                for dt in registry_to.queryDatasets(
-                    datasetType=dtype, collections=...
-                )
-                        ]
+            dim in ["visit"]
+            for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
+        ):
+            ids_visit = [
+                dt.dataId.mapping["visit"]
+                for dt in registry_to.queryDatasets(datasetType=dtype, collections=...)
+            ]
             for id in ids_visit:
                 ids_in_temp_to.append(id)
-         
+
         elif any(
             dim in ["exposure"]
             for dim in registry_to.queryDatasetTypes(dtype)[0].dimensions.names
         ):
-            ids_exposure = [dt.dataId.mapping["exposure"]
-                for dt in registry_to.queryDatasets(
-                    datasetType=dtype, collections=...
-                )]
+            ids_exposure = [
+                dt.dataId.mapping["exposure"]
+                for dt in registry_to.queryDatasets(datasetType=dtype, collections=...)
+            ]
             for id in ids_exposure:
                 ids_in_temp_to.append(id)
         else:
@@ -164,21 +167,15 @@ def is_it_there(
     # verifying the contents of the temp_to butler
     # check that what we expect to move (ids_should_be_moved)
     # are in the temp_to repo (ids_in_temp_to)
-    print('stuff that should move', ids_should_be_moved)
+    print("stuff that should move", ids_should_be_moved)
     sorted_moved = sorted(ids_should_be_moved)
     sorted_temp_to = sorted(ids_in_temp_to)
-    '''
-    assert (
-        sorted_moved == sorted_temp_to
-    ), f"""{sorted_moved} should be in {temp_to} repo but is not, instead what is there: {sorted_temp_to}"""
-    '''
     message = f"{sorted_moved} should be in {temp_to} repo but is not, instead what is there:{sorted_temp_to}"
     print(message[:1000])  # print the first part
     print(message[1000:])  # print the second part
-    
+
     assert sorted_moved == sorted_temp_to, message
-    
-    
+
     # now check the temp_from butler and see what remains
     butler_from = Butler(temp_from)
     registry_from = butler_from.registry
@@ -227,7 +224,6 @@ def is_it_there(
         not missing_ids
     ), f"move is {move} and the following IDs are missing in {temp_from} repo: {missing_ids}, \
         instead this is what is in it: {ids_in_temp_from}"
-    
 
 
 class AtLeastOneAssertionFailedError(Exception):
@@ -291,7 +287,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             past_embargo_hours=str(18.5),
             now_time_embargo=now_time_embargo,
             desturiprefix=self.temp_dest_ingest,
-            # namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
             use_dataquery_config=True,
             dataquery_config_file_path="./yamls/",
             dataquery_config_file_name="config_calexp.yaml",
@@ -319,12 +314,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
             desturiprefix=self.temp_dest_ingest,
-            # namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
             use_dataquery_config=True,
             dataquery_config_file_path="./yamls/",
             dataquery_config_file_name="config_calexp.yaml",
         )
-
 
     def test_calexp_should_move_yaml_pasttime_1_hr(self):
         """
@@ -349,12 +342,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             past_embargo_hours=str(1.0),
             now_time_embargo=now_time_embargo,
             desturiprefix=self.temp_dest_ingest,
-            # namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
             use_dataquery_config=True,
             dataquery_config_file_path="./yamls/",
             dataquery_config_file_name="config_calexp.yaml",
         )
-
 
     def test_calexp_should_not_move(self):
         """
@@ -382,11 +373,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         )
-
-
-
-
-    
 
     '''
     # commenting out this one test that incorporates multiple
@@ -457,17 +443,14 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             # desturiprefix="tests/data/",
         )
 
-
     def test_raw_and_calexp_should_move_yaml(self):
         """
         Test that move_embargo_args runs for the calexp datatype
         and for the raw datatype at the same time
         """
         # first raw, then calexp
-        now_time_embargo = ["2020-01-17 16:55:11.322700",
-                            "2022-11-13 03:35:12.836981"]
-        embargo_hours = [str(0.1),
-                         str(80.0)] # hours
+        now_time_embargo = ["2020-01-17 16:55:11.322700", "2022-11-13 03:35:12.836981"]
+        embargo_hours = [str(0.1), str(80.0)]  # hours
         # IDs that should be moved to temp_to:
         ids_moved = [
             # 2020011700004,
@@ -475,14 +458,18 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2019111300061,
             2020011700002,
             2020011700003,
-            2022110800235, 2022110800230, 2022110800238
+            2022110800235,
+            2022110800230,
+            2022110800238,
         ]
         # IDs that should stay in the temp_from:
         ids_remain = [
             2020011700004,
             2020011700005,
             2020011700006,
-            2022110800235, 2022110800230, 2022110800238
+            2022110800235,
+            2022110800230,
+            2022110800238,
         ]
         is_it_there(
             ids_remain,
@@ -498,7 +485,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-    
     def test_raw_should_move_yaml(self):
         """
         Verify that exposures after now are not being moved
@@ -534,46 +520,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataquery_config_file_path="./yamls/",
             dataquery_config_file_name="config_raw.yaml",
         )
-
-    
-
-  
-    def test_raw_should_move_yaml(self):
-        """
-        Verify that exposures after now are not being moved
-        when the nowtime is right in the middle of the exposures
-        Test this for reading from the yaml
-        """
-        now_time_embargo = "2020-01-17 16:55:11.322700"
-        embargo_hours = str(0.1)  # hours
-        # IDs that should be moved to temp_to:
-        ids_moved = [
-            # 2020011700004,
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-        ]
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2020011700004,
-            2020011700005,
-            2020011700006,
-        ]
-        is_it_there(
-            ids_remain,
-            ids_moved,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            embargo_hours=embargo_hours,
-            now_time_embargo=now_time_embargo,
-            desturiprefix=self.temp_dest_ingest,
-            use_dataquery_config=True,
-            dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_raw.yaml",
-        )
-
 
     def test_raw_and_calexp_should_move(self):
         """
@@ -581,10 +527,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         and for the raw datatype at the same time
         """
         # first raw, then calexp
-        now_time_embargo = ["2020-01-17 16:55:11.322700",
-                            "2022-11-13 03:35:12.836981"]
-        embargo_hours = [str(0.1),
-                         str(80.0)] # hours
+        now_time_embargo = ["2020-01-17 16:55:11.322700", "2022-11-13 03:35:12.836981"]
+        embargo_hours = [str(0.1), str(80.0)]  # hours
         # IDs that should be moved to temp_to:
         ids_moved = [
             # 2020011700004,
@@ -592,14 +536,18 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2019111300061,
             2020011700002,
             2020011700003,
-            2022110800235, 2022110800230, 2022110800238
+            2022110800235,
+            2022110800230,
+            2022110800238,
         ]
         # IDs that should stay in the temp_from:
         ids_remain = [
             2020011700004,
             2020011700005,
             2020011700006,
-            2022110800235, 2022110800230, 2022110800238
+            2022110800235,
+            2022110800230,
+            2022110800238,
         ]
         is_it_there(
             ids_remain,
@@ -610,8 +558,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
             datasettype=["raw", "calexp"],
-            collections=["LATISS/raw/all",
-                         "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"],
+            collections=[
+                "LATISS/raw/all",
+                "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616",
+            ],
             desturiprefix=self.temp_dest_ingest,
         )
 
