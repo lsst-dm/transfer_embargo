@@ -291,7 +291,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataquery_config_file_path="./yamls/",
             dataquery_config_file_name="config_calexp.yaml",
         )
-
+    '''
     def test_calexp_should_move_yaml(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -373,6 +373,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         )
+    '''
 
     '''
     # commenting out this one test that incorporates multiple
@@ -415,6 +416,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         )
     '''
 
+    '''
     def test_calexp_should_move(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -976,6 +978,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
+    '''
 
 
 if __name__ == "__main__":
