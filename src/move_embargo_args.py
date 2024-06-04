@@ -12,14 +12,12 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Transferring data from embargo butler to another butler"
     )
-
-    # at least one arg in dataId needed for 'where' clause.
     parser.add_argument(
         "fromrepo",
         type=str,
         nargs="?",
         default="/repo/embargo",
-        help="Butler Repository path from which data is transferred. Input str. Default = '/repo/embargo'",
+        help="Butler repository path from which data is transferred. Input str. Default = '/repo/embargo'",
     )
     parser.add_argument(
         "torepo",
@@ -38,7 +36,8 @@ def parse_args():
         type=str,
         required=False,
         help="Time to search past the embargo time period in hours. \
-              Input float or list. This is helpful for not transferring everything \
+              Input str. Defines a window of data that will be transferred. \
+              This is helpful for transferring a limited amount of data \
               during the initial testing of the deployment.",
     )
     parser.add_argument(
@@ -58,21 +57,15 @@ def parse_args():
               The path and name of the config file are given below",
     )
     parser.add_argument(
-        "--dataquery_config_file_name",
-        type=str,
-        required=False,
-        default="config.yaml",
-        help="Config file that contains lists of datasettype and collections",
-    )
-    parser.add_argument(
-        "--dataquery_config_file_path",
+        "--dataquery_config_file",
         required=False,
         type=str,
-        default="/etc/",
+        default="/etc/config.yaml",
         help="Name and path of the config file.\
               Used to input datasettype, collections list pairs.\
               If datasettype and collections args are also provided,\
-              these are the default.",
+              these are the default. \
+              Default is /etc/config.yaml",
     )
     parser.add_argument(
         "--datasettype",
@@ -98,7 +91,7 @@ def parse_args():
         "--move",
         required=False,
         action="store_true",
-        help="Copies if False, deletes original if it exists True",
+        help="Copies if False, deletes original if it exists (if True)",
     )
     parser.add_argument(
         "--log",
@@ -112,17 +105,14 @@ def parse_args():
         type=str,
         required=False,
         default="False",
-        help="Define dest uri if you need to run ingest for raws",
+        help="Define dest URI if you need to run ingest for raws",
     )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     namespace = parse_args()
-
     # Define embargo and destination butler
-    # If move is true, then you'll need write
-    # permissions from the fromrepo (embargo)
     butler = Butler(namespace.fromrepo, writeable=namespace.move)
     registry = butler.registry
     dest_butler = Butler(namespace.torepo, writeable=True)
@@ -135,6 +125,10 @@ if __name__ == "__main__":
     logger = logging.getLogger("lsst.transfer.embargo")
     logger.info("log level %s", namespace.log)
     logger.info("namespace: %s", namespace)
+
+    # If move is true, then you'll need write
+    # permissions from the fromrepo (embargo)
+    # For now we will not allow move to be true
     if namespace.move:
         raise ValueError(
             "namespace.move is True. Program terminating because this is too dangerous."
@@ -142,39 +136,30 @@ if __name__ == "__main__":
 
     # determine if we will use the config file or the
     # provided datasettypelist and collections args
+    # from the cli
     if namespace.use_dataquery_config:
+        # define the config file
+        config_file = namespace.dataquery_config_file
         logger.info(
-            "using the config file, use_dataquery_config is %s",
-            namespace.use_dataquery_config,
-        )
-        # define the config path
-        config_file = (
-            namespace.dataquery_config_file_path + namespace.dataquery_config_file_name
-        )
-        logger.info("config_file name/path is %s", config_file)
-        # Read config file
+            "using the config file, config_file name/path is %s", config_file)
+        # read config file
         with open(config_file, "r") as f:
             config = yaml.safe_load(f)
-        print("config", config)
         logger.info("config %s", config)
         # Extract datasettype and collections from config
         datasetTypeList = []
         collections = []
         embargohrs_list = []
-        # dataqueries = []
         for query in config["dataqueries"]:
-            # dataqueries.append(DataQuery(query))
             datasetTypeList.append(query["datasettype"])
             collections.append(query["collections"])
             if "embargohrs" in query:
-                # The 'embargohrs' key exists in the dictionary 'query'
                 embargohrs_list.append(query["embargohrs"])
     else:
         datasetTypeList = namespace.datasettype
         collections = namespace.collections
 
     logger.info("whats the datasettypelist in here: %s", datasetTypeList)
-
     move = namespace.move
     dest_uri_prefix = namespace.desturiprefix
     # Dataset to move
@@ -185,6 +170,9 @@ if __name__ == "__main__":
     logger.info("nowtime: %s", namespace.nowtime)
 
     # option for embargohours and nowtime to be individual items
+    # or lists
+    # we would like for these arguments to be individual items
+    # if passed via cli, but they may be lists if passed via config yaml
     if len(namespace.embargohours) == 1 and len(namespace.nowtime) == 1:
         embargo_period = astropy.time.TimeDelta(
             float(namespace.embargohours[0]) * 3600.0, format="sec"
@@ -287,9 +275,7 @@ if __name__ == "__main__":
         # Save data Ids of these observations into a list
         datalist_exposure = []
         collections_exposure = []
-
         dataquery_exposure = []
-
         datalist_visit = []
         collections_visit = []
 

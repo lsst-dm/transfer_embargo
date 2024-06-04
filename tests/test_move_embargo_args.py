@@ -24,8 +24,7 @@ def is_it_there(
     collections: list | str = "LATISS/raw/all",
     desturiprefix: str = "tests/data/",
     use_dataquery_config=None,
-    dataquery_config_file_path: str = "./",
-    dataquery_config_file_name: str = "config.yaml",
+    dataquery_config_file: str = "./config.yaml",
 ):
     """
     # Convert single values to lists if needed
@@ -53,7 +52,7 @@ def is_it_there(
     ]
     if use_dataquery_config:
         # define the config path
-        config_file = dataquery_config_file_path + dataquery_config_file_name
+        config_file = dataquery_config_file
         # Read config file
         with open(config_file, "r") as f:
             config = yaml.safe_load(f)
@@ -104,10 +103,8 @@ def is_it_there(
                 "--nowtime",
                 *iterable_nowtime,
                 "--use_dataquery_config",
-                "--dataquery_config_file_path",
-                str(dataquery_config_file_path),
-                "--dataquery_config_file_name",
-                str(dataquery_config_file_name),
+                "--dataquery_config_file",
+                str(dataquery_config_file),
             ]
         )  # , str(move)])
     print("loaded the config")
@@ -288,8 +285,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             now_time_embargo=now_time_embargo,
             desturiprefix=self.temp_dest_ingest,
             use_dataquery_config=True,
-            dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_calexp.yaml",
+            dataquery_config_file="./yamls/config_calexp.yaml",
         )
 
     def test_calexp_should_move_yaml(self):
@@ -315,8 +311,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             now_time_embargo=now_time_embargo,
             desturiprefix=self.temp_dest_ingest,
             use_dataquery_config=True,
-            dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_calexp.yaml",
+            dataquery_config_file="./yamls/config_calexp.yaml",
         )
 
     def test_calexp_should_move_yaml_pasttime_1_hr(self):
@@ -343,8 +338,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             now_time_embargo=now_time_embargo,
             desturiprefix=self.temp_dest_ingest,
             use_dataquery_config=True,
-            dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_calexp.yaml",
+            dataquery_config_file="./yamls/config_calexp.yaml",
         )
 
     def test_calexp_should_not_move(self):
@@ -409,8 +403,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             now_time_embargo=now_time_embargo,
             use_dataquery_config=True,
-            dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_all_embargohrs.yaml",
+            dataquery_config_file="./yamls/config_all_embargohrs.yaml",
             desturiprefix=self.temp_dest_ingest,
         )
     '''
@@ -480,8 +473,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
             use_dataquery_config=True,
-            dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_all.yaml",
+            dataquery_config_file="./yamls/config_all.yaml",
             desturiprefix=self.temp_dest_ingest,
         )
 
@@ -517,8 +509,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             now_time_embargo=now_time_embargo,
             desturiprefix=self.temp_dest_ingest,
             use_dataquery_config=True,
-            dataquery_config_file_path="./yamls/",
-            dataquery_config_file_name="config_raw.yaml",
+            dataquery_config_file="./yamls/config_raw.yaml",
         )
 
     def test_raw_and_calexp_should_move(self):
