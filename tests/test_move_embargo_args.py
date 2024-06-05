@@ -264,7 +264,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
     # first a a big group of calexp tests
-    def test_calexp_should_move_yaml_pasttime_18_half_hr(self):
+    def test_calexp_should_copy_yaml_pasttime_18_half_hr(self):
         """
         Test that move_embargo_args runs for the calexp datatype
         read from the config.yaml file
@@ -411,7 +411,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         )
     '''
 
-    def test_calexp_should_move(self):
+    def test_calexp_should_copy(self):
         """
         Test that move_embargo_args runs for the calexp datatype
         """
@@ -439,14 +439,16 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             # desturiprefix="tests/data/",
         )
 
-    def test_raw_and_calexp_should_move_yaml(self):
+    def test_raw_and_calexp_should_copy_yaml(self):
         """
         Test that move_embargo_args runs for the calexp datatype
         and for the raw datatype at the same time
         """
         # first raw, then calexp
-        now_time_embargo = ["2020-01-17 16:55:11.322700", "2022-11-13 03:35:12.836981"]
-        embargo_hours = [str(0.1), str(80.0)]  # hours
+        now_time_embargo = ["2020-01-17 16:55:11.322700",
+                            "2022-11-13 03:35:12.836981"]
+        embargo_hours = [str(0.1),
+                         str(80.0)]  # hours
         # IDs that should be moved to temp_to:
         ids_copied = [
             # 2020011700004,
@@ -480,7 +482,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-    def test_raw_should_move_yaml(self):
+    def test_raw_should_copy_yaml(self):
         """
         Verify that exposures after now are not being moved
         when the nowtime is right in the middle of the exposures
@@ -515,7 +517,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataquery_config_file="./yamls/config_raw.yaml",
         )
 
-    def test_raw_and_calexp_should_move(self):
+    # potentially we won't need to test this in the future
+    # @KT - we were not planning on running multiple args from
+    # cli
+    def test_raw_and_calexp_should_copy(self):
         """
         Test that move_embargo_args runs for the calexp datatype
         and for the raw datatype at the same time
@@ -630,7 +635,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-    def test_nothing_moves(self):
+    def test_nothing_copies(self):
         """
         Nothing should move when the embargo hours falls right on
         the oldest exposure
@@ -773,39 +778,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-    def test_main_move(self):
-        """
-        Run move_embargo_args to move some IDs from the fake_from butler
-        to the fake_to butler and test which ones moved
-        """
-        now_time_embargo = "2020-03-01 23:59:59.999999"
-        embargo_hours = str(3827088.677299 / 3600)  # hours
-        # IDs that should be moved to temp_to:
-        ids_copied = [
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-            2020011700004,
-        ]
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2020011700005,
-            2020011700006,
-        ]
-        is_it_there(
-            ids_remain,
-            ids_copied,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            embargo_hours=embargo_hours,
-            now_time_embargo=now_time_embargo,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
-            desturiprefix=self.temp_dest_ingest,
-        )
-
     def test_main_copy(self):
         """
         Run move_embargo_args to move some IDs from the fake_from butler
@@ -813,39 +785,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         now_time_embargo = "2020-03-01 23:59:59.999999"
         embargo_hours = str(3827088.677299 / 3600)  # hours
-        # IDs that should be moved to temp_to:
-        ids_copied = [
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-            2020011700004,
-        ]
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2020011700005,
-            2020011700006,
-        ]
-        is_it_there(
-            ids_remain,
-            ids_copied,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            embargo_hours=embargo_hours,
-            now_time_embargo=now_time_embargo,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
-            desturiprefix=self.temp_dest_ingest,
-        )
-
-    def test_main_move_midnight(self):
-        """
-        Run move_embargo_args to move some IDs from the fake_from butler
-        to the fake_to butler and test which ones moved
-        """
-        now_time_embargo = "2020-03-02 00:00:00.000000"
-        embargo_hours = str(3827088.6773 / 3600)  # hours
         # IDs that should be moved to temp_to:
         ids_copied = [
             2019111300059,
@@ -905,7 +844,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-    def test_main_move_midnight_precision(self):
+    def test_main_midnight_precision(self):
         """
         Run move_embargo_args to move some IDs from the fake_from butler
         to the fake_to butler and test which ones moved
