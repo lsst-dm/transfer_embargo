@@ -9,6 +9,56 @@ from lsst.daf.butler.cli.cliLog import CliLog
 
 
 def parse_args():
+    """Parses and returns command-line arguments for transferring data between Butler repositories.
+
+    Extended Summary
+    ----------------
+    The function sets up an argument parser for transferring data from an embargo Butler repository
+    to another Butler repository. It defines several arguments and their options, including source
+    and destination repositories, instrument, embargo time periods, configuration options, and more.
+
+    Returns
+    -------
+        argparse.Namespace: An object containing the parsed command-line arguments.
+
+    Arguments
+    ---------
+    fromrepo : `str`
+        Path to the Butler repository from which data is transferred. Default is '/repo/embargo'.
+    torepo : `str`
+        Path to the Butler repository to which data is transferred.
+    instrument : `str`
+        Instrument name. Default is 'LATISS'.
+    pastembargohours : `str`, optional
+        Time to search past the embargo period in hours.
+        Useful for transferring limited data during initial testing.
+    embargohours : `list` [`float`], optional
+        Embargo time period in hours.
+    use_dataquery_config : `bool`, optional
+        If True, uses the configuration from the config file; 
+        if False, uses provided datasettype and collections lists.
+    dataquery_config_file : `str`, optional
+        Path to the configuration file. Default is '/etc/config.yaml'.
+    datasettype : `list` [`str`], optional
+        Dataset type(s).
+    collections : `list` [`str`], optional
+        Data collections. Default is 'LATISS/raw/all'.
+    nowtime : `list` [`str`], optional
+        Current time in ISO, TAI timescale. Default is 'now'.
+    move : `bool`, optional
+        If True, deletes original data after transfer; if False, copies data.
+    log : `str`, optional
+        Logging level. Default is 'INFO'. Other options are 'DEBUG' and 'WARNING'.
+    desturiprefix : `str`, optional
+        Destination URI prefix for raw data ingestion. Default is 'False'.
+
+    Example
+    -------
+        args = parse_args()
+        from_repo = args.fromrepo
+        to_repo = args.torepo
+        instrument = args.instrument
+    """
     parser = argparse.ArgumentParser(
         description="Transferring data from embargo butler to another butler"
     )
