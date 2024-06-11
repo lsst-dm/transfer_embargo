@@ -34,7 +34,7 @@ def parse_args():
         Path to the Butler repository to which data is transferred.
     instrument : `str`
         Instrument name. Default is 'LATISS'.
-    pastembargohours : `str`, optional
+    pastembargohours : `float`, optional
         Time to search past the embargo period in hours.
         Useful for transferring limited data during initial testing.
     embargohours : `list` [`float`], optional
@@ -88,21 +88,21 @@ def parse_args():
         help="Instrument. Input str",
     )
     parser.add_argument(
-        "--pastembargohours",
-        type=str,
-        required=False,
-        help="Time to search past the embargo time period in hours. \
-              Input str. Defines a window of data that will be transferred. \
-              This is helpful for transferring a limited amount of data \
-              during the initial testing of the deployment.",
-    )
-    parser.add_argument(
         "--embargohours",
         nargs="+",
         # type=float,
         required=False,
         # default=80.0,
         help="Embargo time period in hours. Input float or list",
+    )
+    parser.add_argument(
+        "--pastembargohours",
+        type=float,
+        required=False,
+        help="Time to search past the embargo time period in hours. \
+              Input float. Defines a window of data that will be transferred. \
+              This is helpful for transferring a limited amount of data \
+              during the initial testing of the deployment.",
     )
     parser.add_argument(
         "--use_dataquery_config",
@@ -258,7 +258,7 @@ if __name__ == "__main__":
             # if this argument is specified, we're placing a limit on the
             # amount of data before that to be transferred
             past_embargo_period = astropy.time.TimeDelta(
-                float(namespace.pastembargohours) * 3600.0, format="sec"
+                namespace.pastembargohours * 3600.0, format="sec"
             )
             timespan_pastembargo = Timespan(
                 now - embargo_period - past_embargo_period, now - embargo_period
@@ -298,7 +298,7 @@ if __name__ == "__main__":
                 # amount of data before that to be transferred
                 past_embargo_periods = [
                     astropy.time.TimeDelta(
-                        float(namespace.pastembargohours) * 3600.0, format="sec"
+                        namespace.pastembargohours * 3600.0, format="sec"
                     )
                     for hours in embargo_hours
                 ]
