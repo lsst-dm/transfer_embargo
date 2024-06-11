@@ -26,12 +26,64 @@ def is_it_there(
     use_dataquery_config=None,
     dataquery_config_file: str = "./config.yaml",
 ):
-    """
-    # Convert single values to lists if needed
-    if not isinstance(embargo_hours, list):
-        embargo_hours = [embargo_hours]
-    if not isinstance(now_time_embargo, list):
-        now_time_embargo = [now_time_embargo]
+    """Execute and validate the transfer of data between Butler repositories.
+
+    Extended summary
+    ----------------
+    This function executes a subprocess to transfer data from one Butler
+    repository to another based on the provided arguments.
+    It then validates the transfer by checking the presence of
+    specific dataset IDs in the source and destination repositories.
+
+    Parameters
+    ----------
+    ids_should_remain_after_move : `list`
+        List of dataset IDs that should remain in the source repository
+        after the move.
+    ids_should_be_moved : `list`
+        List of dataset IDs that should be moved to the destination repository.
+    temp_from : `str`
+        Path to the source Butler repository.
+    temp_to : `str`
+        Path to the destination Butler repository.
+    move : `bool`, optional
+        If True, deletes the original data after transfer; if False,
+        copies the data. Default is None.
+    log : `str`, optional
+        Logging level. Default is "INFO".
+    embargo_hours : `list` or `str`, optional
+        Embargo time period in hours. Default is "80.0".
+    past_embargo_hours : `str`, optional
+        Time to search past the embargo period in hours.
+    now_time_embargo : `list` or `str`, optional
+        Current time in ISO, TAI timescale. Default is "now".
+    datasettype : `list` or `str`, optional
+        Dataset type(s). Default is "raw".
+    collections : `list` or `str`, optional
+        Data collections. Default is "LATISS/raw/all".
+    desturiprefix : `str`, optional
+        Destination URI prefix for raw data ingestion.
+        Default is "tests/data/".
+    use_dataquery_config : `bool`, optional
+        If True, uses configuration from the specified config file.
+    dataquery_config_file : `str`, optional
+        Path to the configuration file. Default is "./config.yaml".
+
+    Raises
+    ------
+    AssertionError
+        If the transfer validation fails, indicating that the dataset IDs
+        are not in the expected repositories.
+
+    Example
+    -------
+    >>> ids_remain = [1, 2, 3]
+    >>> ids_move = [4, 5, 6]
+    >>> temp_from_path = "/path/to/source/repo"
+    >>> temp_to_path = "/path/to/destination/repo"
+    >>> is_it_there(ids_remain, ids_move, temp_from_path, \
+                    temp_to_path, move=False)
+
     """
     # Run the package
     print("this is the move arg", str(move) if move is not None else "")
@@ -445,10 +497,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         and for the raw datatype at the same time
         """
         # first raw, then calexp
-        now_time_embargo = ["2020-01-17 16:55:11.322700",
-                            "2022-11-13 03:35:12.836981"]
-        embargo_hours = [str(0.1),
-                         str(80.0)]  # hours
+        now_time_embargo = ["2020-01-17 16:55:11.322700", "2022-11-13 03:35:12.836981"]
+        embargo_hours = [str(0.1), str(80.0)]  # hours
         # IDs that should be moved to temp_to:
         ids_copied = [
             # 2020011700004,
