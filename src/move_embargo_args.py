@@ -9,22 +9,27 @@ from lsst.daf.butler.cli.cliLog import CliLog
 
 
 def parse_args():
-    """Parses and returns command-line arguments for transferring data between Butler repositories.
+    """Parses and returns command-line arguments
+    for transferring data between Butler repositories.
 
     Extended Summary
     ----------------
-    The function sets up an argument parser for transferring data from an embargo Butler repository
-    to another Butler repository. It defines several arguments and their options, including source
-    and destination repositories, instrument, embargo time periods, configuration options, and more.
+    The function sets up an argument parser for transferring
+    data from an embargo Butler repository to another Butler repository.
+    It defines several arguments and their options, including source
+    and destination repositories, instrument, embargo time periods,
+    configuration options, and more.
 
     Returns
     -------
-        argparse.Namespace: An object containing the parsed command-line arguments.
+        argparse.Namespace: An object containing the parsed command-line
+        arguments.
 
     Arguments
     ---------
     fromrepo : `str`
-        Path to the Butler repository from which data is transferred. Default is '/repo/embargo'.
+        Path to the Butler repository from which data is transferred.
+        Default is '/repo/embargo'.
     torepo : `str`
         Path to the Butler repository to which data is transferred.
     instrument : `str`
@@ -35,7 +40,7 @@ def parse_args():
     embargohours : `list` [`float`], optional
         Embargo time period in hours.
     use_dataquery_config : `bool`, optional
-        If True, uses the configuration from the config file; 
+        If True, uses the configuration from the config file;
         if False, uses provided datasettype and collections lists.
     dataquery_config_file : `str`, optional
         Path to the configuration file. Default is '/etc/config.yaml'.
@@ -48,7 +53,8 @@ def parse_args():
     move : `bool`, optional
         If True, deletes original data after transfer; if False, copies data.
     log : `str`, optional
-        Logging level. Default is 'INFO'. Other options are 'DEBUG' and 'WARNING'.
+        Logging level. Default is 'INFO'.
+        Other options are 'DEBUG' and 'WARNING'.
     desturiprefix : `str`, optional
         Destination URI prefix for raw data ingestion. Default is 'False'.
 
@@ -190,8 +196,7 @@ if __name__ == "__main__":
     if namespace.use_dataquery_config:
         # define the config file
         config_file = namespace.dataquery_config_file
-        logger.info(
-            "using the config file, config_file name/path is %s", config_file)
+        logger.info("using the config file, config_file name/path is %s", config_file)
         # read config file
         with open(config_file, "r") as f:
             config = yaml.safe_load(f)
@@ -258,8 +263,9 @@ if __name__ == "__main__":
             timespan_pastembargo = Timespan(
                 now - embargo_period - past_embargo_period, now - embargo_period
             )
-            assert (now - embargo_period) > (now - embargo_period - past_embargo_period), \
-                "end of embargo happens before start of embargo, this is grabbing not yet released data"
+            assert (now - embargo_period) > (
+                now - embargo_period - past_embargo_period
+            ), "end of embargo happens before start of embargo, this is grabbing not yet released data"
     elif len(namespace.embargohours) > 1 and len(namespace.nowtime) > 1:
         embargo_hours = [float(hours) for hours in namespace.embargohours]
         # Calculate embargo_period for each embargo hour
