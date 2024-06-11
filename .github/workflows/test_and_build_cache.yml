@@ -3,7 +3,7 @@ name: cache dependencies, test, and build
 on:
   push:
     branches:
-      - tickets/DM-41033
+      - main
     tags:
       - v*
   pull_request:
