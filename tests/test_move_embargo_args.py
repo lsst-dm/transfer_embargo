@@ -342,6 +342,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             use_dataquery_config=True,
             dataquery_config_file="./yamls/config_calexp.yaml",
         )
+
     def test_calexp_should_copy_yaml(self):
         """
         Test that move_embargo_args runs for the calexp datatype
