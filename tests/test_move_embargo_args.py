@@ -342,7 +342,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             use_dataquery_config=True,
             dataquery_config_file="./yamls/config_calexp.yaml",
         )
-
     def test_calexp_should_copy_yaml(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -422,7 +421,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         )
-
     '''
     # commenting out this one test that incorporates multiple
     # embargohrs arguments from the config yaml
@@ -462,7 +460,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
     '''
-
     def test_calexp_should_copy(self):
         """
         Test that move_embargo_args runs for the calexp datatype
