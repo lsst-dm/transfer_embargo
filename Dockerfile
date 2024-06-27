@@ -31,4 +31,4 @@ ENV COLLECTIONS ["LATISS/raw/all", "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_20
 ENV LOG "True"
 ENV PASTEMBARGO 1.0
 
-CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\""]
+CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" --datasettype \"$DATASETTYPE\" --collections \"$COLLECTIONS\""]
