@@ -26,7 +26,9 @@ ENV TOREPO "tests_docker/temp_to"
 ENV INSTRUMENT "LATISS"
 ENV NOW "2020-03-01 23:59:59.999999"
 ENV EMBARGO_HRS 1063.08018813861
-ENV MOVE "True"
+ENV DATASETTYPE ["raw", "calexp"]
+ENV COLLECTIONS ["LATISS/raw/all", "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"]
 ENV LOG "True"
+ENV PASTEMBARGO 1.0
 
-CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --move \"$MOVE\" --log \"$LOG\""]
+CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\""]
