@@ -1,0 +1,4 @@
+# config.yaml
+dataqueries:
+  - datasettype: "raw"
+    collections: "LATISS/raw/all"
