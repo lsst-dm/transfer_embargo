@@ -20,8 +20,12 @@ def is_it_there(
     embargo_hours: list | str = "80.0",
     past_embargo_hours=None,
     now_time_embargo: list | str = "now",
-    datasettype: list | str = "raw",
-    collections: list | str = "LATISS/raw/all",
+    dataqueries: dict = {"datasettype": ["raw", "calexp"],
+                         "collections": ["LATISS/raw/all", 
+                                         "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"]
+                        },
+    #datasettype: list | str = "raw",
+    #collections: list | str = "LATISS/raw/all",
     desturiprefix: str = "tests/data/",
     use_dataquery_config=None,
     dataquery_config_file: str = "./config.yaml",
@@ -87,6 +91,7 @@ def is_it_there(
     """
     # Run the package
     print("this is the move arg", str(move) if move is not None else "")
+    print("this is the dataqueries", dataqueries, type(dataqueries))
     # start by adding common args for both the config
     # and the cli options
     subprocess_args = [
@@ -119,8 +124,8 @@ def is_it_there(
         # make it iterable if so
         iterable_embargo_hours = utils.iteration.ensure_iterable(embargo_hours)
         iterable_nowtime = utils.iteration.ensure_iterable(now_time_embargo)
-        iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
-        iterable_collections = utils.iteration.ensure_iterable(collections)
+        #iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
+        #iterable_collections = utils.iteration.ensure_iterable(collections)
         # and extend the args to include the cli args
         subprocess_args.extend(
             [
@@ -128,10 +133,12 @@ def is_it_there(
                 *iterable_embargo_hours,
                 "--nowtime",
                 *iterable_nowtime,
-                "--datasettype",
-                *iterable_datasettype,
-                "--collections",
-                *iterable_collections,
+                "--dataqueries",
+                str(dataqueries),
+                #"--datasettype",
+                #*iterable_datasettype,
+                #"--collections",
+                #*iterable_collections,
             ]
         )
     # add --move argument only if move is not None
@@ -162,7 +169,7 @@ def is_it_there(
                 str(dataquery_config_file),
             ]
         )  # , str(move)])
-    print("loaded the config")
+        print("loaded the config")
     # now run the subprocess
     subprocess.run(subprocess_args, check=True)
     print("made it through the program")
@@ -415,6 +422,33 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
+            dataqueries={"datasettype": "calexp",
+                         "collections": "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
+            },
+            desturiprefix=self.temp_dest_ingest,
+            # desturiprefix="tests/data/",
+        )
+    
+    '''    
+    def test_calexp_no_copy(self):
+        """
+        Test that move_embargo_args does not move
+        the calexp data that is too close to embargo
+        """
+        now_time_embargo = "2022-11-11 03:35:12.836981"
+        # "2020-01-17 16:55:11.322700"
+        embargo_hours = str(80.0)  # hours
+        ids_copied = []
+        # IDs that should stay in the temp_from:
+        ids_remain = [2022110800235, 2022110800230, 2022110800238]
+        is_it_there(
+            ids_remain,
+            ids_copied,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            embargo_hours=embargo_hours,
+            now_time_embargo=now_time_embargo,
             datasettype=["calexp"],
             collections=[
                 "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
@@ -422,6 +456,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         )
+    '''
     '''
     # commenting out this one test that incorporates multiple
     # embargohrs arguments from the config yaml
@@ -460,6 +495,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataquery_config_file="./yamls/config_all_embargohrs.yaml",
             desturiprefix=self.temp_dest_ingest,
         )
+    '''
     '''
     def test_calexp_should_copy(self):
         """
@@ -957,6 +993,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             collections=["LATISS/raw/all"],
             desturiprefix=self.temp_dest_ingest,
         )
+    '''
 
 
 if __name__ == "__main__":

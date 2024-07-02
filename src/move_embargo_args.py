@@ -1,6 +1,7 @@
 import argparse
 import logging
 import yaml
+import json
 
 import astropy.time
 from lsst.resources import ResourcePath
@@ -124,6 +125,14 @@ def parse_args():
               Default is /etc/config.yaml",
     )
     parser.add_argument(
+        "--dataqueries",
+        required=False,
+        type=str,
+        help="A dictionary of dataset type and collection, \
+              can be a single entry or multiple items. Str",
+    )
+    '''
+    parser.add_argument(
         "--datasettype",
         required=False,
         nargs="+",
@@ -136,6 +145,7 @@ def parse_args():
         default="LATISS/raw/all",
         help="Data Collections. Input list or str",
     )
+    '''
     parser.add_argument(
         "--nowtime",
         nargs="+",
@@ -211,8 +221,32 @@ if __name__ == "__main__":
             if "embargohrs" in query:
                 embargohrs_list.append(query["embargohrs"])
     else:
-        datasetTypeList = namespace.datasettype
-        collections = namespace.collections
+        # parse the JSON string into a dictionary
+        logger.info("Using dataqueries: %s", namespace.dataqueries)
+        if namespace.dataqueries:
+            try:
+                dataqueries_dict = yaml.safe_load(namespace.dataqueries)
+                print("Parsed dictionary:")
+                for key, value in dataqueries_dict.items():
+                    print(f"{key}: {value}")
+            except yaml.YAMLError as e:
+                print(f"Error parsing YAML string: {e}")
+        else:
+            dataqueries_dict = {}
+            logger.info("No data queries provided and no config provided, \
+                         we have a problem.")
+        '''
+                dataqueries_dict = json.loads(namespace.dataqueries)
+                
+            except json.JSONDecodeError as e:
+                print(f"Error parsing JSON string: {e}")
+        else:
+        '''
+            
+        datasetTypeList = dataqueries_dict['datasettype']
+        collections = dataqueries_dict['collections']
+        # datasetTypeList = namespace.datasettype
+        # collections = namespace.collections
 
     logger.info("whats the datasettypelist in here: %s", datasetTypeList)
     move = namespace.move
