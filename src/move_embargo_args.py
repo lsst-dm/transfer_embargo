@@ -7,6 +7,7 @@ import astropy.time
 from lsst.resources import ResourcePath
 from lsst.daf.butler import Butler, Timespan, FileDataset
 from lsst.daf.butler.cli.cliLog import CliLog
+import lsst.utils as utils
 
 
 def parse_args():
@@ -245,10 +246,17 @@ if __name__ == "__main__":
             
         datasetTypeList = dataqueries_dict['datasettype']
         collections = dataqueries_dict['collections']
+        # make these iterable if they are not
+        if not isinstance(datasetTypeList, list):
+            datasetTypeList = [datasetTypeList]
+            collections = [collections]
+        
         # datasetTypeList = namespace.datasettype
         # collections = namespace.collections
 
     logger.info("whats the datasettypelist in here: %s", datasetTypeList)
+    logger.info("type of the datasettypelist in here: %s", type(datasetTypeList))
+    
     move = namespace.move
     dest_uri_prefix = namespace.desturiprefix
     # Dataset to move
@@ -336,6 +344,10 @@ if __name__ == "__main__":
     timespan_embargo_no_exposure = []
 
     for i, dtype in enumerate(datasetTypeList):
+        logger.info("dtype: %s", dtype)
+        logger.info("registry.queryDatasetTypes(dtype): %s", registry.queryDatasetTypes(dtype))
+        logger.info("collections: %s", collections)
+        logger.info("registry.queryDatasetTypes(dtype): %s", registry.queryDatasetTypes(dtype))
         if any(
             dim in ["visit"]
             for dim in registry.queryDatasetTypes(dtype)[0].dimensions.names
@@ -475,14 +487,8 @@ if __name__ == "__main__":
         logger.info("exposure ids moved: %s", ids_moved)
     if datalist_visit:  # if there is anything in the list
         # first, run all of the exposure types through
-        logger.info("datalist_visit exists")
+        logger.info("datalist_visit exists: %s", datalist_visit)
         logger.info("collections: %s", collections_visit)
-        logger.info(
-            "these are lists apparently",
-            namespace.embargohours,
-            namespace.nowtime,
-            len(namespace.embargohours),
-        )
         if namespace.pastembargohours:
             outside_embargo = [
                 dt.id

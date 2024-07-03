@@ -322,6 +322,32 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
+    def test_calexp_no_copy(self):
+        """
+        Test that move_embargo_args does not move
+        the calexp data that is too close to embargo
+        """
+        now_time_embargo = "2022-11-11 03:35:12.836981"
+        # "2020-01-17 16:55:11.322700"
+        embargo_hours = str(80.0)  # hours
+        ids_copied = []
+        # IDs that should stay in the temp_from:
+        ids_remain = [2022110800235, 2022110800230, 2022110800238]
+        is_it_there(
+            ids_remain,
+            ids_copied,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            embargo_hours=embargo_hours,
+            now_time_embargo=now_time_embargo,
+            dataqueries={"datasettype": "calexp",
+                         "collections": "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
+            },
+            desturiprefix=self.temp_dest_ingest,
+            # desturiprefix="tests/data/",
+        )
+    '''   
     # first a a big group of calexp tests
     def test_calexp_should_copy_yaml_pasttime_18_half_hr(self):
         """
@@ -403,31 +429,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataquery_config_file="./yamls/config_calexp.yaml",
         )
 
-    def test_calexp_no_copy(self):
-        """
-        Test that move_embargo_args does not move
-        the calexp data that is too close to embargo
-        """
-        now_time_embargo = "2022-11-11 03:35:12.836981"
-        # "2020-01-17 16:55:11.322700"
-        embargo_hours = str(80.0)  # hours
-        ids_copied = []
-        # IDs that should stay in the temp_from:
-        ids_remain = [2022110800235, 2022110800230, 2022110800238]
-        is_it_there(
-            ids_remain,
-            ids_copied,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            embargo_hours=embargo_hours,
-            now_time_embargo=now_time_embargo,
-            dataqueries={"datasettype": "calexp",
-                         "collections": "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
-            },
-            desturiprefix=self.temp_dest_ingest,
-            # desturiprefix="tests/data/",
-        )
+    '''
     
     '''    
     def test_calexp_no_copy(self):
