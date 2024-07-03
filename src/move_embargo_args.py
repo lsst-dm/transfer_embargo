@@ -1,13 +1,11 @@
 import argparse
 import logging
 import yaml
-import json
 
 import astropy.time
 from lsst.resources import ResourcePath
 from lsst.daf.butler import Butler, Timespan, FileDataset
 from lsst.daf.butler.cli.cliLog import CliLog
-import lsst.utils as utils
 
 
 def parse_args():
@@ -132,7 +130,7 @@ def parse_args():
         help="A dictionary of dataset type and collection, \
               can be a single entry or multiple items. Str",
     )
-    '''
+    """
     parser.add_argument(
         "--datasettype",
         required=False,
@@ -146,7 +144,7 @@ def parse_args():
         default="LATISS/raw/all",
         help="Data Collections. Input list or str",
     )
-    '''
+    """
     parser.add_argument(
         "--nowtime",
         nargs="+",
@@ -234,29 +232,24 @@ if __name__ == "__main__":
                 print(f"Error parsing YAML string: {e}")
         else:
             dataqueries_dict = {}
-            logger.info("No data queries provided and no config provided, \
-                         we have a problem.")
-        '''
-                dataqueries_dict = json.loads(namespace.dataqueries)
-                
-            except json.JSONDecodeError as e:
-                print(f"Error parsing JSON string: {e}")
-        else:
-        '''
-            
-        datasetTypeList = dataqueries_dict['datasettype']
-        collections = dataqueries_dict['collections']
+            logger.info(
+                "No data queries provided and no config provided, \
+                         we have a problem."
+            )
+
+        datasetTypeList = dataqueries_dict["datasettype"]
+        collections = dataqueries_dict["collections"]
         # make these iterable if they are not
         if not isinstance(datasetTypeList, list):
             datasetTypeList = [datasetTypeList]
             collections = [collections]
-        
+
         # datasetTypeList = namespace.datasettype
         # collections = namespace.collections
 
     logger.info("whats the datasettypelist in here: %s", datasetTypeList)
     logger.info("type of the datasettypelist in here: %s", type(datasetTypeList))
-    
+
     move = namespace.move
     dest_uri_prefix = namespace.desturiprefix
     # Dataset to move
@@ -345,9 +338,13 @@ if __name__ == "__main__":
 
     for i, dtype in enumerate(datasetTypeList):
         logger.info("dtype: %s", dtype)
-        logger.info("registry.queryDatasetTypes(dtype): %s", registry.queryDatasetTypes(dtype))
+        logger.info(
+            "registry.queryDatasetTypes(dtype): %s", registry.queryDatasetTypes(dtype)
+        )
         logger.info("collections: %s", collections)
-        logger.info("registry.queryDatasetTypes(dtype): %s", registry.queryDatasetTypes(dtype))
+        logger.info(
+            "registry.queryDatasetTypes(dtype): %s", registry.queryDatasetTypes(dtype)
+        )
         if any(
             dim in ["visit"]
             for dim in registry.queryDatasetTypes(dtype)[0].dimensions.names
