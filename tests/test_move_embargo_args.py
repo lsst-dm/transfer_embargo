@@ -20,12 +20,15 @@ def is_it_there(
     embargo_hours: list | str = "80.0",
     past_embargo_hours=None,
     now_time_embargo: list | str = "now",
-    dataqueries: dict = {"datasettype": ["raw", "calexp"],
-                         "collections": ["LATISS/raw/all", 
-                                         "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"]
-                        },
-    #datasettype: list | str = "raw",
-    #collections: list | str = "LATISS/raw/all",
+    dataqueries: dict = {
+        "datasettype": ["raw", "calexp"],
+        "collections": [
+            "LATISS/raw/all",
+            "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616",
+        ],
+    },
+    # datasettype: list | str = "raw",
+    # collections: list | str = "LATISS/raw/all",
     desturiprefix: str = "tests/data/",
     use_dataquery_config=None,
     dataquery_config_file: str = "./config.yaml",
@@ -124,8 +127,8 @@ def is_it_there(
         # make it iterable if so
         iterable_embargo_hours = utils.iteration.ensure_iterable(embargo_hours)
         iterable_nowtime = utils.iteration.ensure_iterable(now_time_embargo)
-        #iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
-        #iterable_collections = utils.iteration.ensure_iterable(collections)
+        # iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
+        # iterable_collections = utils.iteration.ensure_iterable(collections)
         # and extend the args to include the cli args
         subprocess_args.extend(
             [
@@ -135,10 +138,10 @@ def is_it_there(
                 *iterable_nowtime,
                 "--dataqueries",
                 str(dataqueries),
-                #"--datasettype",
-                #*iterable_datasettype,
-                #"--collections",
-                #*iterable_collections,
+                # "--datasettype",
+                # *iterable_datasettype,
+                # "--collections",
+                # *iterable_collections,
             ]
         )
     # add --move argument only if move is not None
@@ -173,6 +176,13 @@ def is_it_there(
     # now run the subprocess
     subprocess.run(subprocess_args, check=True)
     print("made it through the program")
+
+    datasettype = dataqueries["datasettype"]
+    collections = dataqueries["collections"]
+    # make these iterable if they are not
+    if not isinstance(datasettype, list):
+        datasettype = [datasettype]
+        collections = [collections]
 
     # first test stuff in the temp_to butler
     butler_to = Butler(temp_to)
@@ -322,6 +332,55 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
 
+    # potentially we won't need to test this in the future
+    # @KT - we were not planning on running multiple args from
+    # cli
+    def test_raw_and_calexp_should_copy(self):
+        """
+        Test that move_embargo_args runs for the calexp datatype
+        and for the raw datatype at the same time
+        """
+        # first raw, then calexp
+        now_time_embargo = ["2020-01-17 16:55:11.322700", "2022-11-13 03:35:12.836981"]
+        embargo_hours = [str(0.1), str(80.0)]  # hours
+        # IDs that should be moved to temp_to:
+        ids_copied = [
+            # 2020011700004,
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+            2022110800235,
+            2022110800230,
+            2022110800238,
+        ]
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2020011700004,
+            2020011700005,
+            2020011700006,
+            2022110800235,
+            2022110800230,
+            2022110800238,
+        ]
+        is_it_there(
+            ids_remain,
+            ids_copied,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            embargo_hours=embargo_hours,
+            now_time_embargo=now_time_embargo,
+            dataqueries={
+                "datasettype": ["raw", "calexp"],
+                "collections": [
+                    "LATISS/raw/all",
+                    "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616",
+                ],
+            },
+            desturiprefix=self.temp_dest_ingest,
+        )
+
     def test_calexp_no_copy(self):
         """
         Test that move_embargo_args does not move
@@ -341,13 +400,14 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
-            dataqueries={"datasettype": "calexp",
-                         "collections": "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
+            dataqueries={
+                "datasettype": "calexp",
+                "collections": "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616",
             },
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         )
-    '''   
+
     # first a a big group of calexp tests
     def test_calexp_should_copy_yaml_pasttime_18_half_hr(self):
         """
@@ -430,36 +490,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         )
 
     '''
-    
-    '''    
-    def test_calexp_no_copy(self):
-        """
-        Test that move_embargo_args does not move
-        the calexp data that is too close to embargo
-        """
-        now_time_embargo = "2022-11-11 03:35:12.836981"
-        # "2020-01-17 16:55:11.322700"
-        embargo_hours = str(80.0)  # hours
-        ids_copied = []
-        # IDs that should stay in the temp_from:
-        ids_remain = [2022110800235, 2022110800230, 2022110800238]
-        is_it_there(
-            ids_remain,
-            ids_copied,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            embargo_hours=embargo_hours,
-            now_time_embargo=now_time_embargo,
-            datasettype=["calexp"],
-            collections=[
-                "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
-            ],
-            desturiprefix=self.temp_dest_ingest,
-            # desturiprefix="tests/data/",
-        )
-    '''
-    '''
     # commenting out this one test that incorporates multiple
     # embargohrs arguments from the config yaml
     def test_raw_and_calexp_should_move_yaml_embargo_hrs_in_yaml(self):
@@ -498,7 +528,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
     '''
-    '''
+
     def test_calexp_should_copy(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -519,10 +549,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
-            datasettype=["calexp"],
-            collections=[
-                "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
-            ],
+            dataqueries={
+                "datasettype": "calexp",
+                "collections": "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616",
+            },
             desturiprefix=self.temp_dest_ingest,
             # desturiprefix="tests/data/",
         )
@@ -603,53 +633,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataquery_config_file="./yamls/config_raw.yaml",
         )
 
-    # potentially we won't need to test this in the future
-    # @KT - we were not planning on running multiple args from
-    # cli
-    def test_raw_and_calexp_should_copy(self):
-        """
-        Test that move_embargo_args runs for the calexp datatype
-        and for the raw datatype at the same time
-        """
-        # first raw, then calexp
-        now_time_embargo = ["2020-01-17 16:55:11.322700", "2022-11-13 03:35:12.836981"]
-        embargo_hours = [str(0.1), str(80.0)]  # hours
-        # IDs that should be moved to temp_to:
-        ids_copied = [
-            # 2020011700004,
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-            2022110800235,
-            2022110800230,
-            2022110800238,
-        ]
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2020011700004,
-            2020011700005,
-            2020011700006,
-            2022110800235,
-            2022110800230,
-            2022110800238,
-        ]
-        is_it_there(
-            ids_remain,
-            ids_copied,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            embargo_hours=embargo_hours,
-            now_time_embargo=now_time_embargo,
-            datasettype=["raw", "calexp"],
-            collections=[
-                "LATISS/raw/all",
-                "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616",
-            ],
-            desturiprefix=self.temp_dest_ingest,
-        )
-
     @pytest.mark.xfail(strict=True)
     def test_should_fail_if_move_is_true(self):
         """
@@ -682,8 +665,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
+            dataqueries={"datasettype": "raw", "collections": "LATISS/raw/all"},
             desturiprefix=self.temp_dest_ingest,
         )
 
@@ -716,8 +698,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
+            dataqueries={"datasettype": "raw", "collections": "LATISS/raw/all"},
             desturiprefix=self.temp_dest_ingest,
         )
 
@@ -748,8 +729,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
+            dataqueries={"datasettype": "raw", "collections": "LATISS/raw/all"},
             desturiprefix=self.temp_dest_ingest,
         )
 
@@ -785,8 +765,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
+            dataqueries={"datasettype": "raw", "collections": "LATISS/raw/all"},
             desturiprefix=self.temp_dest_ingest,
         )
 
@@ -825,8 +804,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
+            dataqueries={"datasettype": "raw", "collections": "LATISS/raw/all"},
             desturiprefix=self.temp_dest_ingest,
         )
 
@@ -859,8 +837,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
+            dataqueries={"datasettype": "raw", "collections": "LATISS/raw/all"},
             desturiprefix=self.temp_dest_ingest,
         )
 
@@ -892,8 +869,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
+            dataqueries={"datasettype": "raw", "collections": "LATISS/raw/all"},
             desturiprefix=self.temp_dest_ingest,
         )
 
@@ -925,8 +901,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
+            dataqueries={"datasettype": "raw", "collections": "LATISS/raw/all"},
             desturiprefix=self.temp_dest_ingest,
         )
 
@@ -958,8 +933,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
+            dataqueries={"datasettype": "raw", "collections": "LATISS/raw/all"},
             desturiprefix=self.temp_dest_ingest,
         )
 
@@ -991,11 +965,9 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             embargo_hours=embargo_hours,
             now_time_embargo=now_time_embargo,
-            datasettype=["raw"],
-            collections=["LATISS/raw/all"],
+            dataqueries={"datasettype": "raw", "collections": "LATISS/raw/all"},
             desturiprefix=self.temp_dest_ingest,
         )
-    '''
 
 
 if __name__ == "__main__":
