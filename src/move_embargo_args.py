@@ -169,7 +169,7 @@ def parse_args():
         "--desturiprefix",
         type=str,
         required=False,
-        default="False",
+        #default="False",
         help="Define dest URI if you need to run ingest for raws",
     )
     return parser.parse_args()
@@ -251,7 +251,13 @@ if __name__ == "__main__":
     logger.info("type of the datasettypelist in here: %s", type(datasetTypeList))
 
     move = namespace.move
-    dest_uri_prefix = namespace.desturiprefix
+    if namespace.desturiprefix:
+        dest_uri_prefix = namespace.desturiprefix
+    else:
+        # if this is not defined, make a tempdir
+        temp_dir = tempfile.TemporaryDirectory()
+        dest_uri_prefix = os.path.join(temp_dir.name, "temp_dest_ingest")
+         
     # Dataset to move
     dataId = {"instrument": namespace.instrument}
 
@@ -434,6 +440,9 @@ if __name__ == "__main__":
                     if new_dest_uri.exists():
                         logger.info("new_dest_uri already exists")
                     else:
+                        logger.info(
+                            "dest_uri_prefix: %s",
+                            dest_uri_prefix)
                         logger.info(
                             "new_dest_uri does not yet exist: %s",
                             new_dest_uri)
