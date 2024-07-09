@@ -434,9 +434,13 @@ if __name__ == "__main__":
                     if new_dest_uri.exists():
                         logger.info("new_dest_uri already exists")
                     else:
+                        logger.info(
+                            "new_dest_uri does not yet exist, source path URI: %s",
+                            source_path_uri)
                         new_dest_uri.transfer_from(source_path_uri, transfer="copy")
                         logger.info(
-                            "new_dest_uri does not exist, creating new dest URI"
+                            "new_dest_uri does not exist (%s), creating new dest URI",
+                            new_dest_uri
                         )
                     filedataset_list.append(FileDataset(new_dest_uri, key))
 
@@ -581,7 +585,7 @@ if __name__ == "__main__":
                 collections=collections_no_exposure,
             )
         ]
-        logger.info("ingest ids moved: %s", ids_moved)
+        logger.info("ids in to butler: %s", ids_moved)
 
     if move == "True":
         # concatenate both dataset types
