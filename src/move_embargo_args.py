@@ -435,7 +435,10 @@ if __name__ == "__main__":
                         logger.info("new_dest_uri already exists")
                     else:
                         logger.info(
-                            "new_dest_uri does not yet exist, source path URI: %s",
+                            "new_dest_uri does not yet exist: %s",
+                            new_dest_uri)
+                        logger.info(
+                            "source path URI: %s",
                             source_path_uri)
                         new_dest_uri.transfer_from(source_path_uri, transfer="copy")
                         logger.info(
