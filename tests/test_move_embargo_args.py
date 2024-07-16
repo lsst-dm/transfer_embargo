@@ -327,7 +327,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         Removes all test files created by tests
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
-'''
     # potentially we won't need to test this in the future
     # @KT - we were not planning on running multiple args from
     # cli
@@ -484,7 +483,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             use_dataquery_config=True,
             dataquery_config_file="./yamls/config_calexp.yaml",
         )
-
     '''
     # commenting out this one test that incorporates multiple
     # embargohrs arguments from the config yaml
@@ -524,7 +522,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
     '''
-
     def test_calexp_should_copy(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -964,7 +961,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataqueries={"datasettype": "raw", "collections": "LATISS/raw/all"},
             desturiprefix=self.temp_dest_ingest,
         )
-'''
+
 
 if __name__ == "__main__":
     unittest.main()
