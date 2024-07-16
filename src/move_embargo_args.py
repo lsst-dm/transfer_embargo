@@ -46,7 +46,7 @@ def parse_args():
         if False, uses provided datasettype and collections lists.
     dataquery_config_file : `str`, optional
         Path to the configuration file. Default is '/etc/config.yaml'.
-    datasettype : `list` [`str`], optional
+    dataqueries : `dict`, optional
         Dataset type(s).
     collections : `list` [`str`], optional
         Data collections. Default is 'LATISS/raw/all'.
