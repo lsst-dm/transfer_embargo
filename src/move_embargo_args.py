@@ -3,6 +3,8 @@ import logging
 import yaml
 
 import astropy.time
+import os
+import tempfile
 from lsst.resources import ResourcePath
 from lsst.daf.butler import Butler, Timespan, FileDataset
 from lsst.daf.butler.cli.cliLog import CliLog
@@ -130,21 +132,6 @@ def parse_args():
         help="A dictionary of dataset type and collection, \
               can be a single entry or multiple items. Str",
     )
-    """
-    parser.add_argument(
-        "--datasettype",
-        required=False,
-        nargs="+",
-        help="Dataset type. Input list or str",
-    )
-    parser.add_argument(
-        "--collections",
-        nargs="+",
-        required=False,
-        default="LATISS/raw/all",
-        help="Data Collections. Input list or str",
-    )
-    """
     parser.add_argument(
         "--nowtime",
         nargs="+",
@@ -169,7 +156,6 @@ def parse_args():
         "--desturiprefix",
         type=str,
         required=False,
-        #default="False",
         help="Define dest URI if you need to run ingest for raws",
     )
     return parser.parse_args()
@@ -257,7 +243,7 @@ if __name__ == "__main__":
         # if this is not defined, make a tempdir
         temp_dir = tempfile.TemporaryDirectory()
         dest_uri_prefix = os.path.join(temp_dir.name, "temp_dest_ingest")
-         
+
     # Dataset to move
     dataId = {"instrument": namespace.instrument}
 

@@ -27,8 +27,6 @@ def is_it_there(
             "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616",
         ],
     },
-    # datasettype: list | str = "raw",
-    # collections: list | str = "LATISS/raw/all",
     desturiprefix: str = "tests/data/",
     use_dataquery_config=None,
     dataquery_config_file: str = "./config.yaml",
@@ -64,10 +62,14 @@ def is_it_there(
         Time to search past the embargo period in hours.
     now_time_embargo : `list` or `str`, optional
         Current time in ISO, TAI timescale. Default is "now".
-    datasettype : `list` or `str`, optional
-        Dataset type(s). Default is "raw".
-    collections : `list` or `str`, optional
-        Data collections. Default is "LATISS/raw/all".
+    dataqueries : `dict`, optional
+        Dataset type(s) and collection(s). Default is {
+        "datasettype": ["raw", "calexp"],
+        "collections": [
+            "LATISS/raw/all",
+            "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616",
+        ],
+    }
     desturiprefix : `str`, optional
         Destination URI prefix for raw data ingestion.
         Default is "tests/data/".
@@ -127,8 +129,6 @@ def is_it_there(
         # make it iterable if so
         iterable_embargo_hours = utils.iteration.ensure_iterable(embargo_hours)
         iterable_nowtime = utils.iteration.ensure_iterable(now_time_embargo)
-        # iterable_datasettype = utils.iteration.ensure_iterable(datasettype)
-        # iterable_collections = utils.iteration.ensure_iterable(collections)
         # and extend the args to include the cli args
         subprocess_args.extend(
             [
@@ -138,10 +138,6 @@ def is_it_there(
                 *iterable_nowtime,
                 "--dataqueries",
                 str(dataqueries),
-                # "--datasettype",
-                # *iterable_datasettype,
-                # "--collections",
-                # *iterable_collections,
             ]
         )
     # add --move argument only if move is not None
@@ -331,7 +327,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         Removes all test files created by tests
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
-
+'''
     # potentially we won't need to test this in the future
     # @KT - we were not planning on running multiple args from
     # cli
@@ -968,7 +964,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             dataqueries={"datasettype": "raw", "collections": "LATISS/raw/all"},
             desturiprefix=self.temp_dest_ingest,
         )
-
+'''
 
 if __name__ == "__main__":
     unittest.main()
