@@ -327,6 +327,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         Removes all test files created by tests
         """
         shutil.rmtree(self.temp_dir.name, ignore_errors=True)
+
     # potentially we won't need to test this in the future
     # @KT - we were not planning on running multiple args from
     # cli
