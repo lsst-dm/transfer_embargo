@@ -467,23 +467,6 @@ if __name__ == "__main__":
                     register_dataset_types=True,
                     transfer_dimensions=True,
                 )
-        ids_moved = []
-        for dt in dest_registry.queryDatasets(
-            datasetType=datalist_exposure, collections=collections_exposure
-        ):
-            try:
-                ids_moved.append(dt.dataId.mapping["exposure"])
-            except KeyError:
-                continue
-        """
-        ids_moved = [
-            dt.dataId.mapping["exposure"]
-            for dt in dest_registry.queryDatasets(
-                datasetType=datalist_exposure, collections=collections_exposure
-            )
-        ]
-        """
-        logger.info("exposure ids moved: %s", ids_moved)
     if datalist_visit:  # if there is anything in the list
         # first, run all of the exposure types through
         logger.info("datalist_visit exists: %s", datalist_visit)
@@ -537,24 +520,6 @@ if __name__ == "__main__":
                 register_dataset_types=True,
                 transfer_dimensions=True,
             )
-        # its breaking here because not everything is a visit in the registry
-        ids_moved = []
-        for dt in dest_registry.queryDatasets(datasetType=..., collections=...):
-            try:
-                ids_moved.append(dt.dataId.mapping["visit"])
-            except KeyError:
-                continue
-        """
-        ids_moved = [
-                dt.dataId.mapping["visit"]
-                for dt in dest_registry.queryDatasets(
-                datasetType=..., collections=...)
-            ]
-        """
-        logger.info("datalist_visit: %s", datalist_visit)
-        logger.info("collections_visit: %s", collections_visit)
-        logger.info("visit ids moved: %s", ids_moved)
-
     if datalist_no_exposure:
         # this is for datatypes that don't have an exposure
         # or visit dimension
@@ -576,15 +541,6 @@ if __name__ == "__main__":
             register_dataset_types=True,
             transfer_dimensions=True,
         )
-        ids_moved = [
-            dt.id
-            for dt in dest_registry.queryDatasets(
-                datasetType=datalist_no_exposure,
-                collections=collections_no_exposure,
-            )
-        ]
-        logger.info("ids in to butler: %s", ids_moved)
-
     if move == "True":
         # concatenate both dataset types
         combined_datalist = datalist_exposure + datalist_visit + datalist_no_exposure
