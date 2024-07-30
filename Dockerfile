@@ -24,12 +24,11 @@ RUN pip install -r requirements.txt
 ENV FROMREPO "tests_docker/temp_from"
 ENV TOREPO "tests_docker/temp_to"
 ENV INSTRUMENT "LATISS"
-ENV NOW "2020-03-01 23:59:59.999999"
-ENV EMBARGO_HRS "7200"
-ENV DATAQUERIES '{ "datasettype": "raw", "collections": "LATISS/raw/all"}'
+ENV DATAQUERIES "--dataqueries '{ \"datasettype\": \"raw\", \"collections\": \"LATISS/raw/all\"}'"
 ENV LOG "True"
 ENV PASTEMBARGO "1.0"
+ENV OTHER_ARGUMENTS "--embargohours 80 --nowtime \"now\""
 
 #CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\""]
 
-CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" --dataqueries \"$DATAQUERIES\""]
+CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" $DATAQUERIES $OTHER_ARGUMENTS"]
