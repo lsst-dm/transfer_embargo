@@ -15,7 +15,12 @@ WORKDIR /opt/lsst/transfer_embargo
 # RUN ls -R /opt/lsst/transfer_embargo/tests_docker/
 # RUN ls -R /opt/lsst/transfer_embargo/tests/data/test_from/
 
-RUN pip install -r requirements.txt
+# RUN pip install -r requirements.txt
+ARG OBS_LSST_VERSION
+ENV OBS_LSST_VERSION=${OBS_LSST_VERSION:-w_2024_24}
+USER lsst
+RUN source loadLSST.bash && eups distrib install -t "${OBS_LSST_VERSION}" obs_lsst
+
 
 # Define the environment variables
 # These are written over if they are re-defined
@@ -31,4 +36,6 @@ ENV OTHER_ARGUMENTS "--embargohours 80 --nowtime \"now\""
 
 #CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\""]
 
-CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" $DATAQUERIES $OTHER_ARGUMENTS"]
+#CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" $DATAQUERIES $OTHER_ARGUMENTS"]
+
+ENTRYPOINT [ "bash", "-c", "source loadLSST.bash; setup lsst_obs; python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" $DATAQUERIES $OTHER_ARGUMENTS" ]
