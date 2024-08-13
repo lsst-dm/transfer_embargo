@@ -18,7 +18,7 @@ WORKDIR /opt/lsst/transfer_embargo
 # RUN pip install -r requirements.txt
 ARG OBS_LSST_VERSION
 ENV OBS_LSST_VERSION=${OBS_LSST_VERSION:-w_2024_24}
-USER lsst
+# USER lsst
 RUN source loadLSST.bash && eups distrib install -t "${OBS_LSST_VERSION}" obs_lsst
 
 
