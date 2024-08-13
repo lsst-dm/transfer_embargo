@@ -21,9 +21,8 @@ jobs:
       - name: Cache dependencies
         uses: actions/cache@v2
         with:
-          path: ${{ github.workspace }}/eups/
+          path: ${{ github.workspace }}/conda/
           key: ${{ runner.os }}-eups-${{ env.EUPS_DISTRIB_VERSION }}-${{ hashFiles('**/*.txt') }}
-          restore-keys: ${{ runner.os }}-eups-
       - name: Install dependencies
         run: |
           curl -OL https://ls.st/lsstinstall
