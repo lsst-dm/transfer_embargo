@@ -20,6 +20,10 @@ ARG OBS_LSST_VERSION
 ENV OBS_LSST_VERSION=${OBS_LSST_VERSION:-w_2024_24}
 # USER lsst
 
+# debug eups
+RUN which eups || echo "eups not found in PATH"
+RUN eups --version || echo "eups command failed"
+
 # trying to explicitly run in a bash shell
 RUN bash -c "source loadLSST.bash && eups distrib install -t \"${OBS_LSST_VERSION}\" obs_lsst"
 #RUN source loadLSST.bash && eups distrib install -t "${OBS_LSST_VERSION}" obs_lsst
