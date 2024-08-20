@@ -10,7 +10,7 @@ COPY tests_docker/ /opt/lsst/transfer_embargo/tests_docker/
 WORKDIR /opt/lsst/transfer_embargo
 
 # List files for debugging
-# RUN ls -la /opt/lsst/transfer_embargo/
+RUN ls -la /opt/lsst/transfer_embargo/
 # RUN ls -R /opt/lsst/transfer_embargo/src/
 # RUN ls -R /opt/lsst/transfer_embargo/tests_docker/
 # RUN ls -R /opt/lsst/transfer_embargo/tests/data/test_from/
