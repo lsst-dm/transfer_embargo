@@ -19,7 +19,10 @@ WORKDIR /opt/lsst/transfer_embargo
 ARG OBS_LSST_VERSION
 ENV OBS_LSST_VERSION=${OBS_LSST_VERSION:-w_2024_24}
 # USER lsst
-RUN source loadLSST.bash && eups distrib install -t "${OBS_LSST_VERSION}" obs_lsst
+
+# trying to explicitly run in a bash shell
+RUN bash -c "source loadLSST.bash && eups distrib install -t \"${OBS_LSST_VERSION}\" obs_lsst"
+#RUN source loadLSST.bash && eups distrib install -t "${OBS_LSST_VERSION}" obs_lsst
 
 
 # Define the environment variables
