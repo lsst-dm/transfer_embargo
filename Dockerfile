@@ -1,5 +1,7 @@
 # Dockerfile
-FROM python:3.11
+ARG RUBINENV_VERSION=9.0.0
+FROM ghcr.io/lsst-dm/docker-newinstall:9-latest-${RUBINENV_VERSION}
+# workdir is /opt/lsst/software/stack
 
 # Copy source code and test files
 COPY requirements.txt /opt/lsst/transfer_embargo/
@@ -21,12 +23,16 @@ ENV OBS_LSST_VERSION=${OBS_LSST_VERSION:-w_2024_24}
 # USER lsst
 
 # debug eups
-RUN which eups || echo "eups not found in PATH"
-RUN eups --version || echo "eups command failed"
+# RUN command -v eups || echo "eups not found in PATH"
 
 # trying to explicitly run in a bash shell
-RUN bash -c "source loadLSST.bash && eups distrib install -t \"${OBS_LSST_VERSION}\" obs_lsst"
-#RUN source loadLSST.bash && eups distrib install -t "${OBS_LSST_VERSION}" obs_lsst
+#RUN bash -c "source loadLSST.bash && eups distrib install -t \"${OBS_LSST_VERSION}\" obs_lsst"
+RUN <<EOF
+set -e
+source /opt/lsst/software/stack/loadLSST.bash
+command -v eups || echo "eups not found in PATH"
+eups distrib install -t "${OBS_LSST_VERSION}" obs_lsst
+EOF
 
 
 # Define the environment variables
@@ -45,4 +51,4 @@ ENV OTHER_ARGUMENTS "--embargohours 80 --nowtime \"now\""
 
 #CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" $DATAQUERIES $OTHER_ARGUMENTS"]
 
-ENTRYPOINT [ "bash", "-c", "source loadLSST.bash; setup lsst_obs; python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" $DATAQUERIES $OTHER_ARGUMENTS" ]
+ENTRYPOINT [ "bash", "-c", "source /opt/lsst/software/stack/loadLSST.bash; setup lsst_obs; python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" $DATAQUERIES $OTHER_ARGUMENTS" ]
