@@ -10,7 +10,7 @@ on:
 
 env:
   PROGRAM_NAME: transfer-embargo
-  EUPS_DISTRIB_VERSION: "w_2024_16"
+  EUPS_DISTRIB_VERSION: "w_2024_32"
 
 jobs:
   test:
