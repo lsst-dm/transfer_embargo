@@ -1,13 +1,13 @@
 import argparse
 import logging
-import yaml
-
-import astropy.time
 import os
 import tempfile
-from lsst.resources import ResourcePath
-from lsst.daf.butler import Butler, Timespan, FileDataset
+
+import astropy.time
+import yaml
+from lsst.daf.butler import Butler, FileDataset, Timespan
 from lsst.daf.butler.cli.cliLog import CliLog
+from lsst.resources import ResourcePath
 
 
 def parse_args():
@@ -426,19 +426,13 @@ if __name__ == "__main__":
                     if new_dest_uri.exists():
                         logger.info("new_dest_uri already exists")
                     else:
-                        logger.info(
-                            "dest_uri_prefix: %s",
-                            dest_uri_prefix)
-                        logger.info(
-                            "new_dest_uri does not yet exist: %s",
-                            new_dest_uri)
-                        logger.info(
-                            "source path URI: %s",
-                            source_path_uri)
+                        logger.info("dest_uri_prefix: %s", dest_uri_prefix)
+                        logger.info("new_dest_uri does not yet exist: %s", new_dest_uri)
+                        logger.info("source path URI: %s", source_path_uri)
                         new_dest_uri.transfer_from(source_path_uri, transfer="copy")
                         logger.info(
                             "new_dest_uri does not exist (%s), creating new dest URI",
-                            new_dest_uri
+                            new_dest_uri,
                         )
                     filedataset_list.append(FileDataset(new_dest_uri, key))
 
