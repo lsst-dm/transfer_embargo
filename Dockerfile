@@ -34,6 +34,8 @@ command -v eups || echo "eups not found in PATH"
 eups distrib install -t "${OBS_LSST_VERSION}" obs_lsst
 EOF
 
+RUN command -v bash || echo "bash not found"
+
 
 # Define the environment variables
 # These are written over if they are re-defined
