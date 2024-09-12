@@ -1,7 +1,10 @@
 import argparse
+import hashlib
 import itertools
 import logging
 import os
+import random
+import re
 import tempfile
 import time
 import yaml
@@ -10,6 +13,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import pydantic
+import rucio.common.exception
 from astropy.time import Time, TimeDelta
 from lsst.daf.butler import (
     Butler,
@@ -21,6 +25,8 @@ from lsst.daf.butler import (
 )
 from lsst.daf.butler.cli.cliLog import CliLog
 from lsst.resources import ResourcePath
+from rucio.client.didclient import DIDClient
+from rucio.client.replicaclient import ReplicaClient
 
 
 class DataQuery(pydantic.BaseModel):
@@ -45,6 +51,170 @@ def from_yaml(yaml_source: Any) -> list[DataQuery]:
     for entry in yaml.safe_load(yaml_source):
         result.append(DataQuery(**entry))
     return result
+
+
+class RucioInterface:
+    """Register files in Rucio and attach them to datasets.
+
+    Parameters
+    ----------
+    rucio_rse: `str`
+        Name of the RSE that the files live in.
+    dtn_url: `str`
+        Base URL of the data transfer node for the Rucio physical filename.
+    scope: `str`
+        Rucio scope to register the files in.
+    root: 'str'
+        Root URL for direct-ingested raw files.
+    """
+
+    def __init__(self, rucio_rse: str, dtn_url: str, scope: str, root: str):
+        self.rucio_rse = rucio_rse
+        if not dtn_url.endswith("/"):
+            dtn_url += "/"
+        self.pfn_base = dtn_url
+        self.scope = scope
+        self.root = ResourcePath(root)
+
+        self.replica_client = ReplicaClient()
+        self.did_client = DIDClient()
+
+    def _make_did(self, dataset_ref: DatasetRef, path: str) -> dict[str, str | int]:
+        """Make a Rucio data identifier dictionary from a resource.
+
+        Parameters
+        ----------
+        path: `str`
+            Root-relative path to the file.
+
+        Returns
+        -------
+        did: `dict [ str, str|int ]`
+            Rucio data identifier including physical and logical names,
+            byte length, adler32 and MD5 checksums, and scope.
+        """
+        location = self.root.join(path)
+        with location.open("rb") as f:
+            contents = f.read()
+            size = len(contents)
+            md5 = hashlib.md5(contents).hexdigest()
+            adler32 = f"{zlib.adler32(contents):08x}"
+        path = path.removeprefix("/")
+        pfn = self.pfn_base + path
+        meta = dict(rubin_butler=1, rubin_sidecar=dataset_ref.to_json())
+        return dict(
+            pfn=pfn,
+            bytes=size,
+            adler32=adler32,
+            md5=md5,
+            name=path,
+            scope=self.scope,
+            meta=meta,
+        )
+
+    def _add_files_to_dataset(self, dids: list[dict], dataset_id: str) -> None:
+        """Attach a list of files specified by Rucio DIDs to a Rucio dataset.
+
+        Ignores already-attached files for idempotency.
+
+        Parameters
+        ----------
+        dids: `list [ dict [ str, str|int ] ]`
+            List of Rucio data identifiers.
+        dataset_id: `str`
+            Logical name of the Rucio dataset.
+        """
+        retries = 0
+        max_retries = 2
+        while True:
+            try:
+                self.did_client.add_files_to_dataset(
+                    scope=self.scope,
+                    name=dataset_id,
+                    files=dids,
+                    rse=self.rucio_rse,
+                )
+                return
+            except rucio.common.exception.FileAlreadyExists:
+                # At least one already is in the dataset.
+                # This shouldn't happen, but if it does,
+                # we have to retry each individually.
+                for did in dids:
+                    try:
+                        self.did_client.add_files_to_dataset(
+                            scope=self.scope,
+                            name=dataset_id,
+                            files=[did],
+                            rse=self.rucio_rse,
+                        )
+                    except rucio.common.exception.FileAlreadyExists:
+                        pass
+                return
+            except rucio.common.exception.DatabaseException:
+                logger.info("Retrying add_files_to_dataset due to database")
+                retries += 1
+                if retries < max_retries:
+                    time.sleep(random.uniform(0.5, 2))
+                    continue
+                else:
+                    raise
+
+    def register(
+        self,
+        dataset_refs: list[DatasetRef],
+        paths: list[str],
+        dry_run: bool = False
+    ) -> None:
+        """Register a list of files in Rucio.
+
+        Parameters
+        ----------
+        dataset_refs: `list` [ `DatasetRef` ]
+            List of Butler source repo dataset refs.
+        paths: `list` [ `str` ]
+            List of relative paths to files relative to direct root.
+        dry_run: `bool`
+            Do not take any actions if true.
+        """
+        data = [self._make_did(dsr, p) for dsr, p in zip(dataset_refs, paths)]
+        datasets = dict()
+        for did in data:
+            # For non-science images, use a dataset per 100 exposures
+            dataset_id = re.sub(
+                r"^(.+?)/(\d{8})/[A-Z]{2}_[A-Z]_\2_(\d{4})\d{2}/.*",
+                r"Dataset/\1/\2/\3",
+                did["name"],
+            )
+            datasets.setdefault(dataset_id, []).append(did)
+            # TODO: compute datasets for science images based on visit/tract
+
+        for dataset_id, dids in datasets.items():
+            try:
+                logger.info(
+                    "Registering %s in dataset %s, RSE %s",
+                    dids,
+                    dataset_id,
+                    self.rucio_rse,
+                )
+                if not dry_run:
+                    self._add_files_to_dataset(dids, dataset_id)
+            except rucio.common.exception.DataIdentifierNotFound:
+                # No such dataset, so create it
+                try:
+                    logger.info("Creating Rucio dataset %s", dataset_id)
+                    self.did_client.add_dataset(
+                        scope=self.scope,
+                        name=dataset_id,
+                        statuses={"monotonic": True},
+                        rse=self.rucio_rse,
+                    )
+                except rucio.common.exception.DataIdentifierAlreadyExists:
+                    # If someone else created it in the meantime
+                    pass
+                # And then retry adding DIDs
+                self._add_files_to_dataset(dids, dataset_id)
+
+        logger.info("Done with Rucio for %s", paths)
 
 
 def _batched(l: list[Any], n: int) -> list[Any]:
@@ -133,6 +303,26 @@ def parse_args():
         required=False,
         help="Destination URI prefix for raw data.",
     )
+
+    parser.add_argument(
+        "--rucio_rse",
+        type=str,
+        required=False,
+        help="Rucio RSE for raw data.",
+    )
+    parser.add_argument(
+        "--dtn_url",
+        type=str,
+        required=False,
+        help="DTN URL for Rucio access to raw data.",
+    )
+    parser.add_argument(
+        "--scope",
+        type=str,
+        required=False,
+        help="Rucio scope for raw data.",
+    )
+
     parser.add_argument(
         "--log",
         type=str,
@@ -145,6 +335,14 @@ def parse_args():
     ns.now = Time(ns.now, format="isot", scale="utc") if ns.now else Time.now()
     if ns.now > Time.now():
         raise ValueError(f"--now is in the future: {ns.now}")
+    if ns.rucio_rse is not None:
+        if ns.dest_uri_prefix is None:
+            raise ValueError("--dest_uri_prefix required with --rucio_rse")
+        if ns.dtn_url is None:
+            raise ValueError("--dtn_url required with --rucio_rse")
+        if ns.scope is None:
+            raise ValueError("--scope required with --rucio_rse")
+
     return ns
 
 
@@ -226,7 +424,7 @@ def transfer_dataset_type(dataset_type, collections, where, bind, is_raw):
 
 
 def transfer_datasets(dataset_refs: list[DatasetRef], is_raw):
-    global config, source_butler, dest_butler
+    global config, source_butler, dest_butler, rucio_interface
     if not is_raw:
         logger.info("transfer_from(%s)", dataset_refs)
         if not config.dry_run:
@@ -261,16 +459,19 @@ def transfer_datasets(dataset_refs: list[DatasetRef], is_raw):
         logger.info("ingest(%s)", filedatasets)
         if not config.dry_run:
             dest_butler.ingest(*filedatasets, transfer="direct")
+        if config.rucio_rse:
+            rucio_interface.register(dataset_refs, relative_rps, config.dry_run)
 
 
 config: argparse.Namespace = None
 logger: logging.Logger = None
 source_butler: Butler = None
 dest_butler: Butler = None
+rucio_interface: RucioInterface = None
 
 
 def initialize():
-    global config, source_butler, dest_butler, logger
+    global config, source_butler, dest_butler, logger, rucio_interface
 
     config = parse_args()
 
@@ -284,6 +485,23 @@ def initialize():
     # Define embargo and destination butler
     source_butler = Butler(config.fromrepo, instrument=config.instrument)
     dest_butler = Butler(config.torepo, writeable=True)
+
+    if config.rucio_rse:
+        if config.dry_run:
+            rucio_interface = RucioInterface(
+                config.rucio_rse,
+                config.dtn_url,
+                config.scope,
+                "s3://embargo@rubin-summit/",
+            )
+        else:
+            rucio_interface = RucioInterface(
+                config.rucio_rse,
+                config.dtn_url,
+                config.scope,
+                config.dest_uri_prefix,
+            )
+
 
 def main():
     global config
