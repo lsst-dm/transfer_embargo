@@ -25,6 +25,10 @@ ENV OBS_LSST_VERSION=${OBS_LSST_VERSION:-w_2024_32}
 # debug eups
 # RUN command -v eups || echo "eups not found in PATH"
 
+RUN ls -la /opt/lsst/software/stack/loadLSST.bash
+RUN command -v bash || echo "bash not found, installing bash"
+RUN command -v sh || echo "sh not found"
+
 # trying to explicitly run in a bash shell
 #RUN bash -c "source loadLSST.bash && eups distrib install -t \"${OBS_LSST_VERSION}\" obs_lsst"
 RUN <<EOF
@@ -34,8 +38,7 @@ command -v eups || echo "eups not found in PATH"
 eups distrib install -t "${OBS_LSST_VERSION}" obs_lsst
 EOF
 
-RUN command -v bash || echo "bash not found, installing bash"
-RUN command -v sh || echo "sh not found"
+
 
 
 # Define the environment variables
@@ -54,4 +57,4 @@ ENV OTHER_ARGUMENTS "--embargohours 80 --nowtime \"now\""
 
 #CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" $DATAQUERIES $OTHER_ARGUMENTS"]
 
-ENTRYPOINT [ "sh", "-c", "source /opt/lsst/software/stack/loadLSST.bash; setup lsst_obs; python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" $DATAQUERIES $OTHER_ARGUMENTS" ]
+ENTRYPOINT [ "bash", "-c", "source /opt/lsst/software/stack/loadLSST.bash; setup lsst_obs; python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" $DATAQUERIES $OTHER_ARGUMENTS" ]
