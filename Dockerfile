@@ -49,9 +49,8 @@ ENV FROMREPO "tests_docker/temp_from"
 ENV TOREPO "tests_docker/temp_to"
 ENV INSTRUMENT "LATISS"
 ENV DATAQUERIES "--dataqueries '{ \"datasettype\": \"raw\", \"collections\": \"LATISS/raw/all\"}'"
-ENV LOG "True"
 ENV PASTEMBARGO "1.0"
-ENV OTHER_ARGUMENTS "--embargohours 80 --nowtime \"now\""
+ENV OTHER_ARGUMENTS "--embargohours 80 --nowtime now"
 
 #CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\""]
 
@@ -59,8 +58,8 @@ ENV OTHER_ARGUMENTS "--embargohours 80 --nowtime \"now\""
 
 # Option if this entrypoint continues to fail is to copy
 # all of the commands into a separate script
-COPY commands.sh /scripts/commands.sh
-RUN ["chmod", "+x", "/scripts/commands.sh"]
-ENTRYPOINT ["/scripts/commands.sh"]
+#COPY commands.sh /scripts/commands.sh
+#RUN ["chmod", "+x", "/scripts/commands.sh"]
+#ENTRYPOINT ["/scripts/commands.sh"]
 
-#ENTRYPOINT [ "bash", "-c", "source /opt/lsst/software/stack/loadLSST.bash; setup lsst_obs; python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" $DATAQUERIES $OTHER_ARGUMENTS" ]
+ENTRYPOINT [ "bash", "-c", "source /opt/lsst/software/stack/loadLSST.bash; setup lsst_obs; python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" $DATAQUERIES $OTHER_ARGUMENTS" ]
