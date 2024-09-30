@@ -454,6 +454,7 @@ if __name__ == "__main__":
                         butler, datasetRefs_exposure
                     )
                     dest_butler.ingest(*filedataset_list, transfer="direct")
+                    logger.info("did the ingest for raws")
                 except IndexError:
                     # this will be thrown if nothing is being moved
                     logger.info("nothing in datasetRefs_exposure")
