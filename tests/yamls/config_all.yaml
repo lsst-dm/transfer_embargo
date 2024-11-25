@@ -1,6 +1,11 @@
 # config.yaml
-dataqueries:
-  - datasettype: "raw"
-    collections: "LATISS/raw/all"
-  - datasettype: "calexp"
-    collections: "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616"
+- dataset_types: "raw"
+  collections: "LATISS/raw/all"
+  where: "instrument='LATISS'"
+  embargo_hours: 0.1
+  is_raw: True
+- dataset_types: "calexp"
+  collections: "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/w_2022_46/PREOPS-1616/20221111T182132Z"
+  where: ""
+  embargo_hours: 80
+  is_raw: False

@@ -270,7 +270,7 @@ def parse_args():
     )
     parser.add_argument(
         "--now",
-        default="now",
+        default=None,
         type=str,
         help=(
             "Now time in (ISO, TAI timescale)."
@@ -362,7 +362,7 @@ def transfer_data_query(data_query):
     if config.window is not None:
         start_time = end_time - TimeDelta(config.window, format="quantity_str")
     else:
-        start_time = Time(0)
+        start_time = Time(0, format="jd")
     ok_timespan = Timespan(start_time, end_time)
 
     for dataset_type in dataset_types:
