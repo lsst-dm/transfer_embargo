@@ -2,14 +2,11 @@ import argparse
 import hashlib
 import itertools
 import logging
-import os
 import random
 import re
-import tempfile
 import time
 import yaml
 import zlib
-from dataclasses import dataclass
 from typing import Any
 
 import pydantic
@@ -160,10 +157,7 @@ class RucioInterface:
                     raise
 
     def register(
-        self,
-        dataset_refs: list[DatasetRef],
-        paths: list[str],
-        dry_run: bool = False
+        self, dataset_refs: list[DatasetRef], paths: list[str], dry_run: bool = False
     ) -> None:
         """Register a list of files in Rucio.
 
@@ -217,10 +211,11 @@ class RucioInterface:
         logger.info("Done with Rucio for %s", paths)
 
 
-def _batched(l: list[Any], n: int) -> list[Any]:
-    iterator = iter(l)
+def _batched(items: list[Any], n: int) -> list[Any]:
+    iterator = iter(items)
     while batch := list(itertools.islice(iterator, n)):
         yield batch
+
 
 def parse_args():
     """Parses and returns command-line arguments
@@ -390,16 +385,21 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
     global config, source_butler
     try:
         # data_query.where goes last to avoid injection overriding timespan
-        dim_where = f"({dimension}.timespan OVERLAPS _ok_timespan) AND ({data_query.where})"
+        dim_where = (
+            f"({dimension}.timespan OVERLAPS _ok_timespan) AND ({data_query.where})"
+        )
         dim_bind = {"_ok_timespan": ok_timespan}
         logger.info("Querying dimension %s: %s %s", dimension, dim_where, dim_bind)
-        ids = [r.id for r in source_butler.query_dimension_records(
-            dimension,
-            instrument=config.instrument,
-            where=dim_where,
-            bind=dim_bind,
-            limit=None,
-        )]
+        ids = [
+            r.id
+            for r in source_butler.query_dimension_records(
+                dimension,
+                instrument=config.instrument,
+                where=dim_where,
+                bind=dim_bind,
+                limit=None,
+            )
+        ]
     except EmptyQueryResultError:
         logger.warning("No matching records for %s", dimension)
         return
@@ -413,12 +413,13 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
             data_query.is_raw,
         )
 
+
 def transfer_dataset_type(dataset_type, collections, where, bind, is_raw):
     global source_butler
     logger.info("Querying datasets: %s %s", where, bind)
-    dataset_refs = list(source_butler.query_datasets(
-        dataset_type, collections, where=where, bind=bind
-    ))
+    dataset_refs = list(
+        source_butler.query_datasets(dataset_type, collections, where=where, bind=bind)
+    )
     for dsr_batch in _batched(dataset_refs, 1000):
         transfer_datasets(dsr_batch, is_raw)
 
