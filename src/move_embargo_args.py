@@ -371,11 +371,13 @@ def transfer_data_query(data_query):
         elif "exposure" in dataset_type.dimensions:
             transfer_dimension("exposure", dataset_type, data_query, ok_timespan)
         else:
+            where = "(ingest_date in _ok_timespan)"
+            where += f" AND ({data_query.where})" if data_query.where else ""
             # data_query.where goes last to avoid injection overriding timespan
             transfer_dataset_type(
                 dataset_type,
                 data_query.collections,
-                f"(ingest_date in _ok_timespan) AND ({data_query.where})",
+                where,
                 {"_ok_timespan": ok_timespan},
                 data_query.is_raw,
             )
@@ -385,9 +387,8 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
     global config, source_butler
     try:
         # data_query.where goes last to avoid injection overriding timespan
-        dim_where = (
-            f"({dimension}.timespan OVERLAPS _ok_timespan) AND ({data_query.where})"
-        )
+        dim_where = f"({dimension}.timespan OVERLAPS _ok_timespan)"
+        dim_where += f" AND ({data_query.where})" if data_query.where else ""
         dim_bind = {"_ok_timespan": ok_timespan}
         logger.info("Querying dimension %s: %s %s", dimension, dim_where, dim_bind)
         ids = [
@@ -404,11 +405,13 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
         logger.warning("No matching records for %s", dimension)
         return
     for id_batch in _batched(ids, 100):
+        where = f"({dimension}.id IN (_ids))"
+        where += f" AND ({data_query.where})" if data_query.where else ""
         # data_query.where goes last to avoid injection overriding id list
         transfer_dataset_type(
             dataset_type,
             data_query.collections,
-            f"({dimension}.id IN (_ids)) AND ({data_query.where})",
+            where,
             {"_ids": id_batch},
             data_query.is_raw,
         )
