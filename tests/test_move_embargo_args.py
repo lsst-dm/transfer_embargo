@@ -972,7 +972,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-    @unittest.expectedFailure
     def test_main_midnight_precision(self):
         """
         Run move_embargo_args to move some IDs from the fake_from butler
@@ -986,10 +985,10 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             2019111300061,
             2020011700002,
             2020011700003,
+            2020011700004,
         ]
         # IDs that should stay in the temp_from:
         ids_remain = [
-            2020011700004,
             2020011700005,
             2020011700006,
         ]
