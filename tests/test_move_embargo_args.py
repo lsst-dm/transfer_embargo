@@ -1016,46 +1016,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-    @unittest.expectedFailure
-    def test_main_copy_midnight_precision(self):
-        """
-        Run move_embargo_args to move some IDs from the fake_from butler
-        to the fake_to butler and test which ones moved
-        """
-        now_time_embargo = "2020-03-02T00:00:00.000000"
-        embargo_hours = 3827088.677301 / 3600  # hours
-        # IDs that should be moved to temp_to:
-        ids_copied = [
-            2019111300059,
-            2019111300061,
-            2020011700002,
-            2020011700003,
-        ]
-        # IDs that should stay in the temp_from:
-        ids_remain = [
-            2020011700004,
-            2020011700005,
-            2020011700006,
-        ]
-        is_it_there(
-            ids_remain,
-            ids_copied,
-            self.temp_from_path,
-            self.temp_to_path,
-            log=self.log,
-            now_time_embargo=now_time_embargo,
-            dataqueries=[
-                {
-                    "dataset_types": "raw",
-                    "collections": "LATISS/raw/all",
-                    "where": "instrument='LATISS'",
-                    "embargo_hours": embargo_hours,
-                    "is_raw": True,
-                }
-            ],
-            desturiprefix=self.temp_dest_ingest,
-        )
-
 
 if __name__ == "__main__":
     unittest.main()
