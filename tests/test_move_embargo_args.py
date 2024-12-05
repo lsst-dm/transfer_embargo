@@ -307,15 +307,13 @@ class TestMoveEmbargoArgs(unittest.TestCase):
     # potentially we won't need to test this in the future
     # @KT - we were not planning on running multiple args from
     # cli
-    @unittest.expectedFailure
     def test_raw_and_calexp_should_copy(self):
         """
         Test that move_embargo_args runs for the calexp datatype
         and for the raw datatype at the same time
         """
         # first raw, then calexp
-        # TODO: why two now timestamps?
-        now_time_embargo = ["2020-01-17T16:55:11.322700", "2022-11-13T03:35:12.836981"]
+        now_time_embargo = "2022-11-13T03:35:12.836981"
         # IDs that should be moved to temp_to:
         ids_copied = [
             # 2020011700004,
@@ -348,7 +346,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                     "dataset_types": "raw",
                     "collections": "LATISS/raw/all",
                     "where": "instrument='LATISS'",
-                    "embargo_hours": 0.1,
+                    "embargo_hours": 24730.76708730028,
                     "is_raw": True,
                 },
                 {
@@ -541,15 +539,13 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             # desturiprefix="tests/data/",
         )
 
-    @unittest.expectedFailure
     def test_raw_and_calexp_should_copy_yaml(self):
         """
         Test that move_embargo_args runs for the calexp datatype
         and for the raw datatype at the same time
         """
         # first raw, then calexp
-        # TODO: why two now timestamps?
-        now_time_embargo = ["2020-01-17T16:55:11.322700", "2022-11-13T03:35:12.836981"]
+        now_time_embargo = "2022-11-13T03:35:12.836981"
         # IDs that should be moved to temp_to:
         ids_copied = [
             # 2020011700004,
