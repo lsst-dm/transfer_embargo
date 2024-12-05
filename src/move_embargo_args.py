@@ -273,7 +273,7 @@ def parse_args():
         default=None,
         type=str,
         help=(
-            "Now time in (ISO, TAI timescale)."
+            "Now time in (ISOT, TAI timescale)."
             " If left blank it will use astropy.time.Time.now."
         ),
     )
@@ -327,7 +327,7 @@ def parse_args():
     )
 
     ns = parser.parse_args()
-    ns.now = Time(ns.now, format="isot", scale="utc") if ns.now else Time.now()
+    ns.now = Time(ns.now, format="isot", scale="tai") if ns.now else Time.now()
     if ns.now > Time.now():
         raise ValueError(f"--now is in the future: {ns.now}")
     if ns.rucio_rse is not None:

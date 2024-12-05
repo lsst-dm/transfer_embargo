@@ -52,7 +52,7 @@ def is_it_there(
         Time to search past the embargo period in astropy quantity_str format
         (e.g. '3hr 5min 20s').
     now_time_embargo : `str`, optional
-        Current time in ISO, TAI timescale.
+        Current time in ISOT, TAI timescale.
     dataqueries : `list` of `dict`, optional
         Dataset type(s) and collection(s).
     desturiprefix : `str`, optional
@@ -395,7 +395,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         )
 
     # first a a big group of calexp tests
-    @unittest.expectedFailure
     def test_calexp_should_copy_yaml_pasttime_18_half_hr(self):
         """
         Test that move_embargo_args runs for the calexp datatype
@@ -862,7 +861,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-    @unittest.expectedFailure
     def test_main_copy(self):
         """
         Run move_embargo_args to move some IDs from the fake_from butler
@@ -902,7 +900,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-    @unittest.expectedFailure
     def test_main_copy_midnight(self):
         """
         Run move_embargo_args to move some IDs from the fake_from butler
