@@ -696,16 +696,53 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             desturiprefix=self.temp_dest_ingest,
         )
 
-    @unittest.expectedFailure
     def test_nothing_copies(self):
         """
-        Nothing should move when the embargo hours falls right on
+        Nothing should move when the embargo hours falls right before
         the oldest exposure
+        """
+        now_time_embargo = "2020-01-17T16:55:11.322699"
+        embargo_hours = 5596964.255774 / 3600.0
+        # IDs that should be moved to temp_to:
+        ids_copied = []
+        # IDs that should stay in the temp_from:
+        ids_remain = [
+            2019111300059,
+            2019111300061,
+            2020011700002,
+            2020011700003,
+            2020011700004,
+            2020011700005,
+            2020011700006,
+        ]
+        is_it_there(
+            ids_remain,
+            ids_copied,
+            self.temp_from_path,
+            self.temp_to_path,
+            log=self.log,
+            now_time_embargo=now_time_embargo,
+            dataqueries=[
+                {
+                    "dataset_types": "raw",
+                    "collections": "LATISS/raw/all",
+                    "where": "instrument='LATISS'",
+                    "embargo_hours": embargo_hours,
+                    "is_raw": True,
+                }
+            ],
+            desturiprefix=self.temp_dest_ingest,
+        )
+
+    def test_copy_just_one(self):
+        """
+        When the embargo hours falls right on the oldest exposure,
+        only the oldest exposure gets copied, and nothing else.
         """
         now_time_embargo = "2020-01-17T16:55:11.322700"
         embargo_hours = 5596964.255774 / 3600.0
         # IDs that should be moved to temp_to:
-        ids_copied = []
+        ids_copied = [2019111300059]
         # IDs that should stay in the temp_from:
         ids_remain = [
             2019111300059,
