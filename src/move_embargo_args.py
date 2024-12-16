@@ -344,7 +344,14 @@ def parse_args():
 def transfer_data_query(data_query):
     global config, source_butler, dest_butler
 
-    dataset_types = source_butler.registry.queryDatasetTypes(data_query.dataset_types)
+    all_types = source_butler.registry.queryDatasetTypes(data_query.dataset_types)
+    collections_info = source_butler.collections.query_info(
+        data_query.collections, include_summary=True
+    )
+    dataset_type_names = source_butler.collections._filter_dataset_types(
+        [d.name for d in all_types], collections_info
+    )
+    dataset_types = {d for d in all_types if d.name in dataset_type_names}
     if data_query.is_raw:
         for dataset_type in dataset_types:
             logger.info("registerDatasetType(%s)", dataset_type)
