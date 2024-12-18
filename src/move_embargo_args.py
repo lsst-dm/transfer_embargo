@@ -430,7 +430,7 @@ def transfer_dataset_type(dataset_type, collections, where, bind, is_raw):
     dataset_refs = list(
         # ok to have empty results because this is used with batching.
         source_butler.query_datasets(
-            dataset_type, collections, where=where, bind=bind, explain=False
+            dataset_type, collections, where=where, bind=bind, explain=False, limit=None
         )
     )
     for dsr_batch in _batched(dataset_refs, 1000):
