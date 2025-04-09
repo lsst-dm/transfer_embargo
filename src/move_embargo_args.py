@@ -98,7 +98,7 @@ class RucioInterface:
             adler32 = f"{zlib.adler32(contents):08x}"
         path = path.removeprefix("/")
         pfn = self.pfn_base + path
-        meta = dict(rubin_butler=1, rubin_sidecar=dataset_ref.to_json())
+        meta = dict(rubin_butler="raw_file", rubin_sidecar=dataset_ref.to_json())
         return dict(
             pfn=pfn,
             bytes=size,
@@ -157,7 +157,11 @@ class RucioInterface:
                     raise
 
     def register(
-        self, dataset_refs: list[DatasetRef], paths: list[str], dry_run: bool = False
+        self,
+        dataset_refs: list[DatasetRef],
+        paths: list[str],
+        tract_mappings: dict[int, list[int]],
+        dry_run: bool = False,
     ) -> None:
         """Register a list of files in Rucio.
 
@@ -167,20 +171,30 @@ class RucioInterface:
             List of Butler source repo dataset refs.
         paths: `list` [ `str` ]
             List of relative paths to files relative to direct root.
+        tract_mappings: `dict` [ `int`, `list` [ `int` ] ]
+            Dict mapping from exposure ids to lists of tracts.
         dry_run: `bool`
             Do not take any actions if true.
         """
-        data = [self._make_did(dsr, p) for dsr, p in zip(dataset_refs, paths)]
         datasets = dict()
-        for did in data:
-            # For non-science images, use a dataset per 100 exposures
-            dataset_id = re.sub(
-                r"^(.+?)/(\d{8})/[A-Z]{2}_[A-Z]_\2_(\d{4})\d{2}/.*",
-                r"Dataset/\1/\2/\3",
-                did["name"],
-            )
-            datasets.setdefault(dataset_id, []).append(did)
-            # TODO: compute datasets for science images based on visit/tract
+        for dsr, p in zip(dataset_refs, paths):
+            did = self._make_did(dsr, p)
+            tracts = tract_mappings[dsr.dataId["exposure"]]
+            if tracts:
+                for tract in tracts:
+                    dataset_id = re.sub(
+                        r"^(.+?)/(\d{8})/[A-Z]{2}_[A-Z]_\2_(\d{4})\d{2}/.*",
+                        r"Dataset/\1/raw/Tract{tract}/\2/\3",
+                        did["name"],
+                    )
+                    datasets.setdefault(dataset_id, []).append(did)
+            else:
+                dataset_id = re.sub(
+                    r"^(.+?)/(\d{8})/[A-Z]{2}_[A-Z]_\2_(\d{4})\d{2}/.*",
+                    r"Dataset/\1/raw/NoTract/\2/\3",
+                    did["name"],
+                )
+                datasets.setdefault(dataset_id, []).append(did)
 
         for dataset_id, dids in datasets.items():
             try:
@@ -454,6 +468,7 @@ def transfer_datasets(dataset_refs: list[DatasetRef], is_raw):
         dest_root = ResourcePath(config.dest_uri_prefix)
         filedatasets = []
         relative_rps = []
+        tract_mappings = dict()
         for dataset_ref in dataset_refs:
             source_rp = source_butler.getURI(dataset_ref)
             # Assumes that source is coming from an s3://bucket/path URL.
@@ -467,6 +482,18 @@ def transfer_datasets(dataset_refs: list[DatasetRef], is_raw):
                     dest_rp.transfer_from(source_rp, transfer="copy")
             filedatasets.append(FileDataset(dest_rp, dataset_ref))
             relative_rps.append(relative_rp)
+            tract_mappings[dataset_ref.dataId["exposure"]] = []
+
+        with source_butler.query() as q:
+            q = q.join_dimensions(["tract"]).where(
+                "visit IN (exposure_list)",
+                instrument=config.instrument,
+                skymap="lsst_cells_v1",
+                bind={"exposure_list": tract_mappings.keys()}
+            )
+            for id in q.data_ids(["exposure", "tract"]):
+                tract_mappings[id["exposure"]].append(id["tract"])
+
         logger.info("transfer_dimension_records(%s)", dataset_refs)
         if not config.dry_run:
             dest_butler.transfer_dimension_records_from(source_butler, dataset_refs)
@@ -474,7 +501,7 @@ def transfer_datasets(dataset_refs: list[DatasetRef], is_raw):
         if not config.dry_run:
             dest_butler.ingest(*filedatasets, transfer="direct")
         if config.rucio_rse:
-            rucio_interface.register(dataset_refs, relative_rps, config.dry_run)
+            rucio_interface.register(dataset_refs, relative_rps, tract_mappings, config.dry_run)
 
 
 config: argparse.Namespace = None
