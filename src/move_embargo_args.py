@@ -57,19 +57,14 @@ class RucioInterface:
     ----------
     rucio_rse: `str`
         Name of the RSE that the files live in.
-    dtn_url: `str`
-        Base URL of the data transfer node for the Rucio physical filename.
     scope: `str`
         Rucio scope to register the files in.
     root: 'str'
         Root URL for direct-ingested raw files.
     """
 
-    def __init__(self, rucio_rse: str, dtn_url: str, scope: str, root: str):
+    def __init__(self, rucio_rse: str, scope: str, root: str):
         self.rucio_rse = rucio_rse
-        if not dtn_url.endswith("/"):
-            dtn_url += "/"
-        self.pfn_base = dtn_url
         self.scope = scope
         self.root = ResourcePath(root)
 
@@ -97,10 +92,8 @@ class RucioInterface:
             md5 = hashlib.md5(contents).hexdigest()
             adler32 = f"{zlib.adler32(contents):08x}"
         path = path.removeprefix("/")
-        pfn = self.pfn_base + path
         meta = dict(rubin_butler="raw_file", rubin_sidecar=dataset_ref.to_json())
         return dict(
-            pfn=pfn,
             bytes=size,
             adler32=adler32,
             md5=md5,
@@ -320,12 +313,6 @@ def parse_args():
         help="Rucio RSE for raw data.",
     )
     parser.add_argument(
-        "--dtn_url",
-        type=str,
-        required=False,
-        help="DTN URL for Rucio access to raw data.",
-    )
-    parser.add_argument(
         "--scope",
         type=str,
         required=False,
@@ -347,8 +334,6 @@ def parse_args():
     if ns.rucio_rse is not None:
         if ns.dest_uri_prefix is None:
             raise ValueError("--dest_uri_prefix required with --rucio_rse")
-        if ns.dtn_url is None:
-            raise ValueError("--dtn_url required with --rucio_rse")
         if ns.scope is None:
             raise ValueError("--scope required with --rucio_rse")
 
@@ -531,14 +516,12 @@ def initialize():
         if config.dry_run:
             rucio_interface = RucioInterface(
                 config.rucio_rse,
-                config.dtn_url,
                 config.scope,
                 "s3://embargo@rubin-summit/",
             )
         else:
             rucio_interface = RucioInterface(
                 config.rucio_rse,
-                config.dtn_url,
                 config.scope,
                 config.dest_uri_prefix,
             )
