@@ -1,0 +1,9 @@
+- instrument: LSSTComCam
+  embargo_hours: 0
+  where: ""
+- instrument: LSSTCam
+  where: "not exposure.can_see_sky OR exposure.can_see_sky = NULL"
+  embargo_hours: 0
+- instrument: LSSTCam
+  where: "exposure.can_see_sky"
+  embargo_hours: 720
