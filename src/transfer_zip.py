@@ -416,6 +416,7 @@ def transfer_data_query(data_query: DataQuery) -> None:
         bind=dim_bind,
         limit=None,
         instrument=data_query.instrument,
+        order_by="exposure",
         explain=False,
     )
     if not exposures:
