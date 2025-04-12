@@ -36,9 +36,10 @@ import pydantic
 import rucio.common.exception
 from astro_metadata_translator.indexing import index_files
 from astropy.time import Time, TimeDelta
-from lsst.daf.butler import Butler, DimensionRecord, EmptyQueryResultError, Timespan
+from lsst.daf.butler import Butler, DimensionRecord, Timespan
 from lsst.daf.butler.cli.cliLog import CliLog
 from lsst.resources import ResourcePath
+from lsst.utils.timer import time_this
 from rucio.client.didclient import DIDClient
 from rucio.client.replicaclient import ReplicaClient
 
@@ -401,23 +402,23 @@ def transfer_data_query(data_query: DataQuery) -> None:
     if config.window is not None:
         start_time = end_time - TimeDelta(config.window, format="quantity_str")
     else:
-        start_time = Time(0, format="jd")
+        start_time = None
     ok_timespan = Timespan(start_time, end_time)
 
     # Find all exposures meeting criteria
-    dim_where = "(exposure.timespan OVERLAPS _ok_timespan)"
+    dim_where = "(exposure.timespan OVERLAPS :ok_timespan)"
     dim_where += f" AND ({data_query.where})" if data_query.where else ""
-    dim_bind = {"_ok_timespan": ok_timespan}
+    dim_bind = {"ok_timespan": ok_timespan}
     logger.info("Querying exposure: %s with %s", dim_where, dim_bind)
-    try:
-        exposures = source_butler.query_dimension_records(
-            "exposure",
-            where=dim_where,
-            bind=dim_bind,
-            limit=None,
-            instrument=data_query.instrument,
-        )
-    except EmptyQueryResultError:
+    exposures = source_butler.query_dimension_records(
+        "exposure",
+        where=dim_where,
+        bind=dim_bind,
+        limit=None,
+        instrument=data_query.instrument,
+        explain=False,
+    )
+    if not exposures:
         logger.info("No matching records")
         return
     logger.info(
@@ -443,8 +444,8 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
     """
     global logger, config, source_butler, dest_butler, rucio_interface
 
-    # Check several times for existence of the result to avoid work
-    # in case of race conditions
+    # Check several times (before each major step) for existence of the
+    # result to avoid work in case of race conditions
     zip_name = f"{exp.obs_id}.zip"
     dest_dir = (
         ResourcePath(config.dest_uri_prefix).join(instrument).join(f"{exp.day_obs}")
@@ -455,7 +456,6 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         return
 
     # Map exposure to tracts
-    tracts = set()
     with source_butler.query() as q:
         q = q.join_dimensions(["tract"]).where(
             "visit = _exposure",
@@ -463,8 +463,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
             skymap="lsst_cells_v1",
             bind={"_exposure": exp.id},
         )
-        for id in q.data_ids(["tract"]):
-            tracts.add(id["tract"])
+        tracts = {id["tract"] for id in q.data_ids(["tract"])}
 
     # Find all datasets for this exposure and its source directory
     refs = source_butler.query_datasets(
@@ -472,7 +471,12 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         exposure=exp.id,
         instrument=instrument,
         collections=f"{instrument}/raw/all",
+        explain=False,
     )
+    if not refs:
+        logger.warn("No datasets for exposure %s %s", exp.id, exp.obj_id)
+        return
+
 
     logger.info("Handling exposure: %s, %s (%s)", exp.id, exp.obs_id, len(refs))
 
@@ -484,17 +488,17 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         prepdir = os.path.join(tmpdir, "inputs")
         os.mkdir(prepdir)
         os.chdir(prepdir)
+        # Second race condition check
         if dest_path.exists():
             logger.info("Zip exists, not retrieving datasets: %s", dest_path)
             return
 
         # Get the raw datasets
-        start_time = time.time()
-        logger.debug("Retrieving artifacts")
-        retrieved = source_butler.retrieveArtifacts(
-            refs, destination=prepdir, preserve_path=False
-        )
-        logger.debug("retrieved in %s sec", time.time() - start_time)
+        with time_this(logger, "Artifact retrieval"):
+            logger.debug("Retrieving artifacts")
+            retrieved = source_butler.retrieveArtifacts(
+                refs, destination=prepdir, preserve_path=False
+            )
 
         # Generate the index
         _index, okay, failed = index_files(
@@ -517,6 +521,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
             for f in filenames:
                 if not os.path.exists(f):
                     transfer_list.append((dirpath.join(f), ResourcePath(f)))
+        # Third race condition check
         if dest_path.exists():
             logger.info("Zip exists, not copying others: %s", dest_path)
             return
@@ -524,27 +529,36 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         ResourcePath.mtransfer("copy", transfer_list)
 
         # Zip everything.
-        zip_path = os.path.join(tmpdir, zip_name)
-        logger.debug("Writing to %s", zip_path)
-        with zipfile.ZipFile(zip_path, "w") as zip_file:
-            for f in os.listdir():
-                logger.debug("adding %s", f)
-                if f.endswith(".fits"):
-                    zip_file.write(f, f, compress_type=zipfile.ZIP_STORED)
-                else:
-                    zip_file.write(f, f, compress_type=zipfile.ZIP_DEFLATED)
+        with time_this(logger, "Zip creation"):
+            zip_path = os.path.join(tmpdir, zip_name)
+            logger.debug("Writing to %s", zip_path)
+            with zipfile.ZipFile(zip_path, "w") as zip_file:
+                for f in os.listdir():
+                    logger.debug("adding %s", f)
+                    if f.endswith(".fits"):
+                        zip_file.write(f, f, compress_type=zipfile.ZIP_STORED)
+                    else:
+                        zip_file.write(f, f, compress_type=zipfile.ZIP_DEFLATED)
 
         # Compute the Rucio hashes
+        # We do this here rather than internally in RucioInterface so that we
+        # can take advantage of the OS cache since we just wrote the file and
+        # also so that we capture the state of the file just after creation,
+        # in case the transfer to its final destination is corrupted.
         if config.rucio_rse:
             hashes = RucioInterface.compute_hashes(zip_path)
 
-        # Copy to destination
+        # Fourth race condition check
         if dest_path.exists():
             logger.info("Zip exists, not installing: %s", dest_path)
             return
+        # Copy to destination
         logger.info("Installing zip in %s", dest_path)
-        if not config.dry_run:
-            dest_path.transfer_from(ResourcePath(zip_path), "copy")
+        with time_this(logger, "Installing zip"):
+            if not config.dry_run:
+                # The final race condition check is that transfer_from()
+                # will not overwrite.
+                dest_path.transfer_from(ResourcePath(zip_path), "copy")
 
         logger.debug("exporting dimensions")
         dimensions_file = os.path.join(tmpdir, "_dimensions.yaml")
@@ -585,20 +599,22 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
 
     logger.info("Ingesting zip: %s", dest_path)
     if not config.dry_run:
-        dest_butler.ingest_zip(dest_path, transfer="direct")
+        with time_this(logger, "Ingesting zip"):
+            dest_butler.ingest_zip(dest_path, transfer="direct")
 
     if config.rucio_rse:
         logger.info("Registering zip in Rucio")
-        rucio_interface.register(
-            f"{instrument}/{exp.day_obs}/{zip_name}", hashes, tracts, config.dry_run
-        )
-        logger.info("Registering dimensions in Rucio")
-        rucio_interface.register(
-            f"{instrument}/{exp.day_obs}/{exp.obs_id}_dimensions.yaml",
-            dim_hashes,
-            tracts,
-            config.dry_run,
-        )
+        with time_this(logger, "Registering in Rucio"):
+            rucio_interface.register(
+                f"{instrument}/{exp.day_obs}/{zip_name}", hashes, tracts, config.dry_run
+            )
+            logger.info("Registering dimensions in Rucio")
+            rucio_interface.register(
+                f"{instrument}/{exp.day_obs}/{exp.obs_id}_dimensions.yaml",
+                dim_hashes,
+                tracts,
+                config.dry_run,
+            )
 
 
 # Global variables
