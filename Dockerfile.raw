@@ -1,17 +1,19 @@
-# Dockerfile
-FROM ghcr.io/lsst/scipipe:al9-w_2025_15
+ARG STACKVER=w_2025_15
+FROM ghcr.io/lsst/scipipe:al9-${STACKVER}
 
 # Copy code and configuration
-COPY src/transfer_zip.py /opt/lsst/transfer_embargo/
-
-# Set the working directory
-WORKDIR /opt/lsst/transfer_embargo
+COPY src/transfer_zip.py src/transfer_zip.sh /opt/lsst/transfer_embargo/
 
 # Define the environment variables
-ENV FROMREPO "embargo"
-ENV TOREPO "/repo/main"
-ENV WINDOW "1.1hr"
+ENV TMPDIR "/tmp"
+ENV LOGNAME "rubinmgr"
+ENV TRANSFER_CONFIG "/etc/lsst/config_raw.yaml"
+ENV WINDOW "35min"
 ENV DEST "/sdf/data/rubin/lsstdata/offline/instrument/"
 ENV RUCIO "-r SLAC_RAW_DISK -s raw"
+ENV FROMREPO "embargo"
+ENV TOREPO "/repo/main"
+# Also need RUCIO_CONFIG, DAF_BUTLER_REPOSITORY_INDEX, and credentials
+# LOGDIR is optional to store copies of the logs (which also go to stdout)
 
-CMD ["bash", "-c", "source /opt/lsst/loadLSST.sh; setup lsst_distrib; umask 027; python transfer_zip.py -C /etc/lsst/config_raw.yaml --window \"$WINDOW\" -d \"$DEST\" $RUCIO \"$FROMREPO\" \"$TOREPO\""]
+CMD ["transfer_zip.sh"]
