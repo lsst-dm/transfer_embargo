@@ -243,6 +243,7 @@ class RucioInterface:
                     # If someone else created it in the meantime
                     pass
                 # And then retry adding DIDs
+                logger.info("Retrying add_files_to_dataset after creation")
                 self._add_file_to_dataset(did, dataset_id, dry_run)
                 return
             except rucio.common.exception.DatabaseException:
@@ -475,14 +476,29 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         explain=False,
     )
     if not refs:
-        logger.warn("No datasets for exposure %s %s", exp.id, exp.obj_id)
+        logger.warn("No datasets for exposure %s", exp.obs_id)
         return
 
-
-    logger.info("Handling exposure: %s, %s (%s)", exp.id, exp.obs_id, len(refs))
+    logger.info("Handling exposure: %s (%s)", exp.obs_id, len(refs))
 
     source_uri_dir = source_butler.getURI(refs[0]).dirname()
     logger.debug("Source directory: %s", source_uri_dir)
+
+    expected_sensors_path = ResourcePath(source_uri_dir).join(
+        f"{exp.obs_id}_expectedSensors.json"
+    )
+    if expected_sensors_path.exists():
+        with expected_sensors_path.open("rb") as fd:
+            expected_sensors = json.load(fd)["expectedSensors"]
+        expected_refs = len([t for t in expected_sensors.values() if t == "SCIENCE"])
+        if len(refs) < expected_refs:
+            logger.warning(
+                "Skipping incomplete exposure %s: %s < %s",
+                exp.obs_id,
+                len(refs),
+                expected_refs,
+            )
+            return
 
     # Make a zip file for this exposure
     with tempfile.TemporaryDirectory() as tmpdir:
