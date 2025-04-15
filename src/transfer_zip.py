@@ -476,7 +476,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         explain=False,
     )
     if not refs:
-        logger.warn("No datasets for exposure %s", exp.obs_id)
+        logger.warning("No datasets for exposure %s", exp.obs_id)
         return
 
     logger.info("Handling exposure: %s (%s)", exp.obs_id, len(refs))
