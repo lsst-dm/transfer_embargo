@@ -154,13 +154,16 @@ class RucioInterface:
             Rucio Dataset names.
         """
         datasets = set()
+        # Per day per tract for data movement
         if tracts:
             for tract in tracts:
-                dataset_id = f"Dataset/{instrument}/raw/{tract}/{day_obs}/{obs_id}"
+                dataset_id = f"Dataset/{instrument}/raw/Tract{tract}/{day_obs}"
                 datasets.add(dataset_id)
         else:
-            dataset_id = f"Dataset/{instrument}/raw/NoTract/{day_obs}/{obs_id}"
+            dataset_id = f"Dataset/{instrument}/raw/NoTract/{day_obs}"
             datasets.add(dataset_id)
+        # Per observation for tape
+        datasets.add(f"Dataset/{instrument}/raw/Obs/{day_obs}/{obs_id}")
         return datasets
 
     def _add_replica(self, did: dict[str, int | str], dry_run: bool) -> None:
