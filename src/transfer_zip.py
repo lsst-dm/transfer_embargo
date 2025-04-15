@@ -665,6 +665,8 @@ def initialize():
     CliLog.setLogLevels(logLevels=levels)
     logger = logging.getLogger("lsst.transfer.embargo.raw")
     logger.info("config: %s", config)
+    if config.dry_run:
+        logger.warning("dry_run=True, no writes")
 
     source_butler = Butler(config.fromrepo, skymap="lsst_cells_v1")
     dest_butler = Butler(config.torepo, writeable=True)
