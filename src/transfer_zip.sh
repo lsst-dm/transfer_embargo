@@ -22,8 +22,8 @@ python /opt/lsst/transfer_embargo/transfer_zip.py \
     "$FROMREPO" "$TOREPO" \
     2>&1 |
     if [ -d "$LOGDIR" ]; then
-	mkdir -p "$LOGDIR"/$(date +\%Y-\%m)
-        tee "$LOGDIR/$(date +\%Y-\%m)/$(date -Im)@$WINDOW".log
+        mkdir -p "$LOGDIR"/$(date +\%Y-\%m)/$(date -I)
+        tee "$LOGDIR/$(date +\%Y-\%m)/$(date -I)/$(date -Im)@$WINDOW".log
     else
-	cat
+        cat
     fi
