@@ -578,7 +578,11 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
             if not config.dry_run:
                 # The final race condition check is that transfer_from()
                 # will not overwrite.
-                dest_path.transfer_from(ResourcePath(zip_path), "copy")
+                try:
+                    dest_path.transfer_from(ResourcePath(zip_path), "copy")
+                except FileExistsError:
+                    logger.info("Zip exists in transfer_from: %s", dest_path)
+                    return
 
         logger.debug("exporting dimensions")
         dimensions_file = os.path.join(tmpdir, "_dimensions.yaml")
