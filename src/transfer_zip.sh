@@ -12,9 +12,17 @@ export SHELL=/bin/bash
 
 source /opt/lsst/software/stack/loadLSST.sh
 setup lsst_distrib
+# DRY_RUN may be empty, so do not quote it.
 # RUCIO may hold multiple options, so do not quote it.
-python /opt/lsst/transfer_embargo/transfer_zip.py \
-    "$DRY_RUN" \
+echo python "$SWDIR"/transfer_zip.py \
+    $DRY_RUN \
+    -C "$TRANSFER_CONFIG" \
+    --window "$WINDOW" \
+    -d "$DEST" \
+    $RUCIO \
+    "$FROMREPO" "$TOREPO"
+python "$SWDIR"/transfer_zip.py \
+    $DRY_RUN \
     -C "$TRANSFER_CONFIG" \
     --window "$WINDOW" \
     -d "$DEST" \
