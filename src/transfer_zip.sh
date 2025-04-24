@@ -1,5 +1,16 @@
 #!/bin/bash
 
+# Input environment variables:
+# SWDIR = directory where software is located
+# DRY_RUN = (optional) "--dry_run" to indicate not to affect the destination
+# NOW = (optional) "--now ISOT" argument with past datetime in isot format to consider as the current time
+# TRANSFER_CONFIG = path to transfer policy configuration
+# WINDOW = time window to scan for eligible files, previous to $NOW, as "NNmin" or "NNhr"
+# DEST = destination directory for raw zips
+# RUCIO = (optional) arguments for Rucio RSE and scope
+# FROMREPO = source Butler repo
+# TOREPO = destination Butler repo
+
 # Prevent the world from accessing outputs.
 umask 027
 
