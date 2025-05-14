@@ -1,11 +1,11 @@
-name: build transfer_zip container
+name: build transfer-raw container
 
 on:
   push:
     branches:
       - main
     tags:
-      - *
+      - "*"
   pull_request:
 
 jobs:
@@ -17,5 +17,6 @@ jobs:
       - name: Build
         uses: lsst-sqre/build-and-push-to-ghcr@v1
         with:
-            image: lsst-dm/transfer-zip
-            dockerfile: Dockerfile.zip
+            image: lsst-dm/transfer-raw
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            dockerfile: Dockerfile.raw
