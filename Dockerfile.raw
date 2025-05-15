@@ -17,4 +17,10 @@ ENV TOREPO="/repo/main"
 # Also need RUCIO_CONFIG, DAF_BUTLER_REPOSITORY_INDEX, and credentials
 # LOGDIR is optional to store copies of the logs (which also go to stdout)
 
+USER root
+WORKDIR "$TMPDIR"
+RUN groupadd -g 4085 -o rubin_users
+RUN useradd -m -u 18296 -g 4085 -o -s /bin/bash rubinmgr
+USER lsst
+
 CMD "$SWDIR/transfer_zip.sh"
