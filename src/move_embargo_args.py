@@ -369,7 +369,7 @@ def transfer_data_query(data_query):
     if config.window is not None:
         start_time = end_time - TimeDelta(config.window, format="quantity_str")
     else:
-        start_time = Time(0, format="jd")
+        start_time = Time("1970-01-01 00:00:00")
     ok_timespan = Timespan(start_time, end_time)
 
     for dataset_type in dataset_types:
@@ -378,14 +378,18 @@ def transfer_data_query(data_query):
         elif "exposure" in dataset_type.dimensions:
             transfer_dimension("exposure", dataset_type, data_query, ok_timespan)
         else:
-            where = "(ingest_date in _ok_timespan)"
+            where = "(ingest_date >= _ok_timespan_begin AND ingest_date <= _ok_timespan_end)"
             where += f" AND ({data_query.where})" if data_query.where else ""
+            logger.info(f"dataset_type: {dataset_type}; where : {where}")
             # data_query.where goes last to avoid injection overriding timespan
             transfer_dataset_type(
                 dataset_type,
                 data_query.collections,
                 where,
-                {"_ok_timespan": ok_timespan},
+                {
+                    "_ok_timespan_begin": ok_timespan.begin,
+                    "_ok_timespan_end": ok_timespan.end,
+                },
                 data_query.is_raw,
             )
 
