@@ -1,0 +1,25 @@
+ARG STACKVER=w_2025_20
+FROM ghcr.io/lsst/scipipe:al9-${STACKVER}
+
+# Copy code and configuration
+ENV SWDIR="/opt/lsst/transfer_embargo"
+COPY src/move_embargo_args.py src/move_embargo_args.sh "$SWDIR/"
+
+# Define the environment variables
+ENV TMPDIR="/tmp"
+ENV LOGNAME="rubinmgr"
+ENV TRANSFER_CONFIG="/etc/lsst/config_test_pp.yaml"
+ENV WINDOW="35min"
+ENV DEST="/sdf/data/rubin/repo/main_20210215/"
+ENV FROMREPO="embargo"
+ENV TOREPO="/repo/main"
+# Also need DAF_BUTLER_REPOSITORY_INDEX, and credentials
+# LOGDIR is optional to store copies of the logs (which also go to stdout)
+
+USER root
+WORKDIR "$TMPDIR"
+RUN groupadd -g 4085 -o rubin_users
+RUN useradd -m -u 18296 -g 4085 -o -s /bin/bash rubinmgr
+USER lsst
+
+CMD "$SWDIR/move_embargo_args.sh"

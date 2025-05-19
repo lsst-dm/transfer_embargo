@@ -1,0 +1,22 @@
+name: build transfer-nonraw container
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+      - name: Build
+        uses: lsst-sqre/build-and-push-to-ghcr@v1
+        with:
+            image: lsst-dm/transfer-nonraw
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            dockerfile: Dockerfile.nonraw

@@ -1,0 +1,5 @@
+- dataset_types: "*"
+  collections: "LSSTComCam/prompt/output-2024-11-01*"
+  where: ""
+  embargo_hours: 1
+  is_raw: False
