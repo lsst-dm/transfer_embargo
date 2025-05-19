@@ -31,15 +31,16 @@ import time
 import zipfile
 import zlib
 
-import rucio.common.exception
+import rucio.common.exception  # type: ignore
 from astro_metadata_translator.indexing import index_files
-from astropy.time import Time, TimeDelta
+from astropy.time import Time, TimeDelta  # type: ignore
 from lsst.daf.butler import Butler, DimensionRecord, Timespan
 from lsst.daf.butler.cli.cliLog import CliLog
 from lsst.resources import ResourcePath
 from lsst.utils.timer import time_this
-from rucio.client.didclient import DIDClient
-from rucio.client.replicaclient import ReplicaClient
+from rucio.client.didclient import DIDClient  # type: ignore
+from rucio.client.replicaclient import ReplicaClient  # type: ignore
+
 from data_query import DataQuery
 
 
@@ -83,13 +84,13 @@ class RucioInterface:
                 size += len(buffer)
                 md5.update(buffer)
                 adler32 = zlib.adler32(buffer, adler32)
-        md5 = md5.hexdigest()
-        adler32 = f"{adler32:08x}"
-        return (size, md5, adler32)
+        md5_digest = md5.hexdigest()
+        adler32_digest = f"{adler32:08x}"
+        return (size, md5_digest, adler32_digest)
 
     def _make_did(
         self, zip_path: str, hashes: tuple[int, str, str], meta: dict | None = None
-    ) -> dict[str, str | int]:
+    ) -> dict[str, str | int | dict | None]:
         """Make a Rucio data identifier dictionary from a zip file.
 
         Parameters
@@ -152,7 +153,9 @@ class RucioInterface:
         datasets.add(f"Dataset/{instrument}/raw/Obs/{day_obs}/{obs_id}")
         return datasets
 
-    def _add_replica(self, did: dict[str, int | str], dry_run: bool) -> None:
+    def _add_replica(
+        self, did: dict[str, int | str | dict | None], dry_run: bool
+    ) -> None:
         """Add a file as a replica of a specified Rucio DID.
 
         Parameters
@@ -268,7 +271,7 @@ class RucioInterface:
             meta = None
         did = self._make_did(name, hashes, meta)
         self._add_replica(did, dry_run)
-        datasets = self._compute_datasets(tracts, instrument, day_obs, obs_id)
+        datasets = self._compute_datasets(tracts, instrument, int(day_obs), obs_id)
         for dataset in datasets:
             self._add_file_to_dataset(did, dataset, dry_run)
 
@@ -454,7 +457,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
             skymap="lsst_cells_v1",
             bind={"_exposure": exp.id},
         )
-        tracts = {id["tract"] for id in q.data_ids(["tract"])}
+        tracts = {int(id["tract"]) for id in q.data_ids(["tract"])}
 
     # Find all datasets for this exposure and its source directory
     refs = source_butler.query_datasets(
@@ -629,11 +632,11 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
 
 # Global variables
 
-config: argparse.Namespace = None
-logger: logging.Logger = None
-source_butler: Butler = None
-dest_butler: Butler = None
-rucio_interface: RucioInterface = None
+config: argparse.Namespace
+logger: logging.Logger
+source_butler: Butler
+dest_butler: Butler
+rucio_interface: RucioInterface
 
 
 def initialize():

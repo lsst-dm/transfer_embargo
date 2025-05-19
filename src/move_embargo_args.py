@@ -1,21 +1,12 @@
 import argparse
-import hashlib
 import itertools
 import logging
-import random
-import re
-import time
-import zlib
-from typing import Any
+from typing import Any, Generator
 
-import rucio.common.exception
-from astropy.time import Time, TimeDelta
+from astropy.time import Time, TimeDelta  # type: ignore
 from lsst.daf.butler import (
     Butler,
-    CollectionType,
-    DatasetRef,
     EmptyQueryResultError,
-    FileDataset,
     Timespan,
 )
 from lsst.daf.butler.cli.cliLog import CliLog
@@ -23,7 +14,7 @@ from lsst.daf.butler.cli.cliLog import CliLog
 from data_query import DataQuery
 
 
-def _batched(items: list[Any], n: int) -> list[Any]:
+def _batched(items: list[Any], n: int) -> Generator[list[Any]]:
     iterator = iter(items)
     while batch := list(itertools.islice(iterator, n)):
         yield batch
@@ -171,6 +162,7 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
                 where=dim_where,
                 bind=dim_bind,
                 limit=None,
+                explain=False,
             )
         ]
     except EmptyQueryResultError:
@@ -210,10 +202,10 @@ def transfer_dataset_type(dataset_type, collections, where, bind):
             )
 
 
-config: argparse.Namespace = None
-logger: logging.Logger = None
-source_butler: Butler = None
-dest_butler: Butler = None
+config: argparse.Namespace
+logger: logging.Logger
+source_butler: Butler
+dest_butler: Butler
 
 
 def initialize():
