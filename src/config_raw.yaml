@@ -1,9 +1,15 @@
 - instrument: LSSTComCam
   embargo_hours: 0
   where: ""
+  collections: LSSTComCam/raw/all
+  dataset_types: raw
 - instrument: LSSTCam
   where: "not exposure.can_see_sky OR exposure.can_see_sky = NULL"
   embargo_hours: 0
+  collections: LSSTCam/raw/all
+  dataset_types: raw
 - instrument: LSSTCam
   where: "exposure.can_see_sky"
   embargo_hours: 720
+  collections: LSSTCam/raw/all
+  dataset_types: raw

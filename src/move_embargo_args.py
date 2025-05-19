@@ -5,11 +5,9 @@ import logging
 import random
 import re
 import time
-import yaml
 import zlib
 from typing import Any
 
-import pydantic
 import rucio.common.exception
 from astropy.time import Time, TimeDelta
 from lsst.daf.butler import (
@@ -22,29 +20,7 @@ from lsst.daf.butler import (
 )
 from lsst.daf.butler.cli.cliLog import CliLog
 
-
-class DataQuery(pydantic.BaseModel):
-    collections: str | list[str]
-    """Collection names or glob patterns to search."""
-
-    dataset_types: str | list[str]
-    """List of dataset types or glob patterns to transfer."""
-
-    where: str
-    """Where clause expression to select datasets to transfer."""
-
-    embargo_hours: float
-    """How long to embargo the selected datasets (hours)."""
-
-    is_raw: bool
-    """Treat the matching datasets as raw (archival) data."""
-
-
-def from_yaml(yaml_source: Any) -> list[DataQuery]:
-    result = []
-    for entry in yaml.safe_load(yaml_source):
-        result.append(DataQuery(**entry))
-    return result
+from data_query import DataQuery
 
 
 def _batched(items: list[Any], n: int) -> list[Any]:
@@ -265,10 +241,10 @@ def main():
     if config.config_file:
         logger.info("using config file %s", config.config_file)
         with open(config.config_file, "r") as f:
-            data_queries = from_yaml(f)
+            data_queries = DataQuery.from_yaml(f)
     else:
         logger.info("Using dataqueries: %s", config.dataqueries)
-        data_queries = from_yaml(config.dataqueries)
+        data_queries = DataQuery.from_yaml(config.dataqueries)
     logger.info("data_queries %s", data_queries)
 
     for data_query in data_queries:

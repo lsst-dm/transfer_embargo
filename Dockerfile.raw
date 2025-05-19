@@ -3,7 +3,7 @@ FROM ghcr.io/lsst/scipipe:al9-${STACKVER}
 
 # Copy code and configuration
 ENV SWDIR="/opt/lsst/transfer_embargo"
-COPY src/transfer_zip.py src/transfer_zip.sh "$SWDIR/"
+COPY src/transfer_zip.py src/transfer_zip.sh src/data_query.py "$SWDIR/"
 
 # Define the environment variables
 ENV TMPDIR="/tmp"

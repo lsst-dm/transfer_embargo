@@ -28,11 +28,9 @@ import os
 import random
 import tempfile
 import time
-import yaml
 import zipfile
 import zlib
 
-import pydantic
 import rucio.common.exception
 from astro_metadata_translator.indexing import index_files
 from astropy.time import Time, TimeDelta
@@ -42,19 +40,7 @@ from lsst.resources import ResourcePath
 from lsst.utils.timer import time_this
 from rucio.client.didclient import DIDClient
 from rucio.client.replicaclient import ReplicaClient
-
-
-class DataQuery(pydantic.BaseModel):
-    """A query to select exposures and their associated embargo time."""
-
-    instrument: str
-    """Instrument this query pertains to."""
-
-    where: str
-    """Where clause expression to select datasets to transfer."""
-
-    embargo_hours: float
-    """How long to embargo the selected datasets (hours)."""
+from data_query import DataQuery
 
 
 class RucioInterface:
@@ -684,11 +670,15 @@ def main():
     global config
     initialize()
 
-    data_queries = []
     with open(config.config_file, "r") as f:
-        for entry in yaml.safe_load(f):
-            data_queries.append(DataQuery(**entry))
+        data_queries = DataQuery.from_yaml(f)
     logger.info("data_queries %s", data_queries)
+    for query in data_queries:
+        if (
+            query.collections != f"{query.instrument}/raw/all"
+            or query.dataset_types != "raw"
+        ):
+            raise ValueError(f"Invalid data query for raws: {query}")
 
     for data_query in data_queries:
         logger.info("Processing %s", data_query)
