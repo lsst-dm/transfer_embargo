@@ -670,7 +670,7 @@ def initialize():
 
 def main():
     """Main function."""
-    global config
+    global config, logger
     initialize()
 
     with open(config.config_file, "r") as f:

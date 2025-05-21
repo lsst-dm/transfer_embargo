@@ -147,7 +147,7 @@ def transfer_data_query(data_query):
 
 
 def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
-    global config, source_butler
+    global config, source_butler, logger
     try:
         # data_query.where goes last to avoid injection overriding timespan
         dim_where = f"({dimension}.timespan OVERLAPS _ok_timespan)"
@@ -181,7 +181,7 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
 
 
 def transfer_dataset_type(dataset_type, collections, where, bind):
-    global source_butler
+    global source_butler, logger
     logger.info("Querying datasets: %s %s", where, bind)
     dataset_refs = list(
         # ok to have empty results because this is used with batching.
@@ -226,7 +226,7 @@ def initialize():
 
 
 def main():
-    global config
+    global config, logger
 
     initialize()
 
