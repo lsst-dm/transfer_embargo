@@ -4,3 +4,4 @@
   where: ""
   embargo_hours: 80
   is_raw: False
+  instrument: LATISS
