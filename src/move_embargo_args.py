@@ -1,7 +1,8 @@
 import argparse
 import itertools
 import logging
-from typing import Any, Generator
+from collections.abc import Generator
+from typing import Any
 
 from astropy.time import Time, TimeDelta  # type: ignore
 from lsst.daf.butler import (
@@ -14,7 +15,7 @@ from lsst.daf.butler.cli.cliLog import CliLog
 from data_query import DataQuery
 
 
-def _batched(items: list[Any], n: int) -> Generator[list[Any]]:
+def _batched(items: list[Any], n: int) -> Generator:
     iterator = iter(items)
     while batch := list(itertools.islice(iterator, n)):
         yield batch

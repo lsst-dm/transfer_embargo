@@ -4,8 +4,10 @@
   embargo_hours: 80.0
   where: ""
   is_raw: False
+  instrument: LATISS
 - dataset_types: "raw"
   collections: "LATISS/raw/all"
   embargo_hours: 0.1
   where: ""
   is_raw: True
+  instrument: LATISS

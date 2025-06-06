@@ -1,6 +1,7 @@
 # config.yaml
 - dataset_types: "raw"
   collections: "LATISS/raw/all"
-  where: "instrument='LATISS'"
+  where: ""
   embargo_hours: 0.1
   is_raw: True
+  instrument: LATISS

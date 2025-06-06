@@ -1,12 +1,14 @@
-import os
 import shutil
 import subprocess
 import tempfile
 import unittest
 import yaml
+from pathlib import Path
 
 import pytest
 from lsst.daf.butler import Butler
+
+TEST_DIR = Path(__file__).parent
 
 
 def is_it_there(
@@ -19,9 +21,8 @@ def is_it_there(
     past_embargo_hours=None,
     now_time_embargo: str = None,
     dataqueries: list[dict] = [],
-    desturiprefix: str = "tests/data/",
     use_dataquery_config=None,
-    dataquery_config_file: str = "./config.yaml",
+    dataquery_config_file: str = (TEST_DIR / "config.yaml"),
 ):
     """Execute and validate the transfer of data between Butler repositories.
 
@@ -55,9 +56,6 @@ def is_it_there(
         Current time in ISOT, TAI timescale.
     dataqueries : `list` of `dict`, optional
         Dataset type(s) and collection(s).
-    desturiprefix : `str`, optional
-        Destination URI prefix for raw data ingestion.
-        Default is "tests/data/".
     use_dataquery_config : `bool`, optional
         If True, uses configuration from the specified config file.
     dataquery_config_file : `str`, optional
@@ -86,14 +84,12 @@ def is_it_there(
     # and the cli options
     subprocess_args = [
         "python",
-        "../src/move_embargo_args.py",
+        str(TEST_DIR.parent / "src" / "move_embargo_args.py"),
         temp_from,
         temp_to,
         "LATISS",
         "--log",
         log,
-        "--dest_uri_prefix",
-        desturiprefix,
     ]
     if use_dataquery_config:
         # define the config path
@@ -277,15 +273,14 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         Performs the setup necessary to run
         all tests
         """
-        temp_dir = tempfile.TemporaryDirectory()
-        temp_from_path = os.path.join(temp_dir.name, "temp_test_from")
-        temp_to_path = os.path.join(temp_dir.name, "temp_test_to")
-        temp_dest_ingest = os.path.join(temp_dir.name, "temp_dest_ingest")
-        shutil.copytree("./data/test_from", temp_from_path)
-        os.system("chmod u+x create_testto_butler.sh")
+        temp_dir = Path(tempfile.TemporaryDirectory().name)
+        temp_from_path = temp_dir / "temp_test_from"
+        temp_to_path = temp_dir / "temp_test_to"
+        temp_dest_ingest = temp_dir / "temp_dest_ingest"
+        shutil.copytree(TEST_DIR / "data" / "test_from", temp_from_path)
         subprocess.call(
             [
-                "./create_testto_butler.sh",
+                TEST_DIR / "create_testto_butler.sh",
                 temp_to_path,
             ]
         )
@@ -302,7 +297,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
         """
         Removes all test files created by tests
         """
-        shutil.rmtree(self.temp_dir.name, ignore_errors=True)
+        shutil.rmtree(self.temp_dir, ignore_errors=True)
 
     # potentially we won't need to test this in the future
     # @KT - we were not planning on running multiple args from
@@ -345,20 +340,21 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                 {
                     "dataset_types": "raw",
                     "collections": "LATISS/raw/all",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": 24730.76708730028,
                     "is_raw": True,
+                    "instrument": "LATISS",
                 },
                 {
                     "dataset_types": "calexp",
                     "collections": "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/"
                     + "w_2022_46/PREOPS-1616/20221111T182132Z",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": 80,
                     "is_raw": False,
+                    "instrument": "LATISS",
                 },
             ],
-            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_calexp_no_copy(self):
@@ -383,13 +379,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                     "dataset_types": "calexp",
                     "collections": "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/"
                     + "w_2022_46/PREOPS-1616/20221111T182132Z",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": 80.0,
                     "is_raw": False,
+                    "instrument": "LATISS",
                 }
             ],
-            desturiprefix=self.temp_dest_ingest,
-            # desturiprefix="tests/data/",
         )
 
     # first a a big group of calexp tests
@@ -413,9 +408,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             past_embargo_hours="18.5hr",
             now_time_embargo=now_time_embargo,
-            desturiprefix=self.temp_dest_ingest,
             use_dataquery_config=True,
-            dataquery_config_file="./yamls/config_calexp.yaml",
+            dataquery_config_file=(TEST_DIR / "yamls" / "config_calexp.yaml"),
         )
 
     def test_calexp_should_copy_yaml(self):
@@ -437,9 +431,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             log=self.log,
             now_time_embargo=now_time_embargo,
-            desturiprefix=self.temp_dest_ingest,
             use_dataquery_config=True,
-            dataquery_config_file="./yamls/config_calexp.yaml",
+            dataquery_config_file=(TEST_DIR / "yamls" / "config_calexp.yaml"),
         )
 
     def test_calexp_yaml_pasttime_1_hr(self):
@@ -462,9 +455,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             past_embargo_hours="1hr",
             now_time_embargo=now_time_embargo,
-            desturiprefix=self.temp_dest_ingest,
             use_dataquery_config=True,
-            dataquery_config_file="./yamls/config_calexp.yaml",
+            dataquery_config_file=(TEST_DIR / "yamls" / "config_calexp.yaml"),
         )
 
     '''
@@ -503,7 +495,6 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             now_time_embargo=now_time_embargo,
             use_dataquery_config=True,
             dataquery_config_file="./yamls/config_all_embargohrs.yaml",
-            desturiprefix=self.temp_dest_ingest,
         )
     '''
 
@@ -530,13 +521,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                     "dataset_types": "calexp",
                     "collections": "LATISS/runs/AUXTEL_DRP_IMAGING_2022-11A/"
                     + "w_2022_46/PREOPS-1616/20221111T182132Z",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": 80,
                     "is_raw": False,
+                    "instrument": "LATISS",
                 }
             ],
-            desturiprefix=self.temp_dest_ingest,
-            # desturiprefix="tests/data/",
         )
 
     def test_raw_and_calexp_should_copy_yaml(self):
@@ -574,8 +564,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             log=self.log,
             now_time_embargo=now_time_embargo,
             use_dataquery_config=True,
-            dataquery_config_file="./yamls/config_all.yaml",
-            desturiprefix=self.temp_dest_ingest,
+            dataquery_config_file=(TEST_DIR / "yamls" / "config_all.yaml"),
         )
 
     def test_raw_should_copy_yaml(self):
@@ -606,9 +595,8 @@ class TestMoveEmbargoArgs(unittest.TestCase):
             self.temp_to_path,
             log=self.log,
             now_time_embargo=now_time_embargo,
-            desturiprefix=self.temp_dest_ingest,
             use_dataquery_config=True,
-            dataquery_config_file="./yamls/config_raw.yaml",
+            dataquery_config_file=(TEST_DIR / "yamls" / "config_raw.yaml"),
         )
 
     @pytest.mark.xfail(strict=True)
@@ -645,12 +633,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                 {
                     "dataset_types": "raw",
                     "collections": "LATISS/raw/all",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": 0.1,
                     "is_raw": True,
+                    "instrument": "LATISS",
                 }
             ],
-            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_after_now_01(self):
@@ -684,12 +672,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                 {
                     "dataset_types": "raw",
                     "collections": "LATISS/raw/all",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": 0.1,
                     "is_raw": True,
+                    "instrument": "LATISS",
                 }
             ],
-            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_nothing_copies(self):
@@ -722,12 +710,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                 {
                     "dataset_types": "raw",
                     "collections": "LATISS/raw/all",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": embargo_hours,
                     "is_raw": True,
+                    "instrument": "LATISS",
                 }
             ],
-            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_copy_just_one(self):
@@ -760,12 +748,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                 {
                     "dataset_types": "raw",
                     "collections": "LATISS/raw/all",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": embargo_hours,
                     "is_raw": True,
+                    "instrument": "LATISS",
                 }
             ],
-            desturiprefix=self.temp_dest_ingest,
         )
 
     # test the other datatypes:
@@ -802,12 +790,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                 {
                     "dataset_types": "raw",
                     "collections": "LATISS/raw/all",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": 0.1,
                     "is_raw": True,
+                    "instrument": "LATISS",
                 }
             ],
-            desturiprefix=self.temp_dest_ingest,
         )
 
     @pytest.mark.xfail(strict=True)
@@ -847,12 +835,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                 {
                     "dataset_types": "raw",
                     "collections": "LATISS/raw/all",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": 0.1,
                     "is_raw": True,
+                    "instrument": "LATISS",
                 }
             ],
-            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_after_now_05(self):
@@ -886,12 +874,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                 {
                     "dataset_types": "raw",
                     "collections": "LATISS/raw/all",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": 0.5,
                     "is_raw": True,
+                    "instrument": "LATISS",
                 }
             ],
-            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_main_copy(self):
@@ -925,12 +913,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                 {
                     "dataset_types": "raw",
                     "collections": "LATISS/raw/all",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": embargo_hours,
                     "is_raw": True,
+                    "instrument": "LATISS",
                 }
             ],
-            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_main_copy_midnight(self):
@@ -964,12 +952,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                 {
                     "dataset_types": "raw",
                     "collections": "LATISS/raw/all",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": embargo_hours,
                     "is_raw": True,
+                    "instrument": "LATISS",
                 }
             ],
-            desturiprefix=self.temp_dest_ingest,
         )
 
     def test_main_midnight_precision(self):
@@ -1003,12 +991,12 @@ class TestMoveEmbargoArgs(unittest.TestCase):
                 {
                     "dataset_types": "raw",
                     "collections": "LATISS/raw/all",
-                    "where": "instrument='LATISS'",
+                    "where": "",
                     "embargo_hours": embargo_hours,
                     "is_raw": True,
+                    "instrument": "LATISS",
                 }
             ],
-            desturiprefix=self.temp_dest_ingest,
         )
 
 
