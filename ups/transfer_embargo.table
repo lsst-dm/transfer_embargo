@@ -1,3 +1,0 @@
-setupRequired(daf_butler)
-
-envPrepend(PYTHONPATH, ${PRODUCT_DIR}/src)
