@@ -3,7 +3,7 @@ FROM ghcr.io/lsst/scipipe:al9-${STACKVER}
 
 # Copy code and configuration
 ENV SWDIR="/opt/lsst/transfer_embargo"
-COPY src/transfer_zip.py src/transfer_zip.sh src/data_query.py "$SWDIR/"
+COPY src/transfer_raw_zip.py src/transfer_raw_zip.sh src/data_query.py "$SWDIR/"
 
 # Define the environment variables
 ENV TMPDIR="/tmp"
@@ -23,4 +23,4 @@ RUN groupadd -g 4085 -o rubin_users
 RUN useradd -m -u 18296 -g 4085 -o -s /bin/bash rubinmgr
 USER lsst
 
-CMD "$SWDIR/transfer_zip.sh"
+CMD "$SWDIR/transfer_raw_zip.sh"

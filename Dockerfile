@@ -2,18 +2,10 @@
 FROM python:3.11
 
 # Copy source code and test files
-COPY requirements.txt /opt/lsst/transfer_embargo/
-COPY src/ /opt/lsst/transfer_embargo/src/
-COPY tests_docker/ /opt/lsst/transfer_embargo/tests_docker/
+COPY src/data_query.py src/transfer_non_raw.py /opt/lsst/transfer_embargo/
 
 # Set the working directory
 WORKDIR /opt/lsst/transfer_embargo
-
-# List files for debugging
-# RUN ls -la /opt/lsst/transfer_embargo/
-# RUN ls -R /opt/lsst/transfer_embargo/src/
-# RUN ls -R /opt/lsst/transfer_embargo/tests_docker/
-# RUN ls -R /opt/lsst/transfer_embargo/tests/data/test_from/
 
 RUN pip install -r requirements.txt
 
@@ -30,6 +22,4 @@ ENV DATAQUERIES '{ "datasettype": "raw", "collections": "LATISS/raw/all"}'
 ENV LOG "True"
 ENV PASTEMBARGO "1.0"
 
-#CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --log \"$LOG\""]
-
-CMD ["/bin/sh", "-c", "python src/move_embargo_args.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" --dataqueries \"$DATAQUERIES\""]
+CMD ["/bin/sh", "-c", "python transfer_non_raw.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" --dataqueries \"$DATAQUERIES\""]

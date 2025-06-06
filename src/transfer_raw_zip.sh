@@ -25,7 +25,7 @@ source /opt/lsst/software/stack/loadLSST.sh
 setup lsst_distrib
 # DRY_RUN and NOW may be empty, so do not quote them.
 # RUCIO may hold multiple options, so do not quote it.
-echo python "$SWDIR"/transfer_zip.py \
+echo python "$SWDIR"/transfer_raw_zip.py \
     $DRY_RUN \
     $NOW \
     -C "$TRANSFER_CONFIG" \
@@ -33,7 +33,7 @@ echo python "$SWDIR"/transfer_zip.py \
     -d "$DEST" \
     $RUCIO \
     "$FROMREPO" "$TOREPO"
-python "$SWDIR"/transfer_zip.py \
+python "$SWDIR"/transfer_raw_zip.py \
     $DRY_RUN \
     $NOW \
     -C "$TRANSFER_CONFIG" \
