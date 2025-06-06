@@ -1,12 +1,14 @@
 # Dockerfile
-FROM python:3.11
+FROM python:3.12
 
 # Copy source code and test files
-COPY src/data_query.py src/transfer_non_raw.py /opt/lsst/transfer_embargo/
+COPY src/data_query.py src/transfer_non_raw.py requirements.txt /opt/lsst/transfer_embargo/
 
 # Set the working directory
 WORKDIR /opt/lsst/transfer_embargo
 
+# Install required packages
+#
 RUN pip install -r requirements.txt
 
 # Define the environment variables

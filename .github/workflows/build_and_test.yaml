@@ -23,7 +23,7 @@ jobs:
           path: ${{ github.workspace }}/eups/
           key: ${{ runner.os }}-eups-${{ env.EUPS_DISTRIB_VERSION }}-${{ hashFiles('**/*.txt') }}
           restore-keys: ${{ runner.os }}-eups-
-      - name: Install dependencies
+      - name: Install dependencies for testing
         run: |
           curl -OL https://ls.st/lsstinstall
           chmod u+x lsstinstall
@@ -43,7 +43,7 @@ jobs:
         with:
             image: lsst-dm/transfer-non-raw
             github_token: ${{ secrets.GITHUB_TOKEN }}
-            dockerfile: Dockerfile
+            dockerfile: Dockerfile.non_raw
 
       - name: Build raw
         uses: lsst-sqre/build-and-push-to-ghcr@v1
