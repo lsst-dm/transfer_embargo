@@ -1,4 +1,4 @@
-name: cache dependencies, test, and build
+name: Test and build transfer containers
 
 on:
   push:
@@ -9,7 +9,6 @@ on:
   pull_request:
 
 env:
-  PROGRAM_NAME: transfer-embargo
   EUPS_DISTRIB_VERSION: "w_2025_19"
 
 jobs:
@@ -39,9 +38,16 @@ jobs:
           setup obs_lsst
           pytest tests
 
-      - name: docker build
+      - name: Build non-raw
         uses: lsst-sqre/build-and-push-to-ghcr@v1
         with:
             image: lsst-dm/transfer-non-raw
             github_token: ${{ secrets.GITHUB_TOKEN }}
             dockerfile: Dockerfile
+
+      - name: Build raw
+        uses: lsst-sqre/build-and-push-to-ghcr@v1
+        with:
+            image: lsst-dm/transfer-raw
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            dockerfile: Dockerfile.raw
