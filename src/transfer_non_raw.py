@@ -148,7 +148,6 @@ def transfer_data_query(data_query):
                 where = "(ingest_date overlaps :ok_timespan)"
                 where += " AND (instrument = :inst_name)"
                 where += f" AND ({data_query.where})" if data_query.where else ""
-                # data_query.where goes last to avoid injection overriding timespan
                 transfer_dataset_type(
                     dataset_type,
                     data_query.collections,
