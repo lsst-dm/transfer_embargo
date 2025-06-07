@@ -49,11 +49,6 @@ def parse_args():
         type=str,
         help="Repository to which data is transferred.",
     )
-    parser.add_argument(
-        "instrument",
-        type=str,
-        help="Name of instrument to transfer datasets for.",
-    )
 
     parser.add_argument(
         "--dry_run",
@@ -172,7 +167,7 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
             r.id
             for r in source_butler.query_dimension_records(
                 dimension,
-                instrument=config.instrument,
+                instrument=data_query.instrument,
                 where=dim_where,
                 bind=dim_bind,
                 limit=None,
@@ -188,6 +183,7 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
         logger.info(f"Processing dimension {dimension} batch {i}")
         i += 1
         where = f"({dimension}.id IN (_ids))"
+        where += f" AND (instrument = '{data_query.instrument}')"
         where += f" AND ({data_query.where})" if data_query.where else ""
         # data_query.where goes last to avoid injection overriding id list
         transfer_dataset_type(
@@ -246,7 +242,7 @@ def initialize():
         logger.warning("dry_run=True, no writes")
 
     # Define embargo and destination butler
-    source_butler = Butler(config.fromrepo, instrument=config.instrument)
+    source_butler = Butler(config.fromrepo)
     dest_butler = Butler(config.torepo, writeable=True)
 
 

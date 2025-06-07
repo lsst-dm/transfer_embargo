@@ -87,7 +87,6 @@ def is_it_there(
         str(TEST_DIR.parent / "src" / "transfer_non_raw.py"),
         temp_from,
         temp_to,
-        "LATISS",
         "--log",
         log,
     ]
