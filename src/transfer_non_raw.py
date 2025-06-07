@@ -121,7 +121,11 @@ def transfer_data_query(data_query):
     dataset_type_names = source_butler.collections._filter_dataset_types(
         [d.name for d in all_types], collections_info
     )
-    dataset_types = {d for d in all_types if d.name in dataset_type_names}
+    dataset_types = {
+        d
+        for d in all_types
+        if d.name in dataset_type_names and not d.isCalibration and d.name != "raw"
+    }
     logger.info(f"Dataset types: {dataset_types}")
 
     end_time = config.now - TimeDelta(data_query.embargo_hours * 3600, format="sec")
