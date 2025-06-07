@@ -136,7 +136,7 @@ def transfer_data_query(data_query):
         elif "exposure" in dataset_type.dimensions:
             transfer_dimension("exposure", dataset_type, data_query, ok_timespan)
         else:
-            where = "(ingest_date in _ok_timespan)"
+            where = "(ingest_date overlaps _ok_timespan)"
             where += f" AND ({data_query.where})" if data_query.where else ""
             # data_query.where goes last to avoid injection overriding timespan
             transfer_dataset_type(
