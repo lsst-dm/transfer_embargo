@@ -122,6 +122,7 @@ def transfer_data_query(data_query):
         [d.name for d in all_types], collections_info
     )
     dataset_types = {d for d in all_types if d.name in dataset_type_names}
+    logger.info(f"Dataset types: {dataset_types}")
 
     end_time = config.now - TimeDelta(data_query.embargo_hours * 3600, format="sec")
     if config.window is not None:
@@ -131,6 +132,7 @@ def transfer_data_query(data_query):
     ok_timespan = Timespan(start_time, end_time)
 
     for dataset_type in dataset_types:
+        logger.info(f"Handling dataset type: {dataset_type}")
         if "visit" in dataset_type.dimensions:
             transfer_dimension("visit", dataset_type, data_query, ok_timespan)
         elif "exposure" in dataset_type.dimensions:
@@ -167,8 +169,9 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
             )
         ]
     except EmptyQueryResultError:
-        logger.warning("No matching records for %s", dimension)
+        logger.warning("No matching records for {dimension}")
         return
+    logger.info("Got {len(ids)} dimension values for {dimension}")
     for id_batch in _batched(ids, 100):
         where = f"({dimension}.id IN (_ids))"
         where += f" AND ({data_query.where})" if data_query.where else ""
@@ -183,15 +186,16 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
 
 def transfer_dataset_type(dataset_type, collections, where, bind):
     global source_butler, logger
-    logger.info("Querying datasets: %s %s", where, bind)
+    logger.debug(f"Querying datasets: {where} {bind}")
     dataset_refs = list(
         # ok to have empty results because this is used with batching.
         source_butler.query_datasets(
             dataset_type, collections, where=where, bind=bind, explain=False, limit=None
         )
     )
+    logger.info(f"Got {len(dataset_refs)} datasets")
     for dsr_batch in _batched(dataset_refs, 1000):
-        logger.info("transfer_from(%s)", dataset_refs)
+        logger.debug("transfer_from(%s)", dataset_refs)
         if not config.dry_run:
             dest_butler.transfer_from(
                 source_butler,
@@ -220,6 +224,8 @@ def initialize():
     logger = logging.getLogger("lsst.transfer.embargo")
     logger.info("log level %s", config.log)
     logger.info("config: %s", config)
+    if config.dry_run:
+        logger.warning("dry run; no transfers will occur")
 
     # Define embargo and destination butler
     source_butler = Butler(config.fromrepo, instrument=config.instrument)
