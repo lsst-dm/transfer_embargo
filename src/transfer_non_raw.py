@@ -124,7 +124,9 @@ def transfer_data_query(data_query):
         avoid_dataset_type_names = source_butler.collections._filter_dataset_types(
             [d.name for d in all_types], avoid_collections_info
         )
-        dataset_type_names = [d for d in dataset_type_names if d not in avoid_dataset_type_names]
+        dataset_type_names = [
+            d for d in dataset_type_names if d not in avoid_dataset_type_names
+        ]
     dataset_types = {d for d in all_types if d.name in dataset_type_names}
     logger.info(f"Dataset types {len(dataset_types)}: {dataset_types}")
 
@@ -143,15 +145,15 @@ def transfer_data_query(data_query):
             elif "exposure" in dataset_type.dimensions:
                 transfer_dimension("exposure", dataset_type, data_query, ok_timespan)
             else:
-                where = "(ingest_date overlaps _ok_timespan)"
-                where += f" AND (instrument = '{data_query.instrument}')"
+                where = "(ingest_date overlaps :ok_timespan)"
+                where += " AND (instrument = :inst_name)"
                 where += f" AND ({data_query.where})" if data_query.where else ""
                 # data_query.where goes last to avoid injection overriding timespan
                 transfer_dataset_type(
                     dataset_type,
                     data_query.collections,
                     where,
-                    {"_ok_timespan": ok_timespan},
+                    {"ok_timespan": ok_timespan, "inst_name": data_query.instrument},
                 )
 
 
@@ -159,9 +161,9 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
     global config, source_butler, logger
     try:
         # data_query.where goes last to avoid injection overriding timespan
-        dim_where = f"({dimension}.timespan OVERLAPS _ok_timespan)"
+        dim_where = f"({dimension}.timespan OVERLAPS :ok_timespan)"
         dim_where += f" AND ({data_query.where})" if data_query.where else ""
-        dim_bind = {"_ok_timespan": ok_timespan}
+        dim_bind = {"ok_timespan": ok_timespan}
         logger.info("Querying dimension %s: %s %s", dimension, dim_where, dim_bind)
         ids = [
             r.id
@@ -182,15 +184,15 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
     for id_batch in _batched(ids, 100):
         logger.info(f"Processing dimension {dimension} batch {i}")
         i += 1
-        where = f"({dimension}.id IN (_ids))"
-        where += f" AND (instrument = '{data_query.instrument}')"
+        where = f"({dimension}.id IN (:ids))"
+        where += " AND (instrument = :inst_name)"
         where += f" AND ({data_query.where})" if data_query.where else ""
         # data_query.where goes last to avoid injection overriding id list
         transfer_dataset_type(
             dataset_type,
             data_query.collections,
             where,
-            {"_ids": id_batch},
+            {"ids": id_batch, "inst_name": data_query.instrument},
         )
 
 
@@ -200,7 +202,12 @@ def transfer_dataset_type(dataset_type, collections, where, bind):
     dataset_refs = list(
         # ok to have empty results because this is used with batching.
         source_butler.query_datasets(
-            dataset_type, collections, where=where, bind=bind, explain=False, limit=None
+            dataset_type,
+            collections,
+            where=where,
+            bind=bind,
+            explain=False,
+            limit=None,
         )
     )
     logger.info(f"Got {len(dataset_refs)} datasets")
