@@ -214,11 +214,11 @@ def transfer_dataset_type(dataset_type, collections, where, bind):
     for dsr_batch in _batched(dataset_refs, 1000):
         logger.info(f"Processing dataset batch {i}")
         i += 1
-        logger.debug("transfer_from(%s)", dataset_refs)
+        logger.debug("transfer_from(%s)", dsr_batch)
         if not config.dry_run:
             dest_butler.transfer_from(
                 source_butler,
-                dataset_refs,
+                dsr_batch,
                 transfer="copy",
                 skip_missing=True,
                 register_dataset_types=True,
