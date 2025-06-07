@@ -1,0 +1,10 @@
+- dataset_types: "*"
+  collections: "LSSTCam/runs/*"
+  embargo_hours: 720
+  instrument: "LSSTCam"
+  where: ""
+  avoid_dstypes_from_collections:
+  - "refcats/*"
+  - "skymaps"
+  - "pretrained_models/*"
+  - "LSSTCam/raw/all"
