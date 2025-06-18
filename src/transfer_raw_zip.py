@@ -548,6 +548,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
                         zip_file.write(f, f, compress_type=zipfile.ZIP_STORED)
                     else:
                         zip_file.write(f, f, compress_type=zipfile.ZIP_DEFLATED)
+        after_creation_stat = os.stat(zip_path)
 
         # Compute the Rucio hashes
         # We do this here rather than internally in RucioInterface so that we
@@ -556,6 +557,11 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         # in case the transfer to its final destination is corrupted.
         if config.rucio_rse:
             hashes = RucioInterface.compute_hashes(zip_path)
+            if hashes[0] != after_creation_stat.st_size:
+                logger.error(
+                    f"File size mismatch for {zip_path}:"
+                    f" {after_creation_stat.st_size} reads as {hashes[0]}"
+                )
 
         # Fourth race condition check
         if dest_path.exists():
@@ -568,7 +574,21 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
                 # The final race condition check is that transfer_from()
                 # will not overwrite.
                 try:
+                    before_copy_stat = os.stat(zip_path)
+                    if before_copy_stat.st_size != after_creation_stat.st_size:
+                        logger.error(
+                            f"File size mismatch for {zip_path}:"
+                            f" {after_creation_stat.st_size} is now"
+                            f" {before_copy_stat.st_size} before copy"
+                        )
                     dest_path.transfer_from(ResourcePath(zip_path), "copy")
+                    after_copy_stat = os.stat(dest_path.ospath)
+                    if after_copy_stat.st_size != after_creation_stat.st_size:
+                        logger.error(
+                            f"File size mismatch for {zip_path}:"
+                            f" {after_creation_stat.st_size} is now"
+                            f" {after_copy_stat.st_size} after copy"
+                        )
                 except FileExistsError:
                     logger.info("Zip exists in transfer_from: %s", dest_path)
                     return
