@@ -119,10 +119,11 @@ class RucioInterface:
 
     def _compute_datasets(
         self, tracts: set[int], instrument: str, day_obs: int, obs_id: str
-    ) -> set[str]:
+    ) -> list[str]:
         """Generate standardized Rucio Dataset names for raw data.
 
         Encapsulates the Dataset naming pattern.
+        Obs Dataset (containing a single observation) is always the last one.
 
         Parameters
         ----------
@@ -149,9 +150,10 @@ class RucioInterface:
         else:
             dataset_id = f"Dataset/{instrument}/raw/NoTract/{day_obs}"
             datasets.add(dataset_id)
+        dataset_list = list(datasets)
         # Per observation for tape
-        datasets.add(f"Dataset/{instrument}/raw/Obs/{day_obs}/{obs_id}")
-        return datasets
+        dataset_list.append(f"Dataset/{instrument}/raw/Obs/{day_obs}/{obs_id}")
+        return dataset_list
 
     def _add_replica(
         self, did: dict[str, int | str | dict | None], dry_run: bool
@@ -248,7 +250,13 @@ class RucioInterface:
                 raise
 
     def register(
-        self, name: str, hashes: tuple[int, str, str], tracts: set[int], dry_run: bool
+        self,
+        name: str,
+        hashes: tuple[int, str, str],
+        tracts: set[int],
+        *,
+        finish: bool = False,
+        dry_run: bool = True,
     ) -> None:
         """Register a file in Rucio.
 
@@ -260,6 +268,8 @@ class RucioInterface:
             Length, MD5, and Adler32 hashes of the file.
         tracts: `set` [ `int` ]
             Set of tracts that the file overlaps (empty if not on-sky).
+        finish: `bool`
+            If true, close out the Obs dataset.
         dry_run: `bool`
             If true, only log, do not write anything.
         """
@@ -274,6 +284,21 @@ class RucioInterface:
         datasets = self._compute_datasets(tracts, instrument, int(day_obs), obs_id)
         for dataset in datasets:
             self._add_file_to_dataset(did, dataset, dry_run)
+
+        if not finish:
+            return
+
+        # Assume "Obs" Dataset is the last one.
+        logger.info("Closing and setting metadata on dataset %s", datasets[-1])
+        if dry_run:
+            return
+        self.did_client.close(scope="raw", name=datasets[-1])
+        self.did_client.set_metadata(
+            scope="raw",
+            name=datasets[-1],
+            key="arcBackup",
+            value="SLAC_RAW_DISK_BKUP:need",
+        )
 
 
 def parse_args():
@@ -639,14 +664,18 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         logger.info("Registering zip in Rucio")
         with time_this(logger, "Registering in Rucio"):
             rucio_interface.register(
-                f"{instrument}/{exp.day_obs}/{zip_name}", hashes, tracts, config.dry_run
+                f"{instrument}/{exp.day_obs}/{zip_name}",
+                hashes,
+                tracts,
+                dry_run=config.dry_run,
             )
             logger.info("Registering dimensions in Rucio")
             rucio_interface.register(
                 f"{instrument}/{exp.day_obs}/{exp.obs_id}_dimensions.yaml",
                 dim_hashes,
                 tracts,
-                config.dry_run,
+                finish=True,
+                dry_run=config.dry_run,
             )
 
 
