@@ -84,10 +84,9 @@ def is_it_there(
     # and the cli options
     subprocess_args = [
         "python",
-        str(TEST_DIR.parent / "src" / "move_embargo_args.py"),
+        str(TEST_DIR.parent / "src" / "transfer_non_raw.py"),
         temp_from,
         temp_to,
-        "LATISS",
         "--log",
         log,
     ]
@@ -304,7 +303,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
     # cli
     def test_raw_and_calexp_should_copy(self):
         """
-        Test that move_embargo_args runs for the calexp datatype
+        Test that transfer_non_raw runs for the calexp datatype
         and for the raw datatype at the same time
         """
         # first raw, then calexp
@@ -359,7 +358,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     def test_calexp_no_copy(self):
         """
-        Test that move_embargo_args does not move
+        Test that transfer_non_raw does not move
         the calexp data that is too close to embargo
         """
         now_time_embargo = "2022-11-11T03:35:12.836981"
@@ -390,7 +389,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
     # first a a big group of calexp tests
     def test_calexp_should_copy_yaml_pasttime_18_half_hr(self):
         """
-        Test that move_embargo_args runs for the calexp datatype
+        Test that transfer_non_raw runs for the calexp datatype
         read from the config.yaml file
         """
         now_time_embargo = "2022-11-13T03:35:12.836981"
@@ -414,7 +413,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     def test_calexp_should_copy_yaml(self):
         """
-        Test that move_embargo_args runs for the calexp datatype
+        Test that transfer_non_raw runs for the calexp datatype
         read from the config.yaml file
         """
         now_time_embargo = "2022-11-13T03:35:12.836981"
@@ -437,7 +436,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     def test_calexp_yaml_pasttime_1_hr(self):
         """
-        Test that move_embargo_args runs for the calexp datatype
+        Test that transfer_non_raw runs for the calexp datatype
         read from the config.yaml file
         """
         now_time_embargo = "2022-11-13T03:35:12.836981"
@@ -464,7 +463,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
     # embargohrs arguments from the config yaml
     def test_raw_and_calexp_should_move_yaml_embargo_hrs_in_yaml(self):
         """
-        Test that move_embargo_args runs for the calexp datatype
+        Test that transfer_non_raw runs for the calexp datatype
         and for the raw datatype at the same time
         """
         # first raw, then calexp
@@ -500,7 +499,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     def test_calexp_should_copy(self):
         """
-        Test that move_embargo_args runs for the calexp datatype
+        Test that transfer_non_raw runs for the calexp datatype
         """
         now_time_embargo = "2022-11-13T03:35:12.836981"
         # '2022-11-09 01:03:22.888003'
@@ -531,7 +530,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     def test_raw_and_calexp_should_copy_yaml(self):
         """
-        Test that move_embargo_args runs for the calexp datatype
+        Test that transfer_non_raw runs for the calexp datatype
         and for the raw datatype at the same time
         """
         # first raw, then calexp
@@ -603,7 +602,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
     def test_should_fail_if_move_is_true(self):
         """
         Move being true is scary because it deletes everything
-        in the source repo. Let's make sure that move_embargo_args
+        in the source repo. Let's make sure that transfer_non_raw
         has a mechnism in place to fail if you set move to be true
         """
         move = "anything"
@@ -760,7 +759,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
     # first goodseeingdeepcoadd
     def test_raw_datatypes(self):
         """
-        Test that move_embargo_args runs for a list
+        Test that transfer_non_raw runs for a list
         of input datatypes
         """
         # now_time_embargo = "now"
@@ -801,7 +800,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
     @pytest.mark.xfail(strict=True)
     def test_raw_datatypes_should_fail(self):
         """
-        Test that move_embargo_args runs for a list
+        Test that transfer_non_raw runs for a list
         of input datatypes
         """
         # now_time_embargo = "now"
@@ -884,7 +883,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     def test_main_copy(self):
         """
-        Run move_embargo_args to move some IDs from the fake_from butler
+        Run transfer_non_raw to move some IDs from the fake_from butler
         to the fake_to butler and test which ones moved
         """
         now_time_embargo = "2020-03-01T23:59:59.999999"
@@ -923,7 +922,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     def test_main_copy_midnight(self):
         """
-        Run move_embargo_args to move some IDs from the fake_from butler
+        Run transfer_non_raw to move some IDs from the fake_from butler
         to the fake_to butler and test which ones moved
         """
         now_time_embargo = "2020-03-02T00:00:00.000000"
@@ -962,7 +961,7 @@ class TestMoveEmbargoArgs(unittest.TestCase):
 
     def test_main_midnight_precision(self):
         """
-        Run move_embargo_args to move some IDs from the fake_from butler
+        Run transfer_non_raw to move some IDs from the fake_from butler
         to the fake_to butler and test which ones moved
         """
         now_time_embargo = "2020-03-02T00:00:00.000000"

@@ -1,0 +1,27 @@
+# Dockerfile
+FROM python:3.12
+
+# Copy source code and test files
+COPY src/data_query.py src/transfer_non_raw.py requirements.txt /opt/lsst/transfer_embargo/
+
+# Set the working directory
+WORKDIR /opt/lsst/transfer_embargo
+
+# Install required packages
+#
+RUN pip install -r requirements.txt
+
+# Define the environment variables
+# These are written over if they are re-defined
+# by the cronjob or on the command line deploy
+# of the pod
+ENV FROMREPO "tests_docker/temp_from"
+ENV TOREPO "tests_docker/temp_to"
+ENV INSTRUMENT "LATISS"
+ENV NOW "2020-03-01 23:59:59.999999"
+ENV EMBARGO_HRS "7200"
+ENV DATAQUERIES '{ "datasettype": "raw", "collections": "LATISS/raw/all"}'
+ENV LOG "True"
+ENV PASTEMBARGO "1.0"
+
+CMD ["/bin/sh", "-c", "python transfer_non_raw.py \"$FROMREPO\" \"$TOREPO\" \"$INSTRUMENT\" --nowtime \"$NOW\" --embargohours \"$EMBARGO_HRS\" --log \"$LOG\" --pastembargohours \"$PASTEMBARGO\" --dataqueries \"$DATAQUERIES\""]

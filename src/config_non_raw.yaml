@@ -1,0 +1,11 @@
+- dataset_types: "*"
+  collections: "LSSTCam/runs/DRP/20250415_20250422/d_2025_04_23/DM-50409"
+  embargo_hours: 720
+  instrument: "LSSTCam"
+  where: ""
+  avoid_dstypes_from_collections:
+  - "refcats/*"
+  - "skymaps"
+  - "pretrained_models/*"
+  - "LSSTCam/raw/all"
+  - "LSSTCam/calib"

@@ -1,0 +1,69 @@
+name: Test and build transfer containers
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+
+env:
+  EUPS_DISTRIB_VERSION: "w_2025_19"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/eups/
+          key: ${{ runner.os }}-eups-${{ env.EUPS_DISTRIB_VERSION }}-${{ hashFiles('**/*.txt') }}
+          restore-keys: ${{ runner.os }}-eups-
+
+      - name: Install dependencies for testing
+        run: |
+          curl -OL https://ls.st/lsstinstall
+          chmod u+x lsstinstall
+          ./lsstinstall -T ${{ env.EUPS_DISTRIB_VERSION }}
+          source loadLSST.sh
+          eups distrib install -t ${{ env.EUPS_DISTRIB_VERSION }} obs_lsst
+          curl -sSL https://raw.githubusercontent.com/lsst/shebangtron/main/shebangtron | python
+
+      - name: Run tests
+        run: |
+          source loadLSST.sh
+          setup obs_lsst
+          pytest tests
+
+  build_non_raw:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Build non-raw
+        uses: lsst-sqre/build-and-push-to-ghcr@v1
+        with:
+            image: lsst-dm/transfer-non-raw
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            dockerfile: Dockerfile.non_raw
+
+  build_raw:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Build raw
+        uses: lsst-sqre/build-and-push-to-ghcr@v1
+        with:
+            image: lsst-dm/transfer-raw
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            dockerfile: Dockerfile.raw

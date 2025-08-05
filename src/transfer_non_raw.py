@@ -11,6 +11,7 @@ from lsst.daf.butler import (
     Timespan,
 )
 from lsst.daf.butler.cli.cliLog import CliLog
+from lsst.daf.butler.logging import ButlerMDC
 
 from data_query import DataQuery
 
@@ -47,11 +48,6 @@ def parse_args():
         "torepo",
         type=str,
         help="Repository to which data is transferred.",
-    )
-    parser.add_argument(
-        "instrument",
-        type=str,
-        help="Name of instrument to transfer datasets for.",
     )
 
     parser.add_argument(
@@ -121,7 +117,18 @@ def transfer_data_query(data_query):
     dataset_type_names = source_butler.collections._filter_dataset_types(
         [d.name for d in all_types], collections_info
     )
+    if data_query.avoid_dstypes_from_collections is not None:
+        avoid_collections_info = source_butler.collections.query_info(
+            data_query.avoid_dstypes_from_collections, include_summary=True
+        )
+        avoid_dataset_type_names = source_butler.collections._filter_dataset_types(
+            [d.name for d in all_types], avoid_collections_info
+        )
+        dataset_type_names = [
+            d for d in dataset_type_names if d not in avoid_dataset_type_names
+        ]
     dataset_types = {d for d in all_types if d.name in dataset_type_names}
+    logger.info(f"Dataset types {len(dataset_types)}: {dataset_types}")
 
     end_time = config.now - TimeDelta(data_query.embargo_hours * 3600, format="sec")
     if config.window is not None:
@@ -131,35 +138,37 @@ def transfer_data_query(data_query):
     ok_timespan = Timespan(start_time, end_time)
 
     for dataset_type in dataset_types:
-        if "visit" in dataset_type.dimensions:
-            transfer_dimension("visit", dataset_type, data_query, ok_timespan)
-        elif "exposure" in dataset_type.dimensions:
-            transfer_dimension("exposure", dataset_type, data_query, ok_timespan)
-        else:
-            where = "(ingest_date in _ok_timespan)"
-            where += f" AND ({data_query.where})" if data_query.where else ""
-            # data_query.where goes last to avoid injection overriding timespan
-            transfer_dataset_type(
-                dataset_type,
-                data_query.collections,
-                where,
-                {"_ok_timespan": ok_timespan},
-            )
+        logger.info(f"Handling dataset type: {dataset_type}")
+        with ButlerMDC.set_mdc({"LABEL": dataset_type.name}):
+            if "visit" in dataset_type.dimensions:
+                transfer_dimension("visit", dataset_type, data_query, ok_timespan)
+            elif "exposure" in dataset_type.dimensions:
+                transfer_dimension("exposure", dataset_type, data_query, ok_timespan)
+            else:
+                where = "(ingest_date overlaps :ok_timespan)"
+                where += " AND (instrument = :inst_name)"
+                where += f" AND ({data_query.where})" if data_query.where else ""
+                transfer_dataset_type(
+                    dataset_type,
+                    data_query.collections,
+                    where,
+                    {"ok_timespan": ok_timespan, "inst_name": data_query.instrument},
+                )
 
 
 def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
     global config, source_butler, logger
     try:
         # data_query.where goes last to avoid injection overriding timespan
-        dim_where = f"({dimension}.timespan OVERLAPS _ok_timespan)"
+        dim_where = f"({dimension}.timespan OVERLAPS :ok_timespan)"
         dim_where += f" AND ({data_query.where})" if data_query.where else ""
-        dim_bind = {"_ok_timespan": ok_timespan}
+        dim_bind = {"ok_timespan": ok_timespan}
         logger.info("Querying dimension %s: %s %s", dimension, dim_where, dim_bind)
         ids = [
             r.id
             for r in source_butler.query_dimension_records(
                 dimension,
-                instrument=config.instrument,
+                instrument=data_query.instrument,
                 where=dim_where,
                 bind=dim_bind,
                 limit=None,
@@ -167,35 +176,49 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
             )
         ]
     except EmptyQueryResultError:
-        logger.warning("No matching records for %s", dimension)
+        logger.warning("No matching records for {dimension}")
         return
+    logger.info(f"Got {len(ids)} dimension values for {dimension}")
+    i = 0
     for id_batch in _batched(ids, 100):
-        where = f"({dimension}.id IN (_ids))"
+        logger.info(f"Processing dimension {dimension} batch {i}")
+        i += 1
+        where = f"({dimension}.id IN (:ids))"
+        where += " AND (instrument = :inst_name)"
         where += f" AND ({data_query.where})" if data_query.where else ""
         # data_query.where goes last to avoid injection overriding id list
         transfer_dataset_type(
             dataset_type,
             data_query.collections,
             where,
-            {"_ids": id_batch},
+            {"ids": id_batch, "inst_name": data_query.instrument},
         )
 
 
 def transfer_dataset_type(dataset_type, collections, where, bind):
     global source_butler, logger
-    logger.info("Querying datasets: %s %s", where, bind)
+    logger.debug(f"Querying datasets: {where} {bind}")
     dataset_refs = list(
         # ok to have empty results because this is used with batching.
         source_butler.query_datasets(
-            dataset_type, collections, where=where, bind=bind, explain=False, limit=None
+            dataset_type,
+            collections,
+            where=where,
+            bind=bind,
+            explain=False,
+            limit=None,
         )
     )
+    logger.info(f"Got {len(dataset_refs)} datasets")
+    i = 0
     for dsr_batch in _batched(dataset_refs, 1000):
-        logger.info("transfer_from(%s)", dataset_refs)
+        logger.info(f"Processing dataset batch {i}")
+        i += 1
+        logger.debug("transfer_from(%s)", dsr_batch)
         if not config.dry_run:
             dest_butler.transfer_from(
                 source_butler,
-                dataset_refs,
+                dsr_batch,
                 transfer="copy",
                 skip_missing=True,
                 register_dataset_types=True,
@@ -217,12 +240,15 @@ def initialize():
     # Initialize the logger and set the level
     CliLog.initLog(longlog=True)
     CliLog.setLogLevels(logLevels=[(None, config.log)])
-    logger = logging.getLogger("lsst.transfer.embargo")
+    ButlerMDC.add_mdc_log_record_factory()
+    logger = logging.getLogger("lsst.transfer.embargo.non_raw")
     logger.info("log level %s", config.log)
     logger.info("config: %s", config)
+    if config.dry_run:
+        logger.warning("dry_run=True, no writes")
 
     # Define embargo and destination butler
-    source_butler = Butler(config.fromrepo, instrument=config.instrument)
+    source_butler = Butler(config.fromrepo)
     dest_butler = Butler(config.torepo, writeable=True)
 
 

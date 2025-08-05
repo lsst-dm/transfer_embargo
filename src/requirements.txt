@@ -1,2 +1,0 @@
-astropy==5.2.0
-lsst.daf.butler=='gf8dc3d25d9+8feadece27'

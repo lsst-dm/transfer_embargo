@@ -1,5 +1,4 @@
 lsst-daf-butler
-psycopg2
+psycopg2-binary
 botocore
 boto3
-rucio-clients

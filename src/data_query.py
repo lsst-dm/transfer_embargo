@@ -21,7 +21,7 @@
 
 __all__ = ["DataQuery"]
 
-from typing import Any, Self
+from typing import Any, Optional, Self
 
 import pydantic
 import yaml
@@ -42,6 +42,9 @@ class DataQuery(pydantic.BaseModel):
 
     embargo_hours: float
     """How long to embargo the selected datasets (hours)."""
+
+    avoid_dstypes_from_collections: Optional[str | list[str]] = None
+    """Collections containing dataset types to avoid transferring."""
 
     @classmethod
     def from_yaml(cls, yaml_source: Any) -> list[Self]:
