@@ -71,6 +71,11 @@ def parse_args():
         help="Batch size (default=1000).",
     )
     parser.add_argument(
+        "--register_dataset_types",
+        action="store_true",
+        help="Register any new dataset types.",
+    )
+    parser.add_argument(
         "--log",
         type=str,
         required=False,
@@ -152,7 +157,7 @@ def main():
             batch,
             transfer="copy",
             skip_missing=True,
-            register_dataset_types=False,
+            register_dataset_types=config.register_dataset_types,
             transfer_dimensions=False,
         )
 
