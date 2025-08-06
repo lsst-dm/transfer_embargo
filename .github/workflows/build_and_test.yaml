@@ -61,7 +61,7 @@ jobs:
       - name: Checkout the repo
         uses: actions/checkout@v4
 
-      - name: Build non-raw
+      - name: Build from-list
         uses: lsst-sqre/build-and-push-to-ghcr@v1
         with:
             image: lsst-dm/transfer-from-list

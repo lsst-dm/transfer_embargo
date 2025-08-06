@@ -13,7 +13,7 @@ RUN pip install -r requirements.txt
 
 # Define the environment variables
 # INFILE is required
-ENV INFILE ""
-ENV OTHER_ARGS ""
+ENV INFILE=""
+ENV OTHER_ARGS=""
 
 CMD ["/bin/sh", "-c", "python transfer_from_list.py $OTHER_ARGS \"$INFILE\""]
