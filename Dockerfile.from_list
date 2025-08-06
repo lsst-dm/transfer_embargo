@@ -1,0 +1,19 @@
+# Dockerfile
+FROM python:3.12
+
+# Copy source code and test files
+COPY src/transfer_from_list.py requirements.txt /opt/lsst/transfer_embargo/
+
+# Set the working directory
+WORKDIR /opt/lsst/transfer_embargo
+
+# Install required packages
+#
+RUN pip install -r requirements.txt
+
+# Define the environment variables
+# INFILE is required
+ENV INFILE=""
+ENV OTHER_ARGS=""
+
+CMD ["/bin/sh", "-c", "python transfer_from_list.py $OTHER_ARGS \"$INFILE\""]
