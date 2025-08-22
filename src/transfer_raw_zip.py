@@ -306,11 +306,13 @@ class RucioInterface:
             value="need",
         )
 
+
 def comma_separated_list(arg):
     """
     Custom type function to split a comma-separated string into a list.
     """
     return arg.split(',')
+
 
 def parse_args():
     """Parses, validates, and returns command-line arguments.
@@ -664,7 +666,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
 
     logger.info("Transferring dimension records to destination Butler repo")
     if not config.dry_run:
-        for dest_butler in dest_bulters:
+        for dest_butler in dest_butlers:
             dest_butler.transfer_dimension_records_from(source_butler, refs)
 
     logger.info("Ingesting zip: %s", dest_path)
