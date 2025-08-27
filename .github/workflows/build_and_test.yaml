@@ -54,6 +54,20 @@ jobs:
             github_token: ${{ secrets.GITHUB_TOKEN }}
             dockerfile: Dockerfile.non_raw
 
+  build_from_list:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+
+      - name: Build from-list
+        uses: lsst-sqre/build-and-push-to-ghcr@v1
+        with:
+            image: lsst-dm/transfer-from-list
+            github_token: ${{ secrets.GITHUB_TOKEN }}
+            dockerfile: Dockerfile.from_list
+
   build_raw:
     needs: test
     runs-on: ubuntu-latest

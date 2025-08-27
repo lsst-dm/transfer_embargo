@@ -2,3 +2,6 @@ lsst-daf-butler
 psycopg2-binary
 botocore
 boto3
+astropy
+pandas
+pyarrow
