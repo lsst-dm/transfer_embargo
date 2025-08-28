@@ -302,16 +302,9 @@ class RucioInterface:
         self.did_client.set_metadata(
             scope="raw",
             name=datasets[-1],
-            key="SafeCopyCheck",
-            value="need",
+            key="SafeCopies",
+            value="000",
         )
-
-
-def comma_separated_list(arg):
-    """
-    Custom type function to split a comma-separated string into a list.
-    """
-    return arg.split(',')
 
 
 def parse_args():
@@ -334,9 +327,10 @@ def parse_args():
         help="Butler repository from which data is transferred.",
     )
     parser.add_argument(
-        "torepos",
-        type=comma_separated_list,
-        help="Comma separated list of repositories to which data is transferred.",
+        "torepo",
+        nargs="+",
+        type=str,
+        help="Space separated list of repositories to which data is transferred.",
     )
 
     parser.add_argument(
@@ -726,9 +720,7 @@ def initialize():
         logger.warning("dry_run=True, no writes")
 
     source_butler = Butler(config.fromrepo, skymap="lsst_cells_v1")
-    for torepo in config.torepos:
-        dest_butler = Butler(torepo, writeable=True)
-        dest_butlers.append(dest_butler)
+    dest_butlers = [Butler(repo, writeable=True) for repo in config.torepo] 
 
     if config.rucio_rse:
         rucio_interface = RucioInterface(config.rucio_rse, config.scope)
