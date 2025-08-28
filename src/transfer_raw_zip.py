@@ -720,7 +720,7 @@ def initialize():
         logger.warning("dry_run=True, no writes")
 
     source_butler = Butler(config.fromrepo, skymap="lsst_cells_v1")
-    dest_butlers = [Butler(repo, writeable=True) for repo in config.torepo] 
+    dest_butlers = [Butler(repo, writeable=True) for repo in config.torepo]
 
     if config.rucio_rse:
         rucio_interface = RucioInterface(config.rucio_rse, config.scope)
