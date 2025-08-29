@@ -303,7 +303,7 @@ class RucioInterface:
             scope="raw",
             name=datasets[-1],
             key="SafeCopies",
-            value='{"USDF": 0, "FrDF": 0, "Tape": 0}',
+            value='',
         )
 
 
