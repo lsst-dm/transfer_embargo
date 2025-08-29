@@ -299,6 +299,12 @@ class RucioInterface:
             key="arcBackup",
             value="SLAC_RAW_DISK_BKUP:need",
         )
+        self.did_client.set_metadata(
+            scope="raw",
+            name=datasets[-1],
+            key="SafeCopies",
+            value='{"USDF": 0, "FrDF": 0, "Tape": 0}',
+        )
 
 
 def parse_args():
@@ -322,8 +328,9 @@ def parse_args():
     )
     parser.add_argument(
         "torepo",
+        nargs="+",
         type=str,
-        help="Repository to which data is transferred.",
+        help="Space separated list of repositories to which data is transferred.",
     )
 
     parser.add_argument(
@@ -461,7 +468,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
     instrument: `str`
         The name of the instrument corresponding to the exposure.
     """
-    global logger, config, source_butler, dest_butler, rucio_interface
+    global logger, config, source_butler, dest_butlers, rucio_interface
 
     # Check several times (before each major step) for existence of the
     # result to avoid work in case of race conditions
@@ -653,12 +660,14 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
 
     logger.info("Transferring dimension records to destination Butler repo")
     if not config.dry_run:
-        dest_butler.transfer_dimension_records_from(source_butler, refs)
+        for dest_butler in dest_butlers:
+            dest_butler.transfer_dimension_records_from(source_butler, refs)
 
     logger.info("Ingesting zip: %s", dest_path)
     if not config.dry_run:
         with time_this(logger, "Ingesting zip"):
-            dest_butler.ingest_zip(dest_path, transfer="direct")
+            for dest_butler in dest_butlers:
+                dest_butler.ingest_zip(dest_path, transfer="direct")
 
     if config.rucio_rse:
         logger.info("Registering zip in Rucio")
@@ -684,13 +693,13 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
 config: argparse.Namespace
 logger: logging.Logger
 source_butler: Butler
-dest_butler: Butler
+dest_butlers: list[Butler]
 rucio_interface: RucioInterface
 
 
 def initialize():
     """Set up the global variables."""
-    global config, source_butler, dest_butler, logger, rucio_interface
+    global config, source_butler, dest_butlers, logger, rucio_interface
 
     config = parse_args()
 
@@ -711,7 +720,7 @@ def initialize():
         logger.warning("dry_run=True, no writes")
 
     source_butler = Butler(config.fromrepo, skymap="lsst_cells_v1")
-    dest_butler = Butler(config.torepo, writeable=True)
+    dest_butlers = [Butler(repo, writeable=True) for repo in config.torepo]
 
     if config.rucio_rse:
         rucio_interface = RucioInterface(config.rucio_rse, config.scope)
