@@ -118,8 +118,6 @@ def read_dsrs(fd: io.TextIOBase, dimensions: DimensionUniverse) -> DatasetRef:
 
 def dbretry(retry_label: str, func: Any, *args, **kwargs) -> Any:
     """Retry a database-dependent function call up to 10 times."""
-    global logger
-
     retries = 0
     max_retries = 10
     while retries < max_retries:
@@ -139,6 +137,7 @@ logger: logging.Logger
 
 def main():
     global logger
+
     config = parse_args()
 
     CliLog.initLog(longlog=True)

@@ -167,8 +167,6 @@ class RucioInterface:
         dry_run: `bool`
             If true, only log, do not write anything.
         """
-        global logger
-
         logger.info("Adding replica to %s: %s", self.rucio_rse, did)
         if dry_run:
             return
@@ -203,8 +201,6 @@ class RucioInterface:
         dry_run: `bool`
             If true, only log, do not write anything.
         """
-        global logger
-
         logger.info(
             "Registering %s in dataset %s, RSE %s", did, dataset_id, self.rucio_rse
         )
@@ -411,8 +407,6 @@ def transfer_data_query(data_query: DataQuery) -> None:
     data_query: `DataQuery`
         The query and associated embargo time.
     """
-    global logger, config, source_butler
-
     # End of window is now - embargo length
     end_time = config.now - TimeDelta(data_query.embargo_hours * 3600, format="sec")
     # If window is defined, then start is that much before the end
@@ -461,8 +455,6 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
     instrument: `str`
         The name of the instrument corresponding to the exposure.
     """
-    global logger, config, source_butler, dest_butler, rucio_interface
-
     # Check several times (before each major step) for existence of the
     # result to avoid work in case of race conditions
     zip_name = f"{exp.obs_id}.zip"
@@ -688,6 +680,25 @@ dest_butler: Butler
 rucio_interface: RucioInterface
 
 
+def main():
+    """Main function."""
+    initialize()
+
+    with open(config.config_file, "r") as f:
+        data_queries = DataQuery.from_yaml(f)
+    logger.info("data_queries %s", data_queries)
+    for query in data_queries:
+        if (
+            query.collections != f"{query.instrument}/raw/all"
+            or query.dataset_types != "raw"
+        ):
+            raise ValueError(f"Invalid data query for raws: {query}")
+
+    for data_query in data_queries:
+        logger.info("Processing %s", data_query)
+        transfer_data_query(data_query)
+
+
 def initialize():
     """Set up the global variables."""
     global config, source_butler, dest_butler, logger, rucio_interface
@@ -715,26 +726,6 @@ def initialize():
 
     if config.rucio_rse:
         rucio_interface = RucioInterface(config.rucio_rse, config.scope)
-
-
-def main():
-    """Main function."""
-    global config, logger
-    initialize()
-
-    with open(config.config_file, "r") as f:
-        data_queries = DataQuery.from_yaml(f)
-    logger.info("data_queries %s", data_queries)
-    for query in data_queries:
-        if (
-            query.collections != f"{query.instrument}/raw/all"
-            or query.dataset_types != "raw"
-        ):
-            raise ValueError(f"Invalid data query for raws: {query}")
-
-    for data_query in data_queries:
-        logger.info("Processing %s", data_query)
-        transfer_data_query(data_query)
 
 
 if __name__ == "__main__":

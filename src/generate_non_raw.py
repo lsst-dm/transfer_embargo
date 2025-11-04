@@ -72,8 +72,6 @@ def parse_args():
 
 def dbretry(retry_label: str, func: Any, *args, **kwargs) -> Any:
     """Retry a database-dependent function call up to 10 times."""
-    global logger
-
     retries = 0
     max_retries = 10
     while retries < max_retries:
@@ -89,8 +87,6 @@ def dbretry(retry_label: str, func: Any, *args, **kwargs) -> Any:
 
 def gather_collection_info(collection: str):
     """Get information for a collection and its children."""
-    global logger, butler
-
     collection_info = butler.collections.get_info(collection)
     calibration_collections = set()
     tagged_collections = set()
@@ -121,8 +117,6 @@ def gather_collection_info(collection: str):
 
 def generate_dstypes(collection: str) -> set[DatasetType]:
     """Generate a list of exportable dataset types from a collection."""
-    global butler, logger
-
     all_types = butler.registry.queryDatasetTypes("*")
     collection_info = butler.collections.query_info(collection, include_summary=True)
     calibration_collections, tagged_collections = gather_collection_info(collection)

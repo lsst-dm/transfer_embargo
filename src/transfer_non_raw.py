@@ -108,8 +108,6 @@ def parse_args():
 
 
 def transfer_data_query(data_query):
-    global config, source_butler, dest_butler
-
     all_types = source_butler.registry.queryDatasetTypes(data_query.dataset_types)
     collections_info = source_butler.collections.query_info(
         data_query.collections, include_summary=True
@@ -157,7 +155,6 @@ def transfer_data_query(data_query):
 
 
 def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
-    global config, source_butler, logger
     try:
         # data_query.where goes last to avoid injection overriding timespan
         dim_where = f"({dimension}.timespan OVERLAPS :ok_timespan)"
@@ -196,7 +193,6 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
 
 
 def transfer_dataset_type(dataset_type, collections, where, bind):
-    global source_butler, logger
     logger.debug(f"Querying datasets: {where} {bind}")
     dataset_refs = list(
         # ok to have empty results because this is used with batching.
@@ -226,6 +222,24 @@ def transfer_dataset_type(dataset_type, collections, where, bind):
             )
 
 
+def main():
+    initialize()
+
+    if config.config_file:
+        logger.info("using config file %s", config.config_file)
+        with open(config.config_file, "r") as f:
+            data_queries = DataQuery.from_yaml(f)
+    else:
+        logger.info("Using dataqueries: %s", config.dataqueries)
+        data_queries = DataQuery.from_yaml(config.dataqueries)
+    logger.info("data_queries %s", data_queries)
+
+    for data_query in data_queries:
+        logger.info("Processing %s", data_query)
+        transfer_data_query(data_query)
+    return 0
+
+
 config: argparse.Namespace
 logger: logging.Logger
 source_butler: Butler
@@ -250,26 +264,6 @@ def initialize():
     # Define embargo and destination butler
     source_butler = Butler(config.fromrepo)
     dest_butler = Butler(config.torepo, writeable=True)
-
-
-def main():
-    global config, logger
-
-    initialize()
-
-    if config.config_file:
-        logger.info("using config file %s", config.config_file)
-        with open(config.config_file, "r") as f:
-            data_queries = DataQuery.from_yaml(f)
-    else:
-        logger.info("Using dataqueries: %s", config.dataqueries)
-        data_queries = DataQuery.from_yaml(config.dataqueries)
-    logger.info("data_queries %s", data_queries)
-
-    for data_query in data_queries:
-        logger.info("Processing %s", data_query)
-        transfer_data_query(data_query)
-    return 0
 
 
 if __name__ == "__main__":
