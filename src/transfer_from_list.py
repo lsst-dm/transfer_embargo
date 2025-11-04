@@ -76,6 +76,13 @@ def parse_args():
         help="Register any new dataset types.",
     )
     parser.add_argument(
+        "--transfer",
+        type=str,
+        required=False,
+        default="copy",
+        help="Transfer type (default=copy).",
+    )
+    parser.add_argument(
         "--log",
         type=str,
         required=False,
@@ -155,7 +162,7 @@ def main():
             dest_butler.transfer_from,
             source_butler,
             batch,
-            transfer="copy",
+            transfer=config.transfer,
             skip_missing=True,
             register_dataset_types=config.register_dataset_types,
             transfer_dimensions=False,
