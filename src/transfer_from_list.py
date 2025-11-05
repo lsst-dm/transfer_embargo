@@ -76,6 +76,13 @@ def parse_args():
         help="Register any new dataset types.",
     )
     parser.add_argument(
+        "--transfer",
+        type=str,
+        required=False,
+        default="copy",
+        help="Transfer type (default=copy).",
+    )
+    parser.add_argument(
         "--log",
         type=str,
         required=False,
@@ -111,8 +118,6 @@ def read_dsrs(fd: io.TextIOBase, dimensions: DimensionUniverse) -> DatasetRef:
 
 def dbretry(retry_label: str, func: Any, *args, **kwargs) -> Any:
     """Retry a database-dependent function call up to 10 times."""
-    global logger
-
     retries = 0
     max_retries = 10
     while retries < max_retries:
@@ -132,6 +137,7 @@ logger: logging.Logger
 
 def main():
     global logger
+
     config = parse_args()
 
     CliLog.initLog(longlog=True)
@@ -155,7 +161,7 @@ def main():
             dest_butler.transfer_from,
             source_butler,
             batch,
-            transfer="copy",
+            transfer=config.transfer,
             skip_missing=True,
             register_dataset_types=config.register_dataset_types,
             transfer_dimensions=False,

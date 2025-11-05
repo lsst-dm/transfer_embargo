@@ -9,7 +9,7 @@ on:
   pull_request:
 
 env:
-  EUPS_DISTRIB_VERSION: "w_2025_19"
+  EUPS_DISTRIB_VERSION: "w_2025_41"
 
 jobs:
   test:
