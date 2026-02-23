@@ -399,6 +399,12 @@ def parse_args():
         help="Level name (WARNING, INFO, DEBUG) or comma-sepaarated list of logger=level pairs.",
     )
 
+    parser.add_argument(
+        "--repair",
+        action="store_true",
+        help="Repair partially unembargoed exposures. Expect exposure exist at destination storage and butler.",
+    )
+
     ns = parser.parse_args()
     ns.now = Time(ns.now, format="isot", scale="tai") if ns.now else Time.now()
     if ns.now > Time.now():
@@ -477,7 +483,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         ResourcePath(config.dest_uri_prefix).join(instrument).join(f"{exp.day_obs}")
     )
     dest_path = dest_dir.join(zip_name)
-    if dest_path.exists():
+    if dest_path.exists() and not config.repair:
         logger.info("Zip exists, skipping processing: %s", dest_path)
         return
 
@@ -530,7 +536,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         os.mkdir(prepdir)
         os.chdir(prepdir)
         # Second race condition check
-        if dest_path.exists():
+        if dest_path.exists() and not config.repair:
             logger.info("Zip exists, not retrieving datasets: %s", dest_path)
             return
 
@@ -563,7 +569,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
                 if not os.path.exists(f):
                     transfer_list.append((dirpath.join(f), ResourcePath(f)))
         # Third race condition check
-        if dest_path.exists():
+        if dest_path.exists() and not config.repair:
             logger.info("Zip exists, not copying others: %s", dest_path)
             return
         logger.debug("Also copying %s", [t[0] for t in transfer_list])
@@ -588,21 +594,24 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         # also so that we capture the state of the file just after creation,
         # in case the transfer to its final destination is corrupted.
         if config.rucio_rse:
-            hashes = RucioInterface.compute_hashes(zip_path)
-            if hashes[0] != after_creation_stat.st_size:
-                logger.error(
-                    f"File size mismatch for {zip_path}:"
-                    f" {after_creation_stat.st_size} reads as {hashes[0]}"
-                )
+            if not config.repair:
+                hashes = RucioInterface.compute_hashes(zip_path)
+                if hashes[0] != after_creation_stat.st_size:
+                    logger.error(
+                        f"File size mismatch for {zip_path}:"
+                        f" {after_creation_stat.st_size} reads as {hashes[0]}"
+                    )
+            else:
+                hashes = RucioInterface.compute_hashes(dest_path.path)
 
         # Fourth race condition check
-        if dest_path.exists():
+        if dest_path.exists() and not config.repair:
             logger.info("Zip exists, not installing: %s", dest_path)
             return
         # Copy to destination
         logger.info("Installing zip in %s", dest_path)
         with time_this(logger, "Installing zip"):
-            if not config.dry_run:
+            if not config.dry_run and not config.repair:
                 # The final race condition check is that transfer_from()
                 # will not overwrite.
                 try:
@@ -652,19 +661,22 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         dimensions_dest = dest_dir.join(f"{exp.obs_id}_dimensions.yaml")
         logger.info("Saving exported dimensions in %s", dimensions_dest)
         if not config.dry_run:
-            dimensions_dest.transfer_from(ResourcePath(dimensions_file), "copy")
+            if not config.repair:
+                dimensions_dest.transfer_from(ResourcePath(dimensions_file), "copy")
+            else:
+                dimensions_dest.transfer_from(ResourcePath(dimensions_file), "copy", overwrite=True)
         if config.rucio_rse:
             dim_hashes = RucioInterface.compute_hashes(dimensions_file)
 
         # Done with tmpdir
 
     logger.info("Transferring dimension records to destination Butler repo")
-    if not config.dry_run:
+    if not config.dry_run and not config.repair:
         for dest_butler in dest_butlers:
             dest_butler.transfer_dimension_records_from(source_butler, refs)
 
     logger.info("Ingesting zip: %s", dest_path)
-    if not config.dry_run:
+    if not config.dry_run and not config.repair:
         with time_this(logger, "Ingesting zip"):
             for dest_butler in dest_butlers:
                 dest_butler.ingest_zip(dest_path, transfer="direct")
