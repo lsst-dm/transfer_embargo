@@ -402,7 +402,7 @@ def parse_args():
     parser.add_argument(
         "--repair",
         action="store_true",
-        help="Repair partially unembargoed exposures. Expect exposure exist at destination storage and butler.",
+        help="Repair partially unembargoed exposures: make up incomplete info in Rucio",
     )
 
     ns = parser.parse_args()
