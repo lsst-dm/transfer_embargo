@@ -9,7 +9,9 @@ on:
   pull_request:
 
 env:
-  EUPS_DISTRIB_VERSION: "w_2025_19"
+  # Warning: w_2026_20 and later includes paramiko 5.0.0, which doesn't support
+  #          SHA1 ssk-rsa key and breaks existing Rucio ssh key authentication.
+  EUPS_DISTRIB_VERSION: "w_2026_19"
 
 jobs:
   test:
