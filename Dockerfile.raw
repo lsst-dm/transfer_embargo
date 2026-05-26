@@ -1,6 +1,4 @@
-# Warning: w_2026_20 and later includes paramiko 5.0.0, which doesn't support
-#          SHA1 ssk-rsa key and breaks existing Rucio ssh key authentication.
-ARG STACKVER=w_2026_19
+ARG STACKVER=w_2025_26
 FROM ghcr.io/lsst/scipipe:al9-${STACKVER}
 
 # Copy code and configuration
