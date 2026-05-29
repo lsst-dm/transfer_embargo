@@ -111,7 +111,7 @@ def read_dsrs(fd: io.TextIOBase, dimensions: DimensionUniverse) -> DatasetRef:
 
 def dbretry(retry_label: str, func: Any, *args, **kwargs) -> Any:
     """Retry a database-dependent function call up to 10 times."""
-    global logger
+    # global logger
 
     retries = 0
     max_retries = 10
@@ -127,7 +127,7 @@ def dbretry(retry_label: str, func: Any, *args, **kwargs) -> Any:
         raise RuntimeError("Unable to communicate with database")
 
 
-logger: logging.Logger
+logger: logging.Logger = None
 
 
 def main():
