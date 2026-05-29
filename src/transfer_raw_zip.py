@@ -167,7 +167,7 @@ class RucioInterface:
         dry_run: `bool`
             If true, only log, do not write anything.
         """
-        global logger
+        # global logger
 
         logger.info("Adding replica to %s: %s", self.rucio_rse, did)
         if dry_run:
@@ -203,7 +203,7 @@ class RucioInterface:
         dry_run: `bool`
             If true, only log, do not write anything.
         """
-        global logger
+        # global logger
 
         logger.info(
             "Registering %s in dataset %s, RSE %s", did, dataset_id, self.rucio_rse
@@ -299,6 +299,12 @@ class RucioInterface:
             key="arcBackup",
             value="SLAC_RAW_DISK_BKUP:need",
         )
+        self.did_client.set_metadata(
+            scope="raw",
+            name=datasets[-1],
+            key="SafeCopies",
+            value='',
+        )
 
 
 def parse_args():
@@ -322,8 +328,9 @@ def parse_args():
     )
     parser.add_argument(
         "torepo",
+        nargs="+",
         type=str,
-        help="Repository to which data is transferred.",
+        help="Space separated list of repositories to which data is transferred.",
     )
 
     parser.add_argument(
@@ -392,6 +399,12 @@ def parse_args():
         help="Level name (WARNING, INFO, DEBUG) or comma-sepaarated list of logger=level pairs.",
     )
 
+    parser.add_argument(
+        "--repair",
+        action="store_true",
+        help="Repair partially unembargoed exposures: make up incomplete info in Rucio",
+    )
+
     ns = parser.parse_args()
     ns.now = Time(ns.now, format="isot", scale="tai") if ns.now else Time.now()
     if ns.now > Time.now():
@@ -411,7 +424,7 @@ def transfer_data_query(data_query: DataQuery) -> None:
     data_query: `DataQuery`
         The query and associated embargo time.
     """
-    global logger, config, source_butler
+    # global logger, config, source_butler
 
     # End of window is now - embargo length
     end_time = config.now - TimeDelta(data_query.embargo_hours * 3600, format="sec")
@@ -461,7 +474,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
     instrument: `str`
         The name of the instrument corresponding to the exposure.
     """
-    global logger, config, source_butler, dest_butler, rucio_interface
+    # global logger, config, source_butler, dest_butlers, rucio_interface
 
     # Check several times (before each major step) for existence of the
     # result to avoid work in case of race conditions
@@ -470,7 +483,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         ResourcePath(config.dest_uri_prefix).join(instrument).join(f"{exp.day_obs}")
     )
     dest_path = dest_dir.join(zip_name)
-    if dest_path.exists():
+    if dest_path.exists() and not config.repair:
         logger.info("Zip exists, skipping processing: %s", dest_path)
         return
 
@@ -523,7 +536,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         os.mkdir(prepdir)
         os.chdir(prepdir)
         # Second race condition check
-        if dest_path.exists():
+        if dest_path.exists() and not config.repair:
             logger.info("Zip exists, not retrieving datasets: %s", dest_path)
             return
 
@@ -556,7 +569,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
                 if not os.path.exists(f):
                     transfer_list.append((dirpath.join(f), ResourcePath(f)))
         # Third race condition check
-        if dest_path.exists():
+        if dest_path.exists() and not config.repair:
             logger.info("Zip exists, not copying others: %s", dest_path)
             return
         logger.debug("Also copying %s", [t[0] for t in transfer_list])
@@ -581,21 +594,24 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         # also so that we capture the state of the file just after creation,
         # in case the transfer to its final destination is corrupted.
         if config.rucio_rse:
-            hashes = RucioInterface.compute_hashes(zip_path)
-            if hashes[0] != after_creation_stat.st_size:
-                logger.error(
-                    f"File size mismatch for {zip_path}:"
-                    f" {after_creation_stat.st_size} reads as {hashes[0]}"
-                )
+            if not config.repair:
+                hashes = RucioInterface.compute_hashes(zip_path)
+                if hashes[0] != after_creation_stat.st_size:
+                    logger.error(
+                        f"File size mismatch for {zip_path}:"
+                        f" {after_creation_stat.st_size} reads as {hashes[0]}"
+                    )
+            else:
+                hashes = RucioInterface.compute_hashes(dest_path.path)
 
         # Fourth race condition check
-        if dest_path.exists():
+        if dest_path.exists() and not config.repair:
             logger.info("Zip exists, not installing: %s", dest_path)
             return
         # Copy to destination
         logger.info("Installing zip in %s", dest_path)
         with time_this(logger, "Installing zip"):
-            if not config.dry_run:
+            if not config.dry_run and not config.repair:
                 # The final race condition check is that transfer_from()
                 # will not overwrite.
                 try:
@@ -645,20 +661,25 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         dimensions_dest = dest_dir.join(f"{exp.obs_id}_dimensions.yaml")
         logger.info("Saving exported dimensions in %s", dimensions_dest)
         if not config.dry_run:
-            dimensions_dest.transfer_from(ResourcePath(dimensions_file), "copy")
+            if not config.repair:
+                dimensions_dest.transfer_from(ResourcePath(dimensions_file), "copy")
+            else:
+                dimensions_dest.transfer_from(ResourcePath(dimensions_file), "copy", overwrite=True)
         if config.rucio_rse:
             dim_hashes = RucioInterface.compute_hashes(dimensions_file)
 
         # Done with tmpdir
 
     logger.info("Transferring dimension records to destination Butler repo")
-    if not config.dry_run:
-        dest_butler.transfer_dimension_records_from(source_butler, refs)
+    if not config.dry_run and not config.repair:
+        for dest_butler in dest_butlers:
+            dest_butler.transfer_dimension_records_from(source_butler, refs)
 
     logger.info("Ingesting zip: %s", dest_path)
-    if not config.dry_run:
+    if not config.dry_run and not config.repair:
         with time_this(logger, "Ingesting zip"):
-            dest_butler.ingest_zip(dest_path, transfer="direct")
+            for dest_butler in dest_butlers:
+                dest_butler.ingest_zip(dest_path, transfer="direct")
 
     if config.rucio_rse:
         logger.info("Registering zip in Rucio")
@@ -681,16 +702,16 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
 
 # Global variables
 
-config: argparse.Namespace
-logger: logging.Logger
-source_butler: Butler
-dest_butler: Butler
-rucio_interface: RucioInterface
+config: argparse.Namespace = None
+logger: logging.Logger = None
+source_butler: Butler = None
+dest_butlers: list[Butler] = None
+rucio_interface: RucioInterface = None
 
 
 def initialize():
     """Set up the global variables."""
-    global config, source_butler, dest_butler, logger, rucio_interface
+    global config, source_butler, dest_butlers, logger, rucio_interface
 
     config = parse_args()
 
@@ -711,7 +732,7 @@ def initialize():
         logger.warning("dry_run=True, no writes")
 
     source_butler = Butler(config.fromrepo, skymap="lsst_cells_v1")
-    dest_butler = Butler(config.torepo, writeable=True)
+    dest_butlers = [Butler(repo, writeable=True) for repo in config.torepo]
 
     if config.rucio_rse:
         rucio_interface = RucioInterface(config.rucio_rse, config.scope)
@@ -719,7 +740,7 @@ def initialize():
 
 def main():
     """Main function."""
-    global config, logger
+    # global config, logger
     initialize()
 
     with open(config.config_file, "r") as f:

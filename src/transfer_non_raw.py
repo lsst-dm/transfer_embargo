@@ -108,7 +108,7 @@ def parse_args():
 
 
 def transfer_data_query(data_query):
-    global config, source_butler, dest_butler
+    # global config, source_butler, dest_butler
 
     all_types = source_butler.registry.queryDatasetTypes(data_query.dataset_types)
     collections_info = source_butler.collections.query_info(
@@ -157,7 +157,7 @@ def transfer_data_query(data_query):
 
 
 def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
-    global config, source_butler, logger
+    # global config, source_butler, logger
     try:
         # data_query.where goes last to avoid injection overriding timespan
         dim_where = f"({dimension}.timespan OVERLAPS :ok_timespan)"
@@ -196,7 +196,7 @@ def transfer_dimension(dimension, dataset_type, data_query, ok_timespan):
 
 
 def transfer_dataset_type(dataset_type, collections, where, bind):
-    global source_butler, logger
+    # global source_butler, logger
     logger.debug(f"Querying datasets: {where} {bind}")
     dataset_refs = list(
         # ok to have empty results because this is used with batching.
@@ -226,10 +226,10 @@ def transfer_dataset_type(dataset_type, collections, where, bind):
             )
 
 
-config: argparse.Namespace
-logger: logging.Logger
-source_butler: Butler
-dest_butler: Butler
+config: argparse.Namespace = None
+logger: logging.Logger = None
+source_butler: Butler = None
+dest_butler: Butler = None
 
 
 def initialize():
@@ -253,7 +253,7 @@ def initialize():
 
 
 def main():
-    global config, logger
+    # global config, logger
 
     initialize()
 
