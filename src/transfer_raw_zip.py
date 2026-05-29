@@ -167,7 +167,7 @@ class RucioInterface:
         dry_run: `bool`
             If true, only log, do not write anything.
         """
-        global logger
+        # global logger
 
         logger.info("Adding replica to %s: %s", self.rucio_rse, did)
         if dry_run:
@@ -203,7 +203,7 @@ class RucioInterface:
         dry_run: `bool`
             If true, only log, do not write anything.
         """
-        global logger
+        # global logger
 
         logger.info(
             "Registering %s in dataset %s, RSE %s", did, dataset_id, self.rucio_rse
@@ -424,7 +424,7 @@ def transfer_data_query(data_query: DataQuery) -> None:
     data_query: `DataQuery`
         The query and associated embargo time.
     """
-    global logger, config, source_butler
+    # global logger, config, source_butler
 
     # End of window is now - embargo length
     end_time = config.now - TimeDelta(data_query.embargo_hours * 3600, format="sec")
@@ -474,7 +474,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
     instrument: `str`
         The name of the instrument corresponding to the exposure.
     """
-    global logger, config, source_butler, dest_butlers, rucio_interface
+    # global logger, config, source_butler, dest_butlers, rucio_interface
 
     # Check several times (before each major step) for existence of the
     # result to avoid work in case of race conditions
@@ -702,11 +702,11 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
 
 # Global variables
 
-config: argparse.Namespace
-logger: logging.Logger
-source_butler: Butler
-dest_butlers: list[Butler]
-rucio_interface: RucioInterface
+config: argparse.Namespace = None
+logger: logging.Logger = None
+source_butler: Butler = None
+dest_butlers: list[Butler] = None
+rucio_interface: RucioInterface = None
 
 
 def initialize():
@@ -740,7 +740,7 @@ def initialize():
 
 def main():
     """Main function."""
-    global config, logger
+    # global config, logger
     initialize()
 
     with open(config.config_file, "r") as f:
