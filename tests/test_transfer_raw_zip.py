@@ -30,6 +30,14 @@ class TestZip(unittest.TestCase):
                 universe=self.dest_butler.dimensions,
             )
         )
+        self.dest_butler.registry.registerDatasetType(
+            DatasetType(
+                "guider_raw",
+                ["exposure", "instrument", "detector"],
+                "Exposure",
+                universe=self.dest_butler.dimensions,
+            )
+        )
 
     def tearDown(self):
         """
