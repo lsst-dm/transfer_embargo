@@ -34,7 +34,7 @@ import zlib
 import rucio.common.exception  # type: ignore
 from astro_metadata_translator.indexing import index_files
 from astropy.time import Time, TimeDelta  # type: ignore
-from lsst.daf.butler import Butler, DimensionRecord, Timespan
+from lsst.daf.butler import Butler, DimensionRecord, Timespan, _exceptions
 from lsst.daf.butler.cli.cliLog import CliLog
 from lsst.resources import ResourcePath
 from lsst.utils.timer import time_this
@@ -510,16 +510,20 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         return
 
     # Find all GUIDER datasets for this exposure and its source directory
-    guider_refs = source_butler.query_datasets(
-        "guider_raw",
-        exposure=exp.id,
-        instrument=instrument,
-        collections=f"{instrument}/raw/guider",
-        explain=False,
-    )
-    if not guider_refs:
+    # If they exists:
+    try:
+        guider_refs = source_butler.query_datasets(
+            "guider_raw",
+            exposure=exp.id,
+            instrument=instrument,
+            collections=f"{instrument}/raw/guider",
+            explain=False,
+        )
+        if not guider_refs:
+            logger.warning("No GUIDER datasets for exposure %s", exp.obs_id)
+    except _exceptions.MissingDatasetTypeError:
         logger.warning("No GUIDER datasets for exposure %s", exp.obs_id)
-        return
+        guider_refs = []
 
     refs = science_refs.copy()
     refs.extend(guider_refs)
