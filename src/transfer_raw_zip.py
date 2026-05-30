@@ -497,17 +497,32 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         )
         tracts = {int(id["tract"]) for id in q.data_ids(["tract"])}
 
-    # Find all datasets for this exposure and its source directory
-    refs = source_butler.query_datasets(
+    # Find all SCIENCE datasets for this exposure and its source directory
+    science_refs = source_butler.query_datasets(
         "raw",
         exposure=exp.id,
         instrument=instrument,
         collections=f"{instrument}/raw/all",
         explain=False,
     )
-    if not refs:
-        logger.warning("No datasets for exposure %s", exp.obs_id)
+    if not science_refs:
+        logger.warning("No SCIENCE datasets for exposure %s", exp.obs_id)
         return
+
+    # Find all GUIDER datasets for this exposure and its source directory
+    guider_refs = source_butler.query_datasets(
+        "guider_raw",
+        exposure=exp.id,
+        instrument=instrument,
+        collections=f"{instrument}/raw/guider",
+        explain=False,
+    )
+    if not guider_refs:
+        logger.warning("No GUIDER datasets for exposure %s", exp.obs_id)
+        return
+
+    refs = science_refs.copy()
+    refs.extend(guider_refs)
 
     logger.info("Handling exposure: %s (%s)", exp.obs_id, len(refs))
 
@@ -520,7 +535,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
     if expected_sensors_path.exists():
         with expected_sensors_path.open("rb") as fd:
             expected_sensors = json.load(fd)["expectedSensors"]
-        expected_refs = len([t for t in expected_sensors.values() if t == "SCIENCE"])
+        expected_refs = len([t for t in expected_sensors.values() if t == "SCIENCE" or t == 'GUIDER'])
         if len(refs) < expected_refs:
             logger.warning(
                 "Skipping incomplete exposure %s: %s < %s",
