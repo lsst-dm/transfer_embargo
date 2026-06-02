@@ -521,7 +521,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
         )
         if not guider_refs:
             logger.warning("No GUIDER datasets for exposure %s", exp.obs_id)
-    except _exceptions.MissingDatasetTypeError:
+    except (_exceptions.MissingDatasetTypeError, _exceptions.MissingCollectionError):
         logger.warning("No GUIDER datasets for exposure %s", exp.obs_id)
         guider_refs = []
 
