@@ -655,7 +655,7 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
                             dest_path.ospath,
                             xrdadler32.pack_xrdcks(
                                 int(hashes[2], 16),
-                                after_copy_stat.st_mtime
+                                int(after_copy_stat.st_mtime)
                             )
                         )
                 except FileExistsError:
