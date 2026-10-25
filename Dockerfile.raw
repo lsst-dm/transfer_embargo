@@ -1,4 +1,4 @@
-ARG STACKVER=w_2025_51
+ARG STACKVER=w_2026_41
 FROM ghcr.io/lsst/scipipe:al9-${STACKVER}
 
 # Copy code and configuration

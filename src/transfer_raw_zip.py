@@ -40,6 +40,7 @@ from lsst.resources import ResourcePath
 from lsst.utils.timer import time_this
 from rucio.client.didclient import DIDClient  # type: ignore
 from rucio.client.replicaclient import ReplicaClient  # type: ignore
+import xrdadler32
 
 from data_query import DataQuery
 
@@ -648,6 +649,14 @@ def process_exposure(exp: DimensionRecord, instrument: str) -> None:
                             f"File size mismatch for {zip_path}:"
                             f" {after_creation_stat.st_size} is now"
                             f" {after_copy_stat.st_size} after copy"
+                        )
+                    if config.rucio_rse:
+                        xrdadler32.write_xattr(
+                            dest_path.ospath,
+                            xrdadler32.pack_xrdcks(
+                                int(hashes[2], 16),
+                                after_copy_stat.st_mtime
+                            )
                         )
                 except FileExistsError:
                     logger.info("Zip exists in transfer_from: %s", dest_path)
